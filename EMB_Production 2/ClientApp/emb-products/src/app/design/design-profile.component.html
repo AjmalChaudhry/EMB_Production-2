@@ -1,0 +1,460 @@
+<div class="container-fluid py-3" *ngIf="profile">
+
+  <!-- ================= HEADER ================= -->
+  <div class="d-flex align-items-center mb-3 gap-2 flex-wrap">
+
+    <button class="btn btn-outline-secondary btn-sm" [routerLink]="['/designs']">
+      <i class="bi bi-arrow-left me-1"></i> Back
+    </button>
+
+    <h5 class="mb-0 me-2">
+      <i class="bi bi-layers me-1 text-primary"></i>
+      Design Profile
+    </h5>
+
+    <span class="badge bg-primary">{{ profile.d_Code }}</span>
+    <span class="badge bg-secondary">{{ profile.dNo }}</span>
+    <span class="text-muted">{{ profile.collectionName }}</span>
+
+    <div class="ms-auto d-flex gap-2">
+      <button class="btn btn-info btn-sm text-white" (click)="openCompare()" title="Compare Production vs Original">
+        <i class="bi bi-arrow-left-right me-1"></i> Compare
+      </button>
+      <button class="btn btn-success btn-sm" (click)="openCreate()">
+        <i class="bi bi-plus-circle me-1"></i> Add Component
+      </button>
+      <button class="btn btn-outline-primary btn-sm" (click)="load()" title="Refresh">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= DESIGN HEADER CARD ================= -->
+  <div class="card mb-3">
+    <div class="card-body py-2">
+      <div class="row g-2 small">
+        <div class="col-md-3"><strong>Customer:</strong> {{ profile.customerName || '-' }}</div>
+        <div class="col-md-3"><strong>Product:</strong> {{ profile.productName || '-' }}</div>
+        <div class="col-md-3"><strong>Machine:</strong> {{ profile.machineName || '-' }}</div>
+        <div class="col-md-3"><strong>Branch:</strong> {{ profile.branchName || '-' }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= COMPONENT CARDS ================= -->
+  <div class="card">
+    <div class="card-header d-flex align-items-center bg-light">
+      <i class="bi bi-puzzle me-2 text-info"></i>
+      <strong>Components</strong>
+      <span class="badge bg-info ms-2">{{ profile.componentCount }}</span>
+    </div>
+
+    <div class="card-body">
+
+      <div *ngIf="profile.components.length === 0" class="text-center text-muted py-4">
+        No components yet. Click <em>Add Component</em> to create the first one.
+      </div>
+
+      <div *ngFor="let c of profile.components" class="component-card mb-2 p-2 border rounded">
+
+        <div class="d-flex align-items-center mb-2 flex-wrap gap-1">
+          <span class="badge bg-warning text-dark">{{ c.code }}</span>
+          <strong class="me-1">{{ c.name }}</strong>
+
+          <span class="badge bg-dark" *ngIf="c.version" title="Current PRODUCTION version">
+            V{{ c.version }}
+          </span>
+          <span class="badge bg-info text-white" *ngIf="c.hasOriginal" title="Has approved ORIGINAL baseline">
+            <i class="bi bi-bookmark-check"></i> Original
+          </span>
+
+          <span class="badge"
+                [class.bg-success]="c.active"
+                [class.bg-secondary]="!c.active">
+            {{ c.active ? 'Active' : 'Inactive' }}
+          </span>
+
+          <div class="ms-auto d-flex gap-1">
+            <button class="btn btn-sm btn-outline-dark"
+                    title="Save current as new version"
+                    (click)="saveAsNewVersion(c)">
+              <i class="bi bi-clock-history"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-info"
+                    [title]="c.hasOriginal ? 'Replace ORIGINAL baseline' : 'Capture as ORIGINAL baseline'"
+                    (click)="captureOriginal(c)">
+              <i class="bi bi-bookmark-plus"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-warning"
+                    title="Edit"
+                    (click)="openEdit(c)">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger"
+                    title="Delete"
+                    (click)="askDelete(c.id)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="row row-cols-2 row-cols-md-4 row-cols-lg-7 g-2 small">
+          <div class="spec"><span class="spec-num">{{ c.width ?? '-' }}</span><span class="spec-lbl">Width</span></div>
+          <div class="spec"><span class="spec-num">{{ c.height ?? '-' }}</span><span class="spec-lbl">Height</span></div>
+          <div class="spec"><span class="spec-num">{{ c.stitch ?? '-' }}</span><span class="spec-lbl">Stitches</span></div>
+          <div class="spec"><span class="spec-num">{{ c.colors ?? '-' }}</span><span class="spec-lbl">Colors</span></div>
+          <div class="spec"><span class="spec-num">{{ c.machineHead ?? '-' }}</span><span class="spec-lbl">Mach.Head</span></div>
+          <div class="spec"><span class="spec-num">{{ c.repeatVal ?? '-' }}</span><span class="spec-lbl">Repeat</span></div>
+          <div class="spec"><span class="spec-num">{{ c.hSpace ?? '-' }}</span><span class="spec-lbl">H-Space</span></div>
+          <div class="spec"><span class="spec-num">{{ c.headToHead ?? '-' }}</span><span class="spec-lbl">H2H</span></div>
+          <div class="spec"><span class="spec-num">{{ c.ups ?? '-' }}</span><span class="spec-lbl">UPS</span></div>
+          <div class="spec"><span class="spec-num">{{ c.tilla ?? '-' }}</span><span class="spec-lbl">Tilla</span></div>
+          <div class="spec"><span class="spec-num">{{ c.seqA ?? '-' }}</span><span class="spec-lbl">Seq A</span></div>
+          <div class="spec"><span class="spec-num">{{ c.seqB ?? '-' }}</span><span class="spec-lbl">Seq B</span></div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= FILES PANEL (Phase 2A) ================= -->
+  <div class="card mt-3">
+    <div class="card-header d-flex align-items-center bg-light">
+      <i class="bi bi-file-earmark-arrow-up me-2 text-primary"></i>
+      <strong>Files</strong>
+      <span class="badge bg-info ms-2">{{ files.length }}</span>
+
+      <div class="ms-auto">
+        <label class="btn btn-sm btn-primary mb-0" [class.disabled]="uploadingFile">
+          <i class="bi bi-upload me-1"></i>
+          {{ uploadingFile ? 'Uploading...' : 'Upload' }}
+          <input type="file"
+                 hidden
+                 (change)="onFileSelected($event)"
+                 accept=".pdf,.png,.jpg,.jpeg,.gif">
+        </label>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <div *ngIf="files.length === 0" class="text-center text-muted py-3">
+        No files attached. Click Upload to add a PDF or image (max 20 MB).
+      </div>
+
+      <table *ngIf="files.length > 0" class="table table-sm mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>File</th>
+            <th style="width:120px;">Type</th>
+            <th style="width:100px;">Size</th>
+            <th style="width:170px;">Uploaded</th>
+            <th style="width:80px;">Primary</th>
+            <th style="width:140px;" class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let f of files">
+            <td><i class="bi bi-file-earmark me-1 text-secondary"></i>{{ f.fileName }}</td>
+            <td><small class="text-muted">{{ f.contentType || '-' }}</small></td>
+            <td>{{ fmtBytes(f.sizeBytes) }}</td>
+            <td><small>{{ f.uploadedDate }}</small></td>
+            <td>
+              <i *ngIf="f.isPrimary" class="bi bi-star-fill text-warning" title="Primary"></i>
+              <button *ngIf="!f.isPrimary"
+                      class="btn btn-sm btn-link p-0"
+                      (click)="setPrimary(f.id)"
+                      title="Mark as primary">
+                <i class="bi bi-star"></i>
+              </button>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-outline-primary me-1"
+                      title="Download"
+                      (click)="downloadFile(f.id)">
+                <i class="bi bi-download"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger"
+                      title="Delete"
+                      (click)="deleteFile(f.id)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================= THREAD USAGE PANEL (Phase 2B) ================= -->
+  <div class="card mt-3">
+    <div class="card-header d-flex align-items-center bg-light">
+      <i class="bi bi-palette me-2 text-success"></i>
+      <strong>Thread / Material Usage</strong>
+      <span class="badge bg-secondary ms-2" *ngIf="threadUsage">
+        Per unit total: {{ threadUsage.totalQtyPerUnit | number:'1.0-4' }}
+      </span>
+      <button class="btn btn-sm btn-outline-success ms-auto"
+              (click)="loadThreadUsage()"
+              title="Refresh from BOM">
+        <i class="bi bi-arrow-clockwise me-1"></i> Recalc
+      </button>
+    </div>
+
+    <div class="card-body p-0">
+      <div *ngIf="loadingUsage" class="text-center py-3 text-muted">
+        <div class="spinner-border spinner-border-sm me-2"></div> Calculating...
+      </div>
+
+      <div *ngIf="!loadingUsage && (!threadUsage || threadUsage.rows.length === 0)"
+           class="text-center text-muted py-3">
+        No material usage. Set <strong>Qty / Unit</strong> on this design's
+        component materials to see roll-up here.
+      </div>
+
+      <table *ngIf="!loadingUsage && threadUsage && threadUsage.rows.length > 0"
+             class="table table-sm mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Raw Item</th>
+            <th style="width:120px;">Type</th>
+            <th style="width:110px;">Unit</th>
+            <th style="width:140px;" class="text-end">Qty / Unit</th>
+            <th>Components</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of threadUsage.rows">
+            <td>{{ r.rawItemName }}</td>
+            <td><small class="text-muted">{{ r.rawItemType || '-' }}</small></td>
+            <td>{{ r.unitName || '-' }}</td>
+            <td class="text-end"><strong>{{ r.qtyPerUnit | number:'1.0-4' }}</strong></td>
+            <td>
+              <span *ngFor="let c of r.components" class="badge bg-light text-dark me-1 border">
+                {{ c.componentName }} · {{ c.qty | number:'1.0-4' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="table-success">
+            <th colspan="3" class="text-end">Grand total / unit</th>
+            <th class="text-end">{{ threadUsage.totalQtyPerUnit | number:'1.0-4' }}</th>
+            <th></th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary"></div>
+</div>
+
+<!-- ================= COMPONENT MODAL ================= -->
+<div class="modal fade profile-modal" #compModal tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg profile-modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header"
+           [ngClass]="modalMode === 'create' ? 'bg-success text-white' : 'bg-warning'">
+        <h5 class="modal-title">
+          {{ modalMode === 'create' ? 'Add Component' : 'Edit Component' }}
+        </h5>
+        <button class="btn-close"
+                [class.btn-close-white]="modalMode === 'create'"
+                data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <label class="form-label">Component Name *</label>
+            <input class="form-control"
+                   [(ngModel)]="form.name"
+                   placeholder="e.g. Front Motif">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Width (mm)</label>
+            <input type="number" class="form-control" [(ngModel)]="form.width">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Height (mm)</label>
+            <input type="number" class="form-control" [(ngModel)]="form.height">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Stitches</label>
+            <input type="number" class="form-control" [(ngModel)]="form.stitch">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Colors</label>
+            <input type="number" class="form-control" [(ngModel)]="form.colors">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Machine Head</label>
+            <input type="number" class="form-control" [(ngModel)]="form.machineHead">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Repeat</label>
+            <input type="number" class="form-control" [(ngModel)]="form.repeatVal">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">H-Space</label>
+            <input type="number" class="form-control" [(ngModel)]="form.hSpace">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">H2H</label>
+            <input type="number" class="form-control" [(ngModel)]="form.headToHead">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">UPS</label>
+            <input type="number" class="form-control" [(ngModel)]="form.ups">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Tilla</label>
+            <input type="number" class="form-control" [(ngModel)]="form.tilla">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Sequin A</label>
+            <input type="number" class="form-control" [(ngModel)]="form.seqA">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Sequin B</label>
+            <input type="number" class="form-control" [(ngModel)]="form.seqB">
+          </div>
+          <div class="col-md-6 d-flex align-items-end">
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" [(ngModel)]="form.active">
+              <label class="form-check-label">Active</label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        <button class="btn"
+                [ngClass]="modalMode === 'create' ? 'btn-success' : 'btn-warning'"
+                [disabled]="saving"
+                (click)="save()">
+          {{ modalMode === 'create' ? 'Save' : 'Update' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= DELETE MODAL ================= -->
+<div class="modal fade profile-modal" #deleteModal tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm profile-modal-dialog">
+    <div class="modal-content border-danger">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Delete Component</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Delete this component? This cannot be undone.
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-danger" (click)="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= COMPARE MODAL (Phase 3) ================= -->
+<div class="modal fade profile-modal" #compareModal tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl profile-modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-arrow-left-right me-1"></i>
+          Original vs Production
+          <span class="badge bg-light text-dark ms-2" *ngIf="compareData">
+            Match: {{ compareData.overallMatchPercent }}%
+          </span>
+          <span class="small ms-2" *ngIf="compareData">
+            ({{ compareData.totalFields - compareData.diffFields }} of
+            {{ compareData.totalFields }} fields match)
+          </span>
+        </h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div *ngIf="!compareData || compareData.components.length === 0"
+             class="text-center text-muted py-4">
+          No components to compare.
+        </div>
+
+        <div *ngFor="let comp of compareData?.components || []" class="mb-3">
+
+          <div class="d-flex align-items-center mb-1 gap-2">
+            <span class="badge bg-warning text-dark">{{ comp.code }}</span>
+            <strong>{{ comp.name }}</strong>
+
+            <span class="badge bg-dark"   *ngIf="comp.hasProduction" title="Production version">
+              Prod V{{ comp.productionVersion }}
+            </span>
+            <span class="badge bg-info"   *ngIf="comp.hasOriginal" title="Original version">
+              Orig V{{ comp.originalVersion }}
+            </span>
+            <span class="badge bg-secondary" *ngIf="!comp.hasOriginal">
+              No ORIGINAL baseline yet
+            </span>
+
+            <span class="badge ms-auto"
+                  [class.bg-success]="comp.matchPercent === 100"
+                  [class.bg-warning]="comp.matchPercent > 0 && comp.matchPercent < 100"
+                  [class.bg-danger]="comp.matchPercent === 0">
+              {{ comp.matchPercent }}% match
+            </span>
+          </div>
+
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:130px;">Field</th>
+                <th>Original</th>
+                <th>Production</th>
+                <th style="width:60px;" class="text-center">Δ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let f of comp.fields"
+                  [class.table-warning]="f.changed">
+                <td><strong>{{ f.label }}</strong></td>
+                <td>{{ f.original ?? '-' }}</td>
+                <td>{{ f.production ?? '-' }}</td>
+                <td class="text-center">
+                  <i *ngIf="!f.changed" class="bi bi-check-circle-fill text-success"></i>
+                  <i *ngIf="f.changed" class="bi bi-exclamation-circle-fill text-warning"></i>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>

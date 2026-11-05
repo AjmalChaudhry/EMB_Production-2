@@ -1,0 +1,545 @@
+/* Phase Q.0 - filter bar + summary strip */
+.dp-filter-bar .form-label.small {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.78rem;
+}
+.dp-filter-bar .form-control-sm,
+.dp-filter-bar .form-select-sm {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.dp-summary-strip .badge {
+  font-weight: 500;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.78rem;
+}
+.dp-summary-strip .badge strong { font-weight: 700; }
+
+/* Phase Q.1 - 360 Profile drawer */
+.dp-profile-modal {
+  background: rgba(0, 0, 0, 0.4);
+  padding-top: 60px;
+  overflow-y: auto;
+}
+.dp-profile-modal .modal-content { border-radius: 12px; overflow: hidden; }
+.dp-profile-modal .modal-body { background: #f4f6f9; }
+.dp-profile-modal .profile-section.card {
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+.dp-profile-modal .profile-section .card-header {
+  background: #f8f9fb;
+  border-bottom: 1px solid #eef1f4;
+  font-size: 0.86rem;
+}
+.dp-profile-modal .profile-field-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  font-weight: 600;
+}
+.dp-profile-modal .profile-field-value {
+  font-size: 0.92rem;
+  color: #212529;
+  font-weight: 500;
+  margin-top: 2px;
+}
+.dp-profile-modal .profile-kpi-row .kpi-tile {
+  border: 1px solid #e9ecef;
+  border-left-width: 4px;
+  border-radius: 8px;
+  transition: transform 0.15s ease;
+}
+.dp-profile-modal .profile-kpi-row .kpi-tile:hover { transform: translateY(-1px); }
+.dp-profile-modal .profile-kpi-row .kpi-tile-info    { border-left-color: #0dcaf0; }
+.dp-profile-modal .profile-kpi-row .kpi-tile-success { border-left-color: #198754; }
+.dp-profile-modal .profile-kpi-row .kpi-tile-danger  { border-left-color: #dc3545; }
+.dp-profile-modal .profile-kpi-row .kpi-tile-warning { border-left-color: #ffc107; }
+.dp-profile-modal .profile-kpi-row .kpi-tile-muted   { border-left-color: #adb5bd; }
+.dp-profile-modal .profile-kpi-row .kpi-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+/* Phase S.1 - cost tiles */
+.dp-profile-modal .cost-tile {
+  border: 1px solid #e9ecef;
+  border-left: 4px solid #adb5bd;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  background: #fff;
+  height: 100%;
+  transition: transform .15s ease;
+}
+.dp-profile-modal .cost-tile:hover { transform: translateY(-1px); }
+.dp-profile-modal .cost-tile-primary { border-left-color: #0d6efd; }
+.dp-profile-modal .cost-tile-success { border-left-color: #198754; }
+.dp-profile-modal .cost-tile-info    { border-left-color: #0dcaf0; }
+.dp-profile-modal .cost-tile-warning { border-left-color: #ffc107; }
+.dp-profile-modal .cost-tile-danger  { border-left-color: #dc3545; }
+.dp-profile-modal .cost-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  font-weight: 600;
+}
+.dp-profile-modal .cost-value {
+  font-size: 1.0rem;
+  font-weight: 700;
+  color: #212529;
+  line-height: 1.2;
+  margin-top: 2px;
+}
+.dp-profile-modal .cost-sub {
+  font-size: 0.7rem;
+  margin-top: 1px;
+}
+.dp-profile-modal .profile-kpi-row .kpi-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #212529;
+}
+.dp-profile-modal .profile-kpi-row .kpi-sub { font-size: 0.68rem; margin-top: 2px; }
+.dp-profile-modal .profile-table { font-size: 0.85rem; }
+.dp-profile-modal .profile-table thead th {
+  background: #f8f9fb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #495057;
+  border-bottom: 1px solid #e9ecef;
+  white-space: nowrap;
+}
+.dp-profile-modal .profile-table tbody tr:hover { background: #fcfcfd; }
+
+/* =========================================================
+   DAILY PRODUCTION MODULE
+========================================================= */
+
+.dp-container {
+  font-size: 13px;
+  padding: 14px;
+}
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.dp-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dp-page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: #1f2937;
+}
+
+.dp-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* =========================================================
+   FILTER / TOOLBAR
+========================================================= */
+
+.dp-filter-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+  .dp-filter-card .form-control,
+  .dp-filter-card .form-select {
+    font-size: 13px;
+    min-height: 36px;
+  }
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.dp-table-wrap {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.dp-table {
+  margin-bottom: 0;
+  font-size: 13px;
+}
+
+  .dp-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f8fafc;
+    color: #111827;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-bottom: 1px solid #d9dee7;
+  }
+
+  .dp-table tbody td {
+    vertical-align: middle;
+    color: #111827;
+    border-color: #eef1f4;
+  }
+
+  .dp-table tbody tr:hover {
+    background: #f8fbff;
+  }
+
+  .dp-table .text-end {
+    text-align: right;
+  }
+
+  .dp-table .text-center {
+    text-align: center;
+  }
+
+/* =========================================================
+   BADGES
+========================================================= */
+
+.dp-container .badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0.35em 0.55em;
+  border-radius: 999px;
+}
+
+.dp-status-draft {
+  background: #6c757d;
+  color: #fff;
+}
+
+.dp-status-wip {
+  background: #0d6efd;
+  color: #fff;
+}
+
+.dp-status-qc {
+  background: #6610f2;
+  color: #fff;
+}
+
+.dp-status-complete {
+  background: #198754;
+  color: #fff;
+}
+
+.dp-status-reversed {
+  background: #dc3545;
+  color: #fff;
+}
+
+/* =========================================================
+   ACTION BUTTONS
+========================================================= */
+
+.dp-actions {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+  .dp-actions .btn,
+  .dp-container .btn-sm {
+    border-radius: 7px;
+    padding: 0.22rem 0.45rem;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+    .dp-actions .btn i {
+      font-size: 13px;
+    }
+
+/* =========================================================
+   FORMS
+========================================================= */
+
+.dp-container .form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #344054;
+  margin-bottom: 5px;
+}
+
+.dp-container .form-control,
+.dp-container .form-select {
+  font-size: 13px;
+  border-radius: 9px;
+  min-height: 39px;
+  border: 1px solid #ced4da;
+  box-shadow: none;
+}
+
+  .dp-container .form-control:focus,
+  .dp-container .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.15);
+  }
+
+.dp-container textarea.form-control {
+  min-height: 78px;
+  resize: vertical;
+}
+
+/* =========================================================
+   MODAL - SHARED DAILY PRODUCTION MODALS
+   Use class: dp-modal
+========================================================= */
+
+.dp-modal {
+  z-index: 1060;
+}
+
+  .dp-modal .modal-backdrop {
+    z-index: 1055;
+  }
+
+  .dp-modal .dp-modal-dialog {
+    max-width: 960px;
+    margin-top: 90px;
+    margin-bottom: 30px;
+  }
+
+  .dp-modal .dp-modal-content {
+    border: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    max-height: calc(100vh - 120px);
+    background: #fff;
+    box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
+  }
+
+  .dp-modal .modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    min-height: 64px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    color: #fff;
+    border-bottom: none;
+  }
+
+  .dp-modal .modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+  }
+
+  .dp-modal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 0.95;
+  }
+
+  .dp-modal .modal-body {
+    overflow-y: auto;
+    padding: 18px;
+    max-height: calc(100vh - 230px);
+    background: #fff;
+  }
+
+  .dp-modal .modal-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    padding: 12px 18px;
+    background: #fff;
+    border-top: 1px solid #eef1f4;
+  }
+
+/* =========================================================
+   FORM SECTIONS INSIDE MODAL
+========================================================= */
+
+.dp-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.dp-section-title {
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #344054;
+}
+
+.dp-section-body {
+  padding: 14px;
+}
+
+/* =========================================================
+   DETAIL MODAL
+========================================================= */
+
+.dp-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 22px;
+}
+
+.dp-detail-item label {
+  display: block;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 3px;
+}
+
+.dp-detail-item span {
+  color: #374151;
+}
+
+.dp-detail-divider {
+  border-top: 1px solid #e5e7eb;
+  margin: 18px 0;
+}
+
+/* =========================================================
+   DELETE CONFIRM MODAL
+========================================================= */
+
+.dp-delete-modal {
+  border: 1px solid #dc3545;
+  border-radius: 14px;
+}
+
+  .dp-delete-modal .modal-header {
+    background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+    color: #fff;
+  }
+
+  .dp-delete-modal .modal-title {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .dp-delete-modal .modal-body {
+    text-align: center;
+    padding: 20px;
+  }
+
+    .dp-delete-modal .modal-body p {
+      font-size: 14px;
+      margin-bottom: 0;
+      color: #374151;
+    }
+
+  .dp-delete-modal .modal-footer {
+    justify-content: center;
+    gap: 10px;
+  }
+
+/* =========================================================
+   EMPTY / LOADING STATES
+========================================================= */
+
+.dp-empty {
+  text-align: center;
+  color: #6c757d;
+  padding: 24px;
+  font-size: 13px;
+}
+
+.dp-loading {
+  text-align: center;
+  color: #6c757d;
+  padding: 20px;
+}
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.dp-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 0;
+}
+
+  .dp-pagination .btn {
+    font-size: 12px;
+    border-radius: 7px;
+  }
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 991.98px) {
+  .dp-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dp-page-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .dp-modal .dp-modal-dialog {
+    max-width: 96vw;
+    margin: 75px auto 20px;
+  }
+
+  .dp-detail-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .dp-container {
+    padding: 10px;
+  }
+
+  .dp-table {
+    font-size: 12px;
+  }
+
+    .dp-table thead th {
+      font-size: 11px;
+    }
+
+  .dp-modal .modal-body {
+    padding: 14px;
+  }
+
+  .dp-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

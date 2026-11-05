@@ -1,0 +1,55 @@
+﻿@model EMB_Production.Models.Adm_CompanyProfile
+@{
+    var search = ViewBag.Search;
+    var activeFilter = ViewBag.ActiveFilter;
+    var parentFilter = ViewBag.ParentFilter;
+    var page = ViewBag.Page;
+}
+
+<div class="modal fade" id="companyDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            @* **Begin** correct form targeting your Confirm action *@
+            @using (Html.BeginForm(
+                      "DeleteFromIndexConfirmed",
+                      "Adm_CompanyProfile",
+                      FormMethod.Post,
+                      new { id = "delete-company-form", @class = "px-3" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="modal-body">
+                    <p>
+                        Are you sure you want to delete
+                        <strong>@Model.CompanyName</strong>?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    @* **Notice** type="button" so it won’t auto-submit *@
+                    <button type="button"
+                            id="confirm-delete-btn"
+                            class="btn btn-danger"
+                            data-id="@Model.CompanyID"
+                            data-search="@search"
+                            data-activefilter="@activeFilter"
+                            data-parentfilter="@parentFilter"
+                            data-page="@page">
+                        Delete
+                    </button>
+                </div>
+            }
+            @* **End** form *@
+
+        </div>
+    </div>
+</div>

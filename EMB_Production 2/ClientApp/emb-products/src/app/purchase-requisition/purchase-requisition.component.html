@@ -1,0 +1,577 @@
+<div class="page-wrap">
+
+  <!-- HEADER -->
+  <div class="row align-items-center mb-3">
+    <div class="col-md-5">
+      <h5 class="mb-0 d-flex align-items-center">
+        <i class="bi bi-clipboard-check me-2 text-primary"></i>
+        Purchase Requisition
+      </h5>
+      <div class="text-muted small">
+        Internal material request. Approve → auto-generates a Purchase Order to the supplier.
+      </div>
+    </div>
+    <div class="col-md-7 d-flex justify-content-end align-items-center gap-2 flex-nowrap">
+      <button class="btn btn-sm btn-primary" (click)="openCreate()">
+        <i class="bi bi-plus-circle me-1"></i>New PR
+      </button>
+      <div class="input-group input-group-sm" style="width:240px;">
+        <input class="form-control" [(ngModel)]="searchText" (keyup.enter)="applyFilters()"
+               placeholder="Search PR / supplier / remarks">
+        <button class="btn btn-outline-secondary" (click)="applyFilters()"><i class="bi bi-search"></i></button>
+        <button class="btn btn-outline-secondary" (click)="clearFilters()"><i class="bi bi-arrow-clockwise"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="card mb-3 pr-filter-bar">
+    <div class="card-body py-2">
+      <div class="row g-2">
+        <div class="col-md-3">
+          <label class="form-label small mb-0">Status</label>
+          <select class="form-select form-select-sm" [(ngModel)]="statusFilter" (change)="applyFilters()">
+            <option value="">All</option>
+            <option value="DRAFT">Draft</option>
+            <option value="SUBMITTED">Pending Approval</option>
+            <option value="APPROVED">Approved</option>
+            <option value="CONVERTED_TO_PO">Converted to PO</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small mb-0">Supplier</label>
+          <select class="form-select form-select-sm" [(ngModel)]="supplierFilter" (change)="applyFilters()">
+            <option [ngValue]="null">All Suppliers</option>
+            <option *ngFor="let s of suppliers" [ngValue]="s.id">{{ s.name }}</option>
+          </select>
+        </div>
+        <!-- Sprint-3: source-type filter — auto-PRs (WO_POST, PLAN_*)
+             vs manual (AD_HOC) for audit/reporting. -->
+        <div class="col-md-2">
+          <label class="form-label small mb-0">Source</label>
+          <select class="form-select form-select-sm" [(ngModel)]="sourceTypeFilter" (change)="applyFilters()">
+            <option value="">All Sources</option>
+            <option value="AD_HOC">Manual</option>
+            <option value="WO_POST">WO Post</option>
+            <option value="PLAN_APPROVE">Plan Approve</option>
+            <option value="PLAN_SHORTFALL">Plan Shortfall</option>
+            <option value="EMR_SHORTFALL">EMR Shortfall</option>
+          </select>
+        </div>
+        <!-- Sprint-3: request-date range filter — common reporting need
+             for period reconciliation. -->
+        <div class="col-md-2">
+          <label class="form-label small mb-0">From Date</label>
+          <input type="date" class="form-control form-control-sm"
+                 [(ngModel)]="fromDateFilter" (change)="applyFilters()">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small mb-0">To Date</label>
+          <input type="date" class="form-control form-control-sm"
+                 [(ngModel)]="toDateFilter" (change)="applyFilters()">
+        </div>
+      </div>
+      <div class="row g-2 mt-1"
+           *ngIf="statusFilter || supplierFilter || sourceTypeFilter || fromDateFilter || toDateFilter || searchText">
+        <div class="col-auto">
+          <button type="button" class="btn btn-sm btn-link p-0" (click)="clearFilters()">
+            <i class="bi bi-x-circle me-1"></i>Clear all filters
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sprint-3: bulk-action toolbar. Visible only when at least one row
+       is selected. Buttons act on the current Set; per-row failures
+       surface in the alert after the batch completes. -->
+  <div *ngIf="selectedCount() > 0"
+       class="alert alert-info d-flex flex-wrap align-items-center gap-2 py-2 mb-2 mt-2">
+    <strong class="me-2">
+      <i class="bi bi-check2-square me-1"></i>{{ selectedCount() }} selected
+    </strong>
+    <button type="button"
+            class="btn btn-sm btn-primary"
+            [disabled]="bulkBusy"
+            (click)="bulkApprove()"
+            title="Approve every Pending PR in the selection. Non-Pending rows will be skipped.">
+      <i class="bi bi-check-circle me-1"></i>Approve all
+    </button>
+    <button type="button"
+            class="btn btn-sm btn-danger"
+            [disabled]="bulkBusy"
+            (click)="bulkReject()"
+            title="Reject every Pending PR in the selection. Prompts for a single reason applied to all.">
+      <i class="bi bi-x-circle me-1"></i>Reject all
+    </button>
+    <button type="button"
+            class="btn btn-sm btn-outline-danger"
+            [disabled]="bulkBusy"
+            (click)="bulkDelete()"
+            title="Delete every PR in the selection. Already-converted rows will be skipped.">
+      <i class="bi bi-trash me-1"></i>Delete all
+    </button>
+    <button type="button"
+            class="btn btn-sm btn-outline-secondary ms-auto"
+            (click)="clearSelection()">
+      <i class="bi bi-x-circle me-1"></i>Clear selection
+    </button>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="d-flex flex-wrap gap-2 mb-3 pr-summary-strip">
+    <span class="badge bg-light text-dark border">Total <strong class="ms-1">{{ summary.count }}</strong></span>
+    <span class="badge bg-secondary">Draft <strong class="ms-1">{{ summary.draftCount }}</strong></span>
+    <span class="badge bg-warning text-dark">Pending <strong class="ms-1">{{ summary.submittedCount }}</strong></span>
+    <span class="badge bg-success">Approved <strong class="ms-1">{{ summary.approvedCount }}</strong></span>
+    <span class="badge bg-danger">Rejected <strong class="ms-1">{{ summary.rejectedCount }}</strong></span>
+  </div>
+
+  <!-- LIST -->
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 pr-list-table">
+          <thead class="table-light">
+            <tr>
+              <!-- Sprint-3: select-all header checkbox; indeterminate state
+                   when only some on-page rows are selected. -->
+              <th style="width: 38px;" class="text-center">
+                <input type="checkbox"
+                       class="form-check-input"
+                       [checked]="allOnPageSelected()"
+                       [indeterminate]="someOnPageSelected()"
+                       (change)="toggleAllOnPage($any($event.target).checked)"
+                       title="Select all rows on this page">
+              </th>
+              <th>PR Code</th>
+              <th>Supplier</th>
+              <th style="width: 140px;">Source</th>
+              <th>Date</th>
+              <th>Requested By</th>
+              <th class="text-end" style="width: 70px;">Lines</th>
+              <th class="text-end" style="width: 110px;">Value</th>
+              <th style="width: 110px;">Status</th>
+              <th>Generated PO</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="loading">
+              <td colspan="11" class="text-center text-muted py-4">
+                <span class="spinner-border spinner-border-sm me-2"></span>Loading…
+              </td>
+            </tr>
+            <tr *ngIf="!loading && !rows.length">
+              <td colspan="11" class="text-center text-muted py-4">No PRs found.</td>
+            </tr>
+            <tr *ngFor="let r of rows" [class.table-info]="isSelected(r.id)">
+              <!-- Sprint-3: per-row selection checkbox -->
+              <td class="text-center">
+                <input type="checkbox"
+                       class="form-check-input"
+                       [checked]="isSelected(r.id)"
+                       (change)="toggleRow(r.id, $any($event.target).checked)">
+              </td>
+              <td class="fw-semibold">{{ r.prCode }}</td>
+              <td>{{ r.supplierName || '-' }}</td>
+              <!-- Sprint-1: source chip — clickable for WO_POST / PLAN_*
+                   sources, plain badge for AD_HOC / EMR_SHORTFALL. -->
+              <td>
+                <button *ngIf="sourcePill(r.sourceType).clickable"
+                        type="button"
+                        class="badge border-0 px-2"
+                        [ngClass]="sourcePill(r.sourceType).cls"
+                        (click)="gotoSource(r)"
+                        [title]="'Open source — ' + sourcePill(r.sourceType).label">
+                  <i class="bi me-1" [ngClass]="sourcePill(r.sourceType).icon"></i>
+                  {{ sourcePill(r.sourceType).label }}
+                </button>
+                <span *ngIf="!sourcePill(r.sourceType).clickable"
+                      class="badge"
+                      [ngClass]="sourcePill(r.sourceType).cls">
+                  <i class="bi me-1" [ngClass]="sourcePill(r.sourceType).icon"></i>
+                  {{ sourcePill(r.sourceType).label }}
+                </span>
+              </td>
+              <td>{{ r.requestDate | date:'yyyy-MM-dd' }}</td>
+              <td>{{ r.requestedByName || '-' }}</td>
+              <!-- Sprint-1: lines + value columns -->
+              <td class="text-end small">{{ r.itemCount || 0 }}</td>
+              <td class="text-end fw-semibold small">
+                {{ (r.totalValue || 0) | number:'1.0-0' }}
+              </td>
+              <!-- Sprint-1: shorter status label so the chip stays narrow. -->
+              <td><span class="badge" [ngClass]="badgeClass(r.status)">{{ statusLabel(r.status) }}</span></td>
+              <!-- Sprint-1: generated PO is clickable — one click jumps to
+                   the PO list pre-filtered by code. -->
+              <td>
+                <button *ngIf="r.convertedToPoCode"
+                        type="button"
+                        class="btn btn-sm btn-link p-0 text-success text-decoration-none"
+                        (click)="gotoPo(r)"
+                        [title]="'Open Purchase Order ' + r.convertedToPoCode">
+                  <i class="bi bi-check2-circle me-1"></i>{{ r.convertedToPoCode }}
+                  <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.7rem;"></i>
+                </button>
+                <span *ngIf="!r.convertedToPoCode" class="text-muted">-</span>
+              </td>
+              <td class="text-end text-nowrap">
+                <button class="btn btn-sm btn-outline-info me-1" (click)="openEdit(r.id)" title="View / Edit">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <!-- Sprint-3: clone into a fresh DRAFT with same supplier
+                     and items. Works on any source PR regardless of status
+                     since the clone is always a new Draft. -->
+                <button class="btn btn-sm btn-outline-primary me-1"
+                        (click)="cloneP(r)"
+                        title="Clone to a new DRAFT PR">
+                  <i class="bi bi-files"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-warning me-1"
+                        *ngIf="r.status === 'DRAFT'"
+                        (click)="submitFor(r.id)" title="Submit">
+                  <i class="bi bi-send"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-success me-1"
+                        *ngIf="r.status === 'SUBMITTED'"
+                        (click)="approve(r.id)" title="Approve & Generate PO">
+                  <i class="bi bi-check2-circle"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger me-1"
+                        *ngIf="r.status === 'SUBMITTED'"
+                        (click)="openReject(r.id)" title="Reject">
+                  <i class="bi bi-x-circle"></i>
+                </button>
+                <!-- Change Supplier — shown for any PR that hasn't been
+                     rejected. For CONVERTED_TO_PO, the backend will also
+                     update the linked PO's supplier in the same tx (if
+                     the PO has no receipts). -->
+                <button class="btn btn-sm btn-outline-secondary me-1"
+                        *ngIf="r.status !== 'REJECTED'"
+                        (click)="openChangeSupplier(r)" title="Change Supplier">
+                  <i class="bi bi-shop"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary"
+                        *ngIf="r.status === 'DRAFT' || r.status === 'REJECTED'"
+                        (click)="remove(r.id)" title="Delete">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================================================== -->
+<!-- EDITOR MODAL                                               -->
+<!-- ========================================================== -->
+<div #formModal class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header bg-primary text-white py-2">
+        <h6 class="modal-title mb-0">
+          <i class="bi bi-clipboard-check me-1"></i>
+          {{ modalMode === 'create' ? 'New Purchase Requisition' : 'PR ' + form.prCode }}
+          <span class="badge ms-2" [ngClass]="badgeClass(form.status)">{{ form.status }}</span>
+        </h6>
+        <button type="button" class="btn-close btn-close-white" (click)="closeForm()"></button>
+      </div>
+
+      <div class="modal-body pt-3">
+
+        <!-- Sprint-2: workflow stepper. 5-stage horizontal indicator
+             showing Draft → Pending → Approved → Converted, with
+             Rejected as a terminal red sibling. Hidden in create mode. -->
+        <div *ngIf="modalMode === 'edit'" class="card mb-3 pr-stepper-card">
+          <div class="card-body py-2 px-3">
+            <div class="pr-stepper d-flex align-items-center justify-content-between">
+              <ng-container *ngFor="let stage of workflowStages; let i = index; let last = last">
+                <div class="d-flex flex-column align-items-center pr-stepper-step">
+                  <div class="pr-stepper-dot border d-flex align-items-center justify-content-center"
+                       [ngClass]="stepperState(i).dotCls"
+                       [title]="stageLabel(stage)">
+                    <i *ngIf="i < workflowStageIndex && workflowStageIndex !== 4" class="bi bi-check2"></i>
+                    <i *ngIf="i === workflowStageIndex" class="bi bi-circle-fill" style="font-size: 0.5rem;"></i>
+                    <span *ngIf="i > workflowStageIndex && workflowStageIndex !== 4">{{ i + 1 }}</span>
+                    <i *ngIf="workflowStageIndex === 4 && i < 2" class="bi bi-check2"></i>
+                    <i *ngIf="workflowStageIndex === 4 && i === 4" class="bi bi-x"></i>
+                    <span *ngIf="workflowStageIndex === 4 && i >= 2 && i < 4">—</span>
+                  </div>
+                  <small class="mt-1" [ngClass]="stepperState(i).textCls" style="font-size: 0.68rem;">
+                    {{ stageLabel(stage) }}
+                  </small>
+                </div>
+                <div *ngIf="!last"
+                     class="flex-grow-1 pr-stepper-line mx-1"
+                     [ngClass]="stepperState(i + 1 <= workflowStageIndex ? i + 1 : 999).lineCls"></div>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-3">
+            <label class="form-label small">PR Code</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.prCode" readonly>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Supplier</label>
+            <select class="form-select form-select-sm"
+                    [(ngModel)]="form.supplierId"
+                    [disabled]="form.status !== 'DRAFT'">
+              <option [ngValue]="null">-- pick supplier --</option>
+              <option *ngFor="let s of suppliers" [ngValue]="s.id">{{ s.name }}</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Source</label>
+            <select class="form-select form-select-sm"
+                    [(ngModel)]="form.sourceType"
+                    [disabled]="form.status !== 'DRAFT'">
+              <option *ngFor="let s of sourceTypes" [value]="s.value">{{ s.label }}</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label small">Remarks</label>
+            <textarea class="form-control form-control-sm" rows="2"
+                      [(ngModel)]="form.remarks"
+                      [readonly]="form.status !== 'DRAFT'"
+                      placeholder="Optional notes"></textarea>
+          </div>
+        </div>
+
+        <!-- Auto-fill banner: shown when New PR was pre-populated from
+             store shortage levels. Edit/delete/add still allowed. -->
+        <div *ngIf="modalMode === 'create' && shortfallBannerCount > 0"
+             class="alert alert-info d-flex align-items-center py-2 mb-2"
+             role="alert">
+          <i class="bi bi-magic me-2"></i>
+          <div class="flex-grow-1">
+            <strong>{{ shortfallBannerCount }}</strong>
+            item{{ shortfallBannerCount === 1 ? '' : 's' }} auto-filled from
+            current store shortage levels (CurrentQty &lt; ReorderLevel).
+            Adjust qty, remove rows, or add more before saving.
+          </div>
+        </div>
+        <div *ngIf="modalMode === 'create' && loadingSuggestions"
+             class="alert alert-light border d-flex align-items-center py-2 mb-2">
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          Checking store for shortages…
+        </div>
+
+        <div class="card pr-items-card">
+          <div class="card-header py-2 d-flex justify-content-between align-items-center">
+            <strong><i class="bi bi-box-seam me-1"></i>Items</strong>
+            <button *ngIf="form.status === 'DRAFT'"
+                    class="btn btn-sm btn-outline-primary" (click)="addItem()">
+              <i class="bi bi-plus-lg me-1"></i>Add Line
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-sm mb-0 align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>Raw Item</th>
+                    <th style="width:90px;">Unit</th>
+                    <th class="text-end" style="width:120px;">Qty</th>
+                    <th class="text-end" style="width:120px;">Est. Rate</th>
+                    <th class="text-end" style="width:130px;">Est. Amount</th>
+                    <th>Remarks</th>
+                    <th *ngIf="form.status === 'DRAFT'" style="width:40px;"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let i of form.items; let idx = index">
+                    <td>
+                      <select *ngIf="form.status === 'DRAFT'"
+                              class="form-select form-select-sm"
+                              [(ngModel)]="i.rawItemId"
+                              (change)="onRawPick(i)">
+                        <option [ngValue]="null">-- select --</option>
+                        <option *ngFor="let r of rawItems" [ngValue]="r.id">{{ r.name }}</option>
+                      </select>
+                      <span *ngIf="form.status !== 'DRAFT'">{{ i.rawItemName }}</span>
+                    </td>
+                    <td>
+                      <input *ngIf="form.status === 'DRAFT'" class="form-control form-control-sm"
+                             [(ngModel)]="i.unitCode">
+                      <span *ngIf="form.status !== 'DRAFT'">{{ i.unitCode }}</span>
+                    </td>
+                    <td>
+                      <input *ngIf="form.status === 'DRAFT'" type="number"
+                             class="form-control form-control-sm text-end"
+                             [(ngModel)]="i.qty" min="0" step="0.01">
+                      <span *ngIf="form.status !== 'DRAFT'">{{ i.qty | number }}</span>
+                    </td>
+                    <td>
+                      <input *ngIf="form.status === 'DRAFT'" type="number"
+                             class="form-control form-control-sm text-end"
+                             [(ngModel)]="i.estimatedRate" min="0" step="0.01">
+                      <span *ngIf="form.status !== 'DRAFT'">{{ i.estimatedRate | number }}</span>
+                    </td>
+                    <td class="text-end">
+                      {{ (i.qty * (i.estimatedRate || 0)) | number:'1.0-2' }}
+                    </td>
+                    <td>
+                      <input *ngIf="form.status === 'DRAFT'" class="form-control form-control-sm"
+                             [(ngModel)]="i.remarks">
+                      <span *ngIf="form.status !== 'DRAFT'">{{ i.remarks }}</span>
+                    </td>
+                    <td *ngIf="form.status === 'DRAFT'">
+                      <button class="btn btn-sm btn-outline-danger" (click)="removeItem(idx)">
+                        <i class="bi bi-x"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="!form.items.length">
+                    <td [attr.colspan]="form.status === 'DRAFT' ? 7 : 6"
+                        class="text-center text-muted py-3">
+                      No items yet — click "Add Line".
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot *ngIf="form.items.length" class="table-light">
+                  <tr>
+                    <th colspan="4" class="text-end">Total</th>
+                    <th class="text-end">{{ totalValue(form.items) | number:'1.0-2' }}</th>
+                    <th [attr.colspan]="form.status === 'DRAFT' ? 2 : 1"></th>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sprint-2: Audit Timeline — newest-first list of state-changing
+             actions on this PR (Created / Submitted / Approved / Rejected /
+             Deleted / SupplierChanged). Hidden in create mode. -->
+        <div *ngIf="modalMode === 'edit'" class="card mt-3">
+          <div class="card-header py-1 px-3 d-flex align-items-center">
+            <strong><i class="bi bi-clock-history me-1"></i>Audit Timeline</strong>
+            <small class="text-muted ms-2" *ngIf="!auditLoading">
+              {{ auditLog.length }} entr{{ auditLog.length === 1 ? 'y' : 'ies' }}
+            </small>
+            <span *ngIf="auditLoading"
+                  class="spinner-border spinner-border-sm ms-2 text-muted"
+                  role="status"></span>
+          </div>
+          <div class="card-body py-2 px-3">
+            <div *ngIf="!auditLoading && auditLog.length === 0"
+                 class="text-muted small text-center py-2">
+              No audit history yet — this PR pre-dates the audit log, or no state changes have been recorded.
+            </div>
+            <ul *ngIf="auditLog.length" class="pr-audit-timeline list-unstyled mb-0">
+              <li *ngFor="let a of auditLog" class="d-flex align-items-start py-1">
+                <span class="badge me-2 pr-audit-pill"
+                      [ngClass]="auditPill(a.action).cls">
+                  <i [class]="'bi ' + auditPill(a.action).icon + ' me-1'"></i>{{ auditPill(a.action).label }}
+                </span>
+                <div class="flex-grow-1 small">
+                  <div>
+                    <span *ngIf="a.oldValue || a.newValue" class="me-1">
+                      <span *ngIf="a.oldValue" class="text-muted text-decoration-line-through me-1">{{ a.oldValue }}</span>
+                      <i *ngIf="a.oldValue && a.newValue" class="bi bi-arrow-right text-muted mx-1"></i>
+                      <span *ngIf="a.newValue" class="fw-semibold">{{ a.newValue }}</span>
+                    </span>
+                    <span *ngIf="a.detail" class="text-muted">{{ a.detail }}</span>
+                  </div>
+                  <div class="text-muted">
+                    <i class="bi bi-person me-1"></i>{{ a.changedByName || 'system' }}
+                    <i class="bi bi-clock ms-2 me-1"></i>{{ a.changedDateText }}
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer bg-light py-2">
+        <button class="btn btn-light btn-sm" (click)="closeForm()">Close</button>
+        <button *ngIf="form.status === 'DRAFT'"
+                class="btn btn-success btn-sm" (click)="save()" [disabled]="saving">
+          <i class="bi bi-save me-1"></i>
+          {{ saving ? 'Saving…' : (modalMode === 'create' ? 'Save Draft' : 'Update') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================== -->
+<!-- REJECT MODAL                                               -->
+<!-- ========================================================== -->
+<div #rejectModal class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white py-2">
+        <h6 class="modal-title mb-0"><i class="bi bi-x-circle me-1"></i>Reject PR</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label small">Rejection Reason *</label>
+        <textarea class="form-control form-control-sm" rows="3"
+                  [(ngModel)]="rejectReason"
+                  placeholder="Why is this being rejected?"></textarea>
+      </div>
+      <div class="modal-footer bg-light py-2">
+        <button class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-danger btn-sm" (click)="confirmReject()">
+          <i class="bi bi-x-circle me-1"></i>Reject
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     CHANGE SUPPLIER MODAL
+     For PRs where the auto-assigned supplier isn't who the buyer wants
+     to actually order from. Backend cascades the change to the linked
+     PO if it hasn't received goods yet.
+==================================================================== -->
+<div #supplierModal class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white py-2">
+        <h6 class="modal-title mb-0">
+          <i class="bi bi-shop me-1"></i>Change Supplier
+          <span class="text-white-50 small ms-2" *ngIf="supplierChangePrCode">— {{ supplierChangePrCode }}</span>
+        </h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label small">New Supplier *</label>
+        <select class="form-select form-select-sm"
+                [(ngModel)]="supplierChangeNewId">
+          <option [ngValue]="null">-- pick supplier --</option>
+          <option *ngFor="let s of suppliers" [ngValue]="s.id">{{ s.name }}</option>
+        </select>
+        <div class="form-text small mt-2">
+          <i class="bi bi-info-circle me-1"></i>
+          If this PR has converted to a PO and the PO has no receipts yet,
+          the PO's supplier will be updated too in the same transaction.
+          POs with received goods are blocked — cancel the GRN first.
+        </div>
+      </div>
+      <div class="modal-footer bg-light py-2">
+        <button class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary btn-sm"
+                [disabled]="!supplierChangeNewId || supplierChangeSaving"
+                (click)="confirmChangeSupplier()">
+          <i class="bi bi-check2 me-1"></i>
+          {{ supplierChangeSaving ? 'Saving…' : 'Apply' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

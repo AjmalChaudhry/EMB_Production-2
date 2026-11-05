@@ -1,0 +1,385 @@
+.dashboard-wrap {
+  padding: 18px 22px;
+  background: linear-gradient(180deg, #eef2ff, #f8fafc);
+  min-height: calc(100vh - 70px);
+}
+
+/* ============================================================
+   HERO CARD — denser than before so the range pills + alerts
+   don't push KPIs below the fold.
+   ============================================================ */
+.hero-card {
+  background: linear-gradient(135deg, #0d6efd, #0647b8);
+  color: #fff;
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 6px 18px rgba(13, 110, 253, 0.18);
+}
+
+  .hero-card h4 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 18px;
+  }
+
+  .hero-card p {
+    margin: 2px 0 0;
+    opacity: 0.9;
+  }
+
+.range-pill {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+.range-group .btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+}
+
+/* ============================================================
+   ALERTS STRIP
+   ============================================================ */
+.alerts-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  background: #fff7e6;
+  border: 1px solid #ffe8b0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin: 0 0 12px;
+}
+
+.alerts-label {
+  font-weight: 600;
+  font-size: 12.5px;
+  color: #8a6d3b;
+}
+
+.alert-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid #f0c36d;
+  color: #8a6d3b;
+  font-size: 12px;
+  border-radius: 999px;
+  padding: 3px 12px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+  .alert-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .alert-chip.warn {
+    background: #fff7e6;
+    border-color: #f0c36d;
+    color: #8a6d3b;
+  }
+
+  .alert-chip.info {
+    background: #e7f5ff;
+    border-color: #74c0fc;
+    color: #1864ab;
+  }
+
+  .alert-chip.danger {
+    background: #fff5f5;
+    border-color: #ffa8a8;
+    color: #c92a2a;
+  }
+
+/* ============================================================
+   KPI CARDS — denser, clickable
+   ============================================================ */
+.dash-card {
+  border: 0;
+  text-align: left;
+  border-radius: 14px;
+  padding: 14px 16px;
+  color: #fff;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  min-height: 92px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.16s ease;
+}
+
+  .dash-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .dash-card .icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .dash-card .card-body-inner { min-width: 0; }
+
+  .dash-card h4 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .dash-card p {
+    margin: 4px 0 0;
+    opacity: 0.95;
+    font-size: 12.5px;
+  }
+
+.blue   { background: linear-gradient(135deg, #0d6efd, #4dabf7); }
+.green  { background: linear-gradient(135deg, #198754, #51cf66); }
+.orange { background: linear-gradient(135deg, #f59f00, #ff922b); }
+.purple { background: linear-gradient(135deg, #6f42c1, #9775fa); }
+
+/* ============================================================
+   SECONDARY INFO CARDS
+   ============================================================ */
+.info-card,
+.panel-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eef1f5;
+  min-height: 82px;
+}
+
+.info-card {
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.16s ease;
+}
+
+  .info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .info-card .label {
+    color: #6c757d;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .info-card .value {
+    font-size: 22px;
+    font-weight: 700;
+    margin-top: 3px;
+    line-height: 1.1;
+  }
+
+  .panel-card h6 {
+    color: #495057;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .panel-card .metric {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+.progress {
+  height: 8px;
+  border-radius: 20px;
+  background: #e9ecef;
+}
+
+.progress-bar { border-radius: 20px; }
+
+@media (max-width: 768px) {
+  .dashboard-wrap { padding: 12px; }
+
+  .hero-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .range-group { flex-wrap: wrap; }
+}
+
+
+/* ============================================================
+   WORKFLOW PIPELINE
+   ============================================================ */
+.workflow-card {
+  background: #fff;
+  border: 1px solid #eef1f5;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.workflow-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #e9ecef;
+}
+
+.workflow-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2937;
+  letter-spacing: 0.01em;
+}
+
+.workflow-total .badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.workflow-pipeline {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 2px 0;
+}
+
+.workflow-stage {
+  flex: 1 1 0;
+  min-width: 110px;
+  border: 1px solid #e9ecef;
+  background: #fafbfd;
+  border-radius: 10px;
+  padding: 10px 8px 8px;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.12s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+  .workflow-stage:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+  }
+
+.stage-icon-wrap {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #6366f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.stage-count {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  min-width: 20px;
+  padding: 0 5px;
+  height: 20px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #adb5bd;
+  color: #fff;
+  border: 2px solid #fff;
+}
+
+.stage-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #495057;
+  line-height: 1.1;
+}
+
+.stage-hint {
+  font-size: 10.5px;
+  color: #9ca3af;
+  margin-top: 2px;
+  line-height: 1.15;
+}
+
+/* Visual states */
+.workflow-stage.is-clear .stage-icon-wrap {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.workflow-stage.is-clear .stage-count {
+  background: #10b981;
+}
+
+.workflow-stage.has-pending .stage-icon-wrap {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.workflow-stage.has-pending .stage-count {
+  background: #f59e0b;
+}
+
+.workflow-stage.has-pending {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+  .workflow-stage.has-pending:hover {
+    border-color: #f59e0b;
+  }
+
+.workflow-arrow {
+  display: flex;
+  align-items: center;
+  color: #ced4da;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 992px) {
+  .workflow-pipeline { overflow-x: auto; }
+  .workflow-stage { min-width: 130px; }
+  .stage-hint { display: none; }
+}

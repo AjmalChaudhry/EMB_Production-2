@@ -1,0 +1,46 @@
+﻿@model EMB_Production.ViewModels.CategoriesPageViewModel
+@{
+    Layout = null;   // no outer chrome, just the table
+}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Brand</th>
+            <th>Qty</th>
+            <th>Length</th>
+            <th>Weight</th>
+            <th>Price</th>
+            <th>Active</th>
+            <th>Deleted</th>
+            <th>Created By</th>
+            <th>Created Date</th>
+            <th>Updated By</th>
+            <th>Updated Date</th>
+            <th>Timestamp</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model.Categories)
+        {
+            <tr>
+                <td>@c.Code</td>
+                <td>@c.Name</td>
+                <td>@(c.Gen_Brands?.BrandName ?? "")</td>
+                <td>@c.Quantity</td>
+                <td>@c.Length</td>
+                <td>@c.Weight</td>
+                <td>@String.Format("{0:C2}", c.Price)</td>
+                <td>@(c.Active.GetValueOrDefault() ? "Yes" : "No")</td>
+                <td>@(c.Deleted.GetValueOrDefault() ? "Yes" : "No")</td>
+                <td>@c.CreatedBy</td>
+                <td>@(c.CreatedDate?.ToString("dd/MM/yyyy h:mm:ss tt") ?? "")</td>
+                <td>@c.UpdatedBy</td>
+                <td>@(c.UpdatedDate?.ToString("dd/MM/yyyy h:mm:ss tt") ?? "")</td>
+                <td>@(c.RecordTimeStamp?.ToString("dd/MM/yyyy h:mm:ss tt") ?? "")</td>
+            </tr>
+        }
+    </tbody>
+</table>

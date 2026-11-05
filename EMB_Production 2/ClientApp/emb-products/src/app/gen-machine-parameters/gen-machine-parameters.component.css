@@ -1,0 +1,59 @@
+.toolbar-field {
+  min-width: 120px;
+}
+
+/* Phase R.5 - summary strip + profile drawer */
+.mp-summary-strip .badge { font-weight: 500; padding: 0.5rem 0.7rem; font-size: 0.78rem; }
+.mp-summary-strip .badge strong { font-weight: 700; }
+.mp-profile-modal { background: rgba(0,0,0,0.4); padding-top: 60px; overflow-y: auto; }
+.mp-profile-modal .modal-content { border-radius: 12px; overflow: hidden; }
+.mp-profile-modal .modal-body { background: #f4f6f9; }
+.mp-section-card { border: 1px solid #e9ecef; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+.mp-section-card .card-header { background: #f8f9fb; border-bottom: 1px solid #eef1f4; font-weight: 600; font-size: 0.86rem; }
+.mp-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.mp-value { font-size: 0.92rem; color: #212529; font-weight: 500; margin-top: 2px; }
+.mp-kpi-row .kpi-tile { border: 1px solid #e9ecef; border-left-width: 4px; border-radius: 8px; transition: transform .15s ease; }
+.mp-kpi-row .kpi-tile:hover { transform: translateY(-1px); }
+.mp-kpi-row .kpi-tile-primary { border-left-color: #0d6efd; }
+.mp-kpi-row .kpi-tile-success { border-left-color: #198754; }
+.mp-kpi-row .kpi-tile-info    { border-left-color: #0dcaf0; }
+.mp-kpi-row .kpi-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.mp-kpi-row .kpi-value { font-size: 1.15rem; font-weight: 700; line-height: 1.2; color: #212529; }
+
+.toolbar-label {
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  color: #555;
+}
+
+/* Modal header like other modules */
+.bg-modal {
+  background-color: #0d6efd !important;
+  color: #fff !important;
+}
+
+  .bg-modal .modal-title {
+    color: #fff !important;
+  }
+
+  .bg-modal .btn-close {
+    filter: brightness(0) invert(1);
+  }
+
+/* Status badge */
+.badge {
+  font-size: 11px;
+  padding: 4px 8px;
+}
+.form-label {
+  font-weight: 600;
+}
+
+input[type='number'] {
+  text-align: right;
+}
+
+.modal-dialog {
+  margin-top: 80px;
+}

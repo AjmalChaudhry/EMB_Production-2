@@ -1,0 +1,312 @@
+:root {
+  --sidebar-width: 260px;
+  --topbar-height: 72px;
+}
+
+.page-wrap {
+  padding: 10px 4px;
+}
+
+/* Phase O.0 - filter bar + summary strip */
+.disp-filter-bar .form-label.small {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.78rem;
+}
+.disp-filter-bar .form-control-sm,
+.disp-filter-bar .form-select-sm {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.disp-summary-strip .badge {
+  font-weight: 500;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.78rem;
+}
+.disp-summary-strip .badge strong { font-weight: 700; }
+
+/* Phase O.1 - 360 Profile drawer */
+.disp-profile-modal {
+  background: rgba(0, 0, 0, 0.4);
+  padding-top: 60px;
+  overflow-y: auto;
+}
+.disp-profile-modal .modal-content { border-radius: 12px; overflow: hidden; }
+.disp-profile-modal .modal-body { background: #f4f6f9; }
+
+.disp-profile-modal .profile-section.card {
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+.disp-profile-modal .profile-section .card-header {
+  background: #f8f9fb;
+  border-bottom: 1px solid #eef1f4;
+  font-size: 0.86rem;
+}
+.disp-profile-modal .profile-field-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  font-weight: 600;
+}
+.disp-profile-modal .profile-field-value {
+  font-size: 0.92rem;
+  color: #212529;
+  font-weight: 500;
+  margin-top: 2px;
+}
+.disp-profile-modal .profile-kpi-row .kpi-tile {
+  border: 1px solid #e9ecef;
+  border-left-width: 4px;
+  border-radius: 8px;
+  transition: transform 0.15s ease;
+}
+.disp-profile-modal .profile-kpi-row .kpi-tile:hover { transform: translateY(-1px); }
+.disp-profile-modal .profile-kpi-row .kpi-tile-primary { border-left-color: #0d6efd; }
+.disp-profile-modal .profile-kpi-row .kpi-tile-success { border-left-color: #198754; }
+.disp-profile-modal .profile-kpi-row .kpi-tile-danger  { border-left-color: #dc3545; }
+.disp-profile-modal .profile-kpi-row .kpi-tile-info    { border-left-color: #0dcaf0; }
+.disp-profile-modal .profile-kpi-row .kpi-tile-warning { border-left-color: #ffc107; }
+.disp-profile-modal .profile-kpi-row .kpi-tile-muted   { border-left-color: #adb5bd; }
+.disp-profile-modal .profile-kpi-row .kpi-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  font-weight: 600;
+}
+.disp-profile-modal .profile-kpi-row .kpi-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #212529;
+}
+.disp-profile-modal .profile-kpi-row .kpi-sub { font-size: 0.68rem; margin-top: 2px; }
+.disp-profile-modal .profile-table { font-size: 0.85rem; }
+.disp-profile-modal .profile-table thead th {
+  background: #f8f9fb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #495057;
+  border-bottom: 1px solid #e9ecef;
+  white-space: nowrap;
+}
+.disp-profile-modal .profile-table tbody tr:hover { background: #fcfcfd; }
+
+/* Phase O.1 - Print Challan */
+.dispatch-print-sheet { display: none; }
+
+@media print {
+  body * { visibility: hidden !important; }
+  .dispatch-print-sheet,
+  .dispatch-print-sheet * { visibility: visible !important; }
+
+  .dispatch-print-sheet {
+    display: block !important;
+    position: absolute;
+    left: 0; top: 0; right: 0;
+    padding: 18mm 14mm;
+    background: #fff;
+    color: #000;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 11pt;
+  }
+  .ppv-header { text-align: center; margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 8px; }
+  .ppv-brand { font-size: 18pt; font-weight: 700; letter-spacing: 2px; }
+  .ppv-doc-title { font-size: 12pt; font-weight: 600; margin-top: 2px; }
+  .ppv-doc-no { font-size: 9.5pt; color: #444; margin-top: 2px; }
+  .ppv-meta-table { width: 100%; border-collapse: collapse; margin: 10px 0 14px 0; font-size: 10pt; }
+  .ppv-meta-table td { padding: 4px 6px; border: 1px solid #aaa; }
+  .ppv-items { width: 100%; border-collapse: collapse; font-size: 10pt; }
+  .ppv-items th, .ppv-items td { border: 1px solid #888; padding: 4px 6px; }
+  .ppv-items thead th { background: #eee; font-weight: 700; }
+  .ppv-items tfoot td { background: #f6f6f6; }
+  .text-end { text-align: right; }
+  .ppv-remarks { margin-top: 10px; padding: 6px 8px; border: 1px solid #ccc; font-size: 10pt; }
+  .ppv-signoff { display: flex; justify-content: space-between; margin-top: 40px; }
+  .ppv-sig-block { width: 30%; text-align: center; }
+  .ppv-sig-line { border-top: 1px solid #000; height: 1px; margin-bottom: 4px; }
+  .ppv-sig-label { font-size: 9.5pt; color: #444; }
+  .ppv-footer { text-align: center; font-size: 8.5pt; color: #777; margin-top: 18px; border-top: 1px dashed #aaa; padding-top: 4px; }
+}
+
+/* Compact list table — smaller font + nowrap on code/date/qty columns */
+.dispatch-list {
+  font-size: 0.85rem;
+}
+.dispatch-list th,
+.dispatch-list td {
+  padding: 0.55rem 0.6rem !important;
+  vertical-align: middle;
+}
+.dispatch-list .nowrap-cell {
+  white-space: nowrap;
+}
+
+.search-group {
+  width: 320px;
+}
+
+.status-filter,
+.deleted-filter {
+  width: 140px;
+}
+
+@media (max-width: 768px) {
+  .search-group,
+  .status-filter,
+  .deleted-filter {
+    width: 100%;
+  }
+}
+
+/* ================= DISPATCH TABLE ================= */
+
+.table-sm td,
+.table-sm th {
+  padding: 0.35rem;
+}
+
+.table button {
+  pointer-events: auto;
+}
+
+.badge {
+  font-weight: 600;
+}
+
+/* Sale Bill / Invoice button — distinct teal-purple gradient so it stands
+   out from the other action icons (info/primary/warning/etc.) as the
+   "printable invoice" action. */
+.sale-bill-btn {
+  background: linear-gradient(135deg, #6f42c1, #4a2d82);
+  color: #fff;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px rgba(111, 66, 193, 0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.sale-bill-btn:hover {
+  background: linear-gradient(135deg, #7c4dd1, #5a3a99);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(111, 66, 193, 0.35);
+}
+.sale-bill-btn:active,
+.sale-bill-btn:focus {
+  color: #fff;
+  box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.30);
+}
+.sale-bill-btn i {
+  font-size: 1rem;
+}
+
+.text-nowrap .btn {
+  margin-bottom: 2px;
+}
+
+/* ================= FORM ================= */
+
+.modal-body {
+  padding-bottom: 0.75rem;
+}
+
+.form-label.small {
+  font-weight: 600;
+  color: #495057;
+}
+
+input.is-invalid {
+  border-color: #dc3545;
+  background-color: #fff5f5;
+}
+
+/* ================= MODAL POSITION =================
+   Scope the Bootstrap modal frame itself to sit BELOW the
+   sticky topbar. Bootstrap's default `.modal` is fixed at
+   top:0 / bottom:0 of the viewport — that's why modal-dialog-
+   centered ends up overlapping the topbar. By shifting the
+   modal's top edge down by the topbar height we get clean
+   vertical centering inside the available area instead. */
+
+.page-wrap .modal {
+  top: var(--topbar-height);
+}
+
+@media (min-width: 992px) {
+  .page-wrap .modal {
+    left: var(--sidebar-width);
+  }
+}
+
+.page-wrap .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1056;
+}
+
+/* ================= PRINT ================= */
+
+@media print {
+  .btn,
+  .modal,
+  .search-group,
+  .status-filter,
+  .deleted-filter,
+  .card .card-body > .d-flex {
+    display: none !important;
+  }
+
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Keep SweetAlert popups centered, but DO NOT force `margin: auto`
+   onto every modal-dialog — that override fights the topbar offset
+   and is what was making the Create Dispatch modal overlap the
+   topbar. Bootstrap's own `.modal-dialog-centered` already centers
+   the dialog inside its (now topbar-offset) modal frame. */
+
+.swal2-popup,
+.confirm-modal {
+  margin: auto !important;
+}
+
+.page-wrap .modal.show .modal-dialog-centered {
+  min-height: calc(100vh - var(--topbar-height) - 1rem);
+}
+
+/* Sprint-1 — compact list table so all 16 columns fit on a 1366-px
+   viewport without horizontal scroll. Numeric cells stay nowrap; the
+   Customer / Product cells wrap to 2 lines when needed. */
+.dispatch-list {
+  table-layout: auto;
+  font-size: 0.78rem;
+}
+.dispatch-list thead th {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.dispatch-list td {
+  vertical-align: middle;
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+}
+.dispatch-list .nowrap-cell,
+.dispatch-list .text-end {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.dispatch-list td:nth-child(5),   /* Customer */
+.dispatch-list td:nth-child(6) {  /* Product */
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.25;
+}
+.dispatch-list .dropdown-menu { font-size: 0.82rem; }

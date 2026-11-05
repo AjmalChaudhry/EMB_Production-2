@@ -1,0 +1,150 @@
+/* Phase N.0 - filter bar + summary strip */
+.qc-filter-bar .form-label.small {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.78rem;
+}
+.qc-filter-bar .form-control-sm,
+.qc-filter-bar .form-select-sm {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.qc-summary-strip .badge {
+  font-weight: 500;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.78rem;
+}
+.qc-summary-strip .badge strong { font-weight: 700; }
+
+/* Phase N.1 - 360 Profile drawer */
+.qc-profile-modal {
+  background: rgba(0, 0, 0, 0.4);
+  padding-top: 60px;
+  overflow-y: auto;
+}
+.qc-profile-modal .modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+}
+.qc-profile-modal .modal-body { background: #f4f6f9; }
+
+.qc-profile-modal .profile-section.card {
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+.qc-profile-modal .profile-section .card-header {
+  background: #f8f9fb;
+  border-bottom: 1px solid #eef1f4;
+  font-size: 0.86rem;
+}
+.qc-profile-modal .profile-field-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  font-weight: 600;
+}
+.qc-profile-modal .profile-field-value {
+  font-size: 0.92rem;
+  color: #212529;
+  font-weight: 500;
+  margin-top: 2px;
+}
+.qc-profile-modal .profile-kpi-row .kpi-tile {
+  border: 1px solid #e9ecef;
+  border-left-width: 4px;
+  border-radius: 8px;
+  transition: transform 0.15s ease;
+}
+.qc-profile-modal .profile-kpi-row .kpi-tile:hover { transform: translateY(-1px); }
+.qc-profile-modal .profile-kpi-row .kpi-tile-primary { border-left-color: #0d6efd; }
+.qc-profile-modal .profile-kpi-row .kpi-tile-success { border-left-color: #198754; }
+.qc-profile-modal .profile-kpi-row .kpi-tile-danger  { border-left-color: #dc3545; }
+.qc-profile-modal .profile-kpi-row .kpi-tile-info    { border-left-color: #0dcaf0; }
+.qc-profile-modal .profile-kpi-row .kpi-tile-warning { border-left-color: #ffc107; }
+.qc-profile-modal .profile-kpi-row .kpi-tile-muted   { border-left-color: #adb5bd; }
+.qc-profile-modal .profile-kpi-row .kpi-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  font-weight: 600;
+}
+.qc-profile-modal .profile-kpi-row .kpi-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #212529;
+}
+.qc-profile-modal .profile-kpi-row .kpi-sub { font-size: 0.68rem; margin-top: 2px; }
+.qc-profile-modal .profile-table { font-size: 0.85rem; }
+.qc-profile-modal .profile-table thead th {
+  background: #f8f9fb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #495057;
+  border-bottom: 1px solid #e9ecef;
+  white-space: nowrap;
+}
+.qc-profile-modal .profile-table tbody tr:hover { background: #fcfcfd; }
+
+/* =========================================
+   FORCE TEXT VISIBILITY (IMPORTANT)
+========================================= */
+
+.table,
+.table td,
+.table th {
+  color: #212529 !important; /* dark readable text */
+}
+
+  .table tbody td {
+    color: #212529 !important;
+  }
+
+    .table tbody td span,
+    .table tbody td div,
+    .table tbody td small {
+      color: inherit !important;
+    }
+
+/* prevent white text from bootstrap badge inheritance */
+.badge,
+.badge span {
+  color: inherit;
+}
+
+  /* status badges keep correct colors */
+  .badge.bg-success {
+    color: #fff !important;
+  }
+
+  .badge.bg-danger {
+    color: #fff !important;
+  }
+
+  .badge.bg-warning {
+    color: #212529 !important;
+  }
+
+  .badge.bg-info {
+    color: #212529 !important;
+  }
+
+  .badge.bg-secondary {
+    color: #fff !important;
+  }
+
+/* action buttons icon visibility */
+.action-btn i {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+/* expanded row text */
+.bg-light-subtle,
+.table-secondary,
+.table-warning-subtle {
+  color: #212529 !important;
+}

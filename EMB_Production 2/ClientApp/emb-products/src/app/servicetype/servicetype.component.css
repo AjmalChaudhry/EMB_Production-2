@@ -1,0 +1,52 @@
+.table td {
+  vertical-align: middle;
+}
+
+/* Phase R.8 - summary strip + profile drawer */
+.stype-summary-strip .badge { font-weight: 500; padding: 0.5rem 0.7rem; font-size: 0.78rem; }
+.stype-summary-strip .badge strong { font-weight: 700; }
+.stype-profile-modal { background: rgba(0,0,0,0.4); padding-top: 60px; overflow-y: auto; }
+.stype-profile-modal .modal-content { border-radius: 12px; overflow: hidden; }
+.stype-profile-modal .modal-body { background: #f4f6f9; }
+.stype-section-card { border: 1px solid #e9ecef; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+.stype-section-card .card-header { background: #f8f9fb; border-bottom: 1px solid #eef1f4; font-weight: 600; font-size: 0.86rem; }
+.stype-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.stype-value { font-size: 0.92rem; color: #212529; font-weight: 500; margin-top: 2px; }
+.stype-kpi-row .kpi-tile { border: 1px solid #e9ecef; border-left-width: 4px; border-radius: 8px; transition: transform .15s ease; }
+.stype-kpi-row .kpi-tile:hover { transform: translateY(-1px); }
+.stype-kpi-row .kpi-tile-primary { border-left-color: #0d6efd; }
+.stype-kpi-row .kpi-tile-success { border-left-color: #198754; }
+.stype-kpi-row .kpi-tile-info    { border-left-color: #0dcaf0; }
+.stype-kpi-row .kpi-tile-warning { border-left-color: #ffc107; }
+.stype-kpi-row .kpi-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.stype-kpi-row .kpi-value { font-size: 1.15rem; font-weight: 700; line-height: 1.2; color: #212529; }
+
+.badge {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+}
+
+.page-layout {
+  padding: 10px;
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+}
+/* Keeps icons aligned and neat */
+.btn-sm i {
+  font-size: 1rem;
+}
+
+/* Improve spacing on small screens */
+@media (max-width: 576px) {
+  .page-header-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+}

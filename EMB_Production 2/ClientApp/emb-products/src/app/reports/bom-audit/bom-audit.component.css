@@ -1,0 +1,52 @@
+.bom-audit-page {
+  background: #f6f8fb;
+  min-height: calc(100vh - 80px);
+}
+
+.kpi-tile {
+  border-radius: 10px;
+}
+.kpi-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6a7587;
+  font-weight: 600;
+}
+.kpi-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1f2a44;
+}
+.kpi-tile-primary  { background: #eaf2ff; }
+.kpi-tile-success  { background: #e7f7ee; }
+.kpi-tile-warning  { background: #fff5db; }
+.kpi-tile-danger   { background: #fde8e8; }
+.kpi-tile-info     { background: #e3f3f8; }
+.kpi-tile-muted    { background: #f1f3f5; }
+
+.design-row {
+  cursor: pointer;
+  transition: background 100ms;
+}
+.design-row:hover {
+  background: #f8fafc;
+}
+.design-row.table-active {
+  background: #eaf2ff;
+}
+
+.diag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #f1f3f5;
+  color: #495057;
+  border: 1px solid #dee2e6;
+}
+.diag-pill-good { background: #e7f7ee; color: #146c43; border-color: #a3cfbb; }
+.diag-pill-bad  { background: #fde8e8; color: #842029; border-color: #f1aeb5; }
+.diag-pill i    { font-size: 13px; }

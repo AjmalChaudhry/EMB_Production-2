@@ -1,0 +1,159 @@
+﻿@model EMB_Production.ViewModels.BranchesPageViewModel
+@using PagedList.Mvc
+@using System.Web.Mvc
+
+@{
+    var isAjax = Request.IsAjaxRequest();
+    Layout = isAjax ? null : "~/Views/Shared/_Layout.cshtml";
+
+    var cf = Model.Search ?? "";
+    var af = Model.ActiveFilter ?? "";
+}
+
+@if (!isAjax)
+{
+    <div class="d-flex align-items-center justify-content-between mb-3 bg-primary text-white p-3 rounded">
+        <h4 class="mb-0">Branches</h4>
+        <div class="d-flex align-items-center toolbar">
+            <button type="button"
+                    class="btn btn-success btn-sm me-2 btn-create-ajax"
+                    data-url="@Url.Action("Index", "Branches", new { showCreate = !Model.ShowCreate, search = cf, activeFilter = af })">
+                <i class="bi bi-plus-lg me-1"></i>Add New
+            </button>
+
+            <input type="text" name="search" value="@cf"
+                   class="form-control form-control-sm me-2" style="width:160px" placeholder="Search…" />
+
+            <select name="activeFilter" class="form-select form-select-sm me-2" style="width:120px">
+                <option value="">All</option>
+                <option value="Yes" @(af == "Yes" ? "selected" : "")>Active</option>
+                <option value="No" @(af == "No" ? "selected" : "")>Inactive</option>
+            </select>
+
+            <button type="button" class="btn btn-outline-light btn-sm me-2 btn-search">
+                <i class="bi bi-search"></i>
+            </button>
+
+            <button type="button" class="btn btn-outline-light btn-sm me-2 btn-refresh">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+
+            <button class="btn btn-outline-light btn-sm me-2" onclick="window.print()"><i class="bi bi-printer"></i></button>
+
+            <a href="@Url.Action("ExportToExcel", "Branches", new { search = cf, activeFilter = af })" class="btn btn-light btn-sm me-2" title="Excel">
+                <i class="bi bi-file-earmark-spreadsheet text-success"></i>
+            </a>
+            <a href="@Url.Action("ExportToPdf","Branches", new { search = cf, activeFilter = af, companyFilter = Model.CompanyFilter })"
+               class="btn btn-light btn-sm" title="PDF">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        </div>
+    </div>
+}
+    <div class="d-none" id="ajax-af-token">
+        @Html.AntiForgeryToken()
+    </div>
+
+    <div id="branches-index-wrapper">
+        <div id="branchesWrapper">
+            @if (Model.ShowCreate || Model.ShowEdit)
+            {
+                @Html.Partial("_BranchesForm", Model)
+            }
+
+            @Html.Partial("_BranchesGrid", Model)
+        </div>
+    </div>
+
+
+@section Scripts {
+    <script>
+        (function ($) {
+            $(function () {
+
+                function swapBranchesWrapper(html) {
+                  // Parse safely; capture top-level and descendant matches
+                  var $html = $($.parseHTML(html, document, true));
+                    var $wrapper = $html.filter('#branches-index-wrapper');
+                    if (!$wrapper.length) $wrapper = $html.find('#branches-index-wrapper');
+
+                  if ($wrapper.length) {
+                      $('#branches-index-wrapper').replaceWith($wrapper);
+                  } else {
+                    // fallback: at least show something
+                      $('#branches-index-wrapper').html(html);
+                      console.warn('branches-index-wrapper not found in response');
+                  }
+                }
+
+                 // CREATE & EDIT
+                $(document).on('click', '.btn-create-ajax, .btn-edit-ajax', function (e) {
+                    e.preventDefault();
+                    var url = $(this).data('url');
+                    $.get(url).done(swapBranchesWrapper);
+                });
+
+                // CANCEL
+                $(document).on('click', '.cancel-btn', function (e) {
+                  e.preventDefault();
+
+                  $.get('@Url.Action("Index", "Branches", new { search = Model.Search, activeFilter = Model.ActiveFilter, page = Model.Branches?.PageNumber ?? 1 })')
+                      .done(swapBranchesWrapper);
+                });
+
+                // DELETE MODAL
+                $(document).on('click', '.btn-delete-ajax', function (e) {
+                  e.preventDefault();
+                  $.get($(this).data('url'), function (html) {
+                    $('#branchesDeleteModal').remove();
+                    $('body').append(html);
+                      new bootstrap.Modal($('#branchesDeleteModal')[0]).show();
+                  });
+                });
+
+                // CONFIRM DELETE
+                $(document).on('click', '#confirm-delete-btn', function (e) {
+                  e.preventDefault();
+                  var $btn = $(this).prop('disabled', true);
+                    $.post('@Url.Action("Delete", "Branches")', {
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+                        id: $btn.data('id'),
+                        search: $btn.data('search'),
+                        activeFilter: $btn.data('activefilter'),
+                        page: $btn.data('page')
+                    }).done(swapBranchesWrapper)
+                    .fail(function (xhr) {
+                        alert(xhr.status === 409 ? xhr.responseText : 'Delete failed, please try again.');
+                    }).always(function () {
+                            $btn.prop('disabled', false);
+                    });
+                });
+
+                // DETAILS
+                $(document).on('click', '.btn-detail-ajax', function (e) {
+                  e.preventDefault();
+                  $('.detail-row').remove();
+                  var $btn = $(this), $tr = $btn.closest('tr'), colCount = $tr.children('td,th').length;
+                  $.get($btn.data('detail-url'), function (html) {
+                    $('<tr class="detail-row"><td colspan="' + colCount + '" class="p-0 border-0">' + html + '</td></tr>').insertAfter($tr);
+                  });
+                });
+
+                // CLOSE DETAIL
+                $(document).on('click', '.btn-detail-close', function (e) {
+                  e.preventDefault();
+                  $(this).closest('tr.detail-row').remove();
+                });
+
+                // SEARCH / REFRESH
+                $(document).on('click', '.btn-search, .btn-refresh', function (e) {
+                  e.preventDefault();
+                  var q  = encodeURIComponent($('[name=search]').val() || ''),
+                      af = encodeURIComponent($('[name=activeFilter]').val() || '');
+                    var url = '@Url.Action("Index", "Branches")' + '?search=' + q + '&activeFilter=' + af + '&page=1';
+                    $.get(url).done(swapBranchesWrapper);
+                });
+            });
+        })(jQuery);
+    </script>
+}

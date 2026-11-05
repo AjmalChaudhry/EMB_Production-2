@@ -1,0 +1,163 @@
+<div class="login-shell">
+
+  <!-- ============ LEFT: BRAND PANEL ============ -->
+  <aside class="brand-panel">
+    <div class="brand-panel-top">
+      <a class="brand" routerLink="/home">
+        <i class="bi bi-bezier2 brand-icon"></i>
+        EMB <span class="brand-name-accent">Production</span>
+      </a>
+    </div>
+
+    <div class="brand-panel-body">
+      <span class="hero-eyebrow">
+        <i class="bi bi-stars me-1"></i>
+        Embroidery ERP &middot; one ledger end-to-end
+      </span>
+
+      <h1 class="hero-title">
+        Sign in to the
+        <span class="hero-accent">production floor.</span>
+      </h1>
+
+      <p class="hero-sub">
+        Pick up where you left off &mdash; live KPIs, the workflow pipeline,
+        and every transaction within reach.
+      </p>
+
+      <!-- Mini mock dashboard preview -->
+      <div class="mock-window">
+        <div class="mock-titlebar">
+          <span class="dot red"></span>
+          <span class="dot amber"></span>
+          <span class="dot green"></span>
+          <span class="mock-title">Workflow Pipeline</span>
+        </div>
+
+        <div class="mock-pipeline">
+          <div class="mock-step ok">
+            <i class="bi bi-box-arrow-up-right"></i>
+            <span>Issue Mat.</span>
+            <span class="badge ok">0</span>
+          </div>
+          <i class="bi bi-chevron-right arrow"></i>
+          <div class="mock-step warn">
+            <i class="bi bi-bar-chart-line"></i>
+            <span>Production</span>
+            <span class="badge warn">3</span>
+          </div>
+          <i class="bi bi-chevron-right arrow"></i>
+          <div class="mock-step warn">
+            <i class="bi bi-shield-check"></i>
+            <span>QC</span>
+            <span class="badge warn">1</span>
+          </div>
+          <i class="bi bi-chevron-right arrow"></i>
+          <div class="mock-step ok">
+            <i class="bi bi-truck"></i>
+            <span>Dispatch</span>
+            <span class="badge ok">0</span>
+          </div>
+        </div>
+      </div>
+
+      <ul class="trust-list">
+        <li><i class="bi bi-check2-circle"></i> Audit-ready &mdash; every entry reversible</li>
+        <li><i class="bi bi-check2-circle"></i> Role-aware sidebar &amp; dashboard</li>
+        <li><i class="bi bi-check2-circle"></i> Multi-branch, multi-company</li>
+      </ul>
+    </div>
+
+    <div class="brand-panel-bottom">
+      &copy; {{ currentYear }} EMB Production
+    </div>
+  </aside>
+
+  <!-- ============ RIGHT: LOGIN FORM ============ -->
+  <main class="form-panel">
+    <div class="form-card">
+
+      <div class="form-mobile-brand">
+        <i class="bi bi-bezier2 brand-icon"></i>
+        <span>EMB <span class="brand-name-accent">Production</span></span>
+      </div>
+
+      <h2 class="form-title">Welcome back</h2>
+      <p class="form-sub">Sign in with your employee credentials to continue.</p>
+
+      <form (ngSubmit)="login()" #loginForm="ngForm" novalidate>
+
+        <!-- EMAIL -->
+        <div class="field">
+          <label for="email" class="field-label">Email</label>
+          <div class="input-wrap">
+            <i class="bi bi-envelope input-icon"></i>
+            <input id="email"
+                   type="email"
+                   [(ngModel)]="email"
+                   name="email"
+                   class="input"
+                   placeholder="you@company.com"
+                   autocomplete="email"
+                   required
+                   autofocus>
+          </div>
+        </div>
+
+        <!-- PASSWORD -->
+        <div class="field">
+          <div class="field-row">
+            <label for="password" class="field-label">Password</label>
+            <a class="link-muted" tabindex="-1">Forgot password?</a>
+          </div>
+          <div class="input-wrap">
+            <i class="bi bi-lock input-icon"></i>
+            <input id="password"
+                   [type]="showPassword ? 'text' : 'password'"
+                   [(ngModel)]="password"
+                   name="password"
+                   class="input"
+                   placeholder="Enter password"
+                   autocomplete="current-password"
+                   required>
+            <button type="button"
+                    class="input-action"
+                    (click)="togglePassword()"
+                    [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+              <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- ERROR -->
+        <div *ngIf="loginError" class="form-error" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-1"></i>
+          {{ loginError }}
+        </div>
+
+        <!-- SUBMIT -->
+        <button type="submit"
+                class="btn-submit"
+                [disabled]="submitting || loginForm.invalid">
+          <span *ngIf="submitting" class="spinner"></span>
+          <i *ngIf="!submitting" class="bi bi-box-arrow-in-right me-2"></i>
+          {{ submitting ? 'Signing in…' : 'Sign in' }}
+        </button>
+
+      </form>
+
+      <div class="form-footer">
+        <p>
+          Don't have an account?
+          <span class="text-strong">Contact your administrator.</span>
+        </p>
+        <a routerLink="/home" class="link-muted">
+          <i class="bi bi-arrow-left me-1"></i>
+          Back to home
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+</div>

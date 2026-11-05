@@ -1,0 +1,179 @@
+﻿@model EMB_Production.Models.Gen_Catagories
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Category Details";
+    var currentFilter = Request.QueryString["search"] ?? "";
+    var activeFilter = Request.QueryString["activeFilter"] ?? "";
+}
+
+<style>
+    .detail-card {
+        background: #fff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        margin-top: 1rem;
+    }
+
+    .details-header {
+        font-size: 1.25rem;
+        font-weight: 600;
+        background: #007bff;
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 6px 6px 0 0;
+        margin: -1.5rem -1.5rem 1rem;
+    }
+
+    .toolbar-container .btn {
+        margin-left: .5rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.9rem;
+    }
+
+    .detail-value {
+        color: #34495e;
+        font-size: 1rem;
+        word-wrap: break-word;
+    }
+
+    .btn-custom {
+        border-radius: 6px;
+        padding: 6px 14px;
+    }
+</style>
+
+<div class="detail-card">
+    <!-- Header -->
+    <div class="details-header">Category Details</div>
+
+    <!-- Toolbar -->
+    <div class="toolbar-container d-flex justify-content-end">
+        <button type="button" onclick="location.reload()" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        <button type="button" onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-printer"></i>
+        </button>
+        <a href="@Url.Action("ExportCategoriesToExcel","Gen_Catagories", new { id = Model.Id })"
+           class="btn btn-success btn-sm">
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+        </a>
+        <a href="@Url.Action("ExportCategoriesToPdf","Gen_Catagories", new { id = Model.Id })"
+           class="btn btn-danger btn-sm">
+            <i class="bi bi-file-earmark-pdf"></i>
+        </a>
+    </div>
+
+    <!-- Details Grid -->
+    <div class="row gy-4">
+        <!-- Brand -->
+        <div class="col-md-3">
+            <div class="detail-label">Brand</div>
+            <div class="detail-value">
+                        @(Model.Gen_Brands != null && !string.IsNullOrWhiteSpace(Model.Gen_Brands.BrandName)
+                        ? Model.Gen_Brands.BrandName
+                        : "(none)")
+            </div>
+        </div>
+
+        <!-- Branch -->
+        <div class="col-md-3">
+            <div class="detail-label">Branch</div>
+            <div class="detail-value">
+                @(
+            Model.Branches != null && !string.IsNullOrWhiteSpace(Model.Branches.Name)
+                    ? Model.Branches.Name
+                    : "(none)")
+            </div>
+        </div>
+
+        <!-- Scalar props -->
+        @foreach (var prop in ViewData.ModelMetadata.Properties
+                       .Where(p => p.ShowForDisplay
+                                && p.PropertyName != nameof(Model.Id)
+                                && p.PropertyName != nameof(Model.Gen_Brands)
+                                && p.PropertyName != nameof(Model.Gen_Products)
+                                && p.PropertyName != nameof(Model.Branches)))
+        {
+            <div class="col-md-3">
+                <div class="detail-label">@prop.GetDisplayName()</div>
+                <div class="detail-value">
+                    @{
+                        var val = prop.Model;
+                        if (val is DateTime dt)
+                        {
+                            @dt.ToString("yyyy-MM-dd HH:mm")
+                        }
+                        else
+                        {
+                            @val
+                        }
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Related Products -->
+        <div class="col-12">
+            <div class="detail-label">Products (@Model.Gen_Products.Count())</div>
+            <div class="detail-value p-0">
+                @if (Model.Gen_Products.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in Model.Gen_Products.OrderBy(p => p.Id))
+                                {
+                                    <tr>
+                                        <td class="align-middle">@p.Id</td>
+                                        <td class="align-middle">@p.Prod_Name</td>
+                                        <td class="align-middle">@p.Prod_Code</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <em>(no products)</em>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="mt-4 text-center">
+        @Html.ActionLink("Back to List", "Index", "Gen_Catagories",
+                         new { search = currentFilter, activeFilter },
+                         new { @class = "btn btn-outline-secondary btn-custom me-2" })
+        @Html.ActionLink("Edit", "Index", "Gen_Catagories",
+                         new { showEdit = true, editId = Model.Id, search = currentFilter, activeFilter },
+                         new { @class = "btn btn-primary btn-custom" })
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            // highlight values on hover
+            $('.detail-value').hover(
+                function () { $(this).addClass('bg-light rounded'); },
+                function () { $(this).removeClass('bg-light rounded'); }
+            );
+        });
+    </script>
+}

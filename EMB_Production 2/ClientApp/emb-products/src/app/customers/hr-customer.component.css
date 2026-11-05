@@ -1,0 +1,224 @@
+/* ========================================================= */
+/*  GLOBAL LAYOUT SPACING                                    */
+/* ========================================================= */
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* Title + toolbar row */
+.row.align-items-center {
+  margin-bottom: 1rem;
+}
+
+/* ========================================================= */
+/*  TOOLBAR STYLE                                            */
+/* ========================================================= */
+
+button.btn-sm,
+.input-group-sm .form-control,
+.input-group-sm .btn,
+.form-select-sm {
+  padding: 2px 6px !important;
+  font-size: 0.78rem !important;
+  height: 30px !important;
+}
+
+.input-group-sm .form-control {
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+}
+
+.input-group-sm .btn i {
+  margin: 0 !important;
+}
+
+/* Small icons alignment */
+.btn i {
+  font-size: 0.9rem;
+}
+
+/* Toolbar spacing */
+.gap-2 {
+  gap: 0.35rem !important;
+}
+
+/* Search input */
+.search-group input {
+  border-radius: 4px 0 0 4px !important;
+}
+
+/* Reduce width of search + status filter */
+.input-group-sm {
+  max-width: 150px;
+}
+
+.form-select-sm {
+  max-width: 120px;
+}
+
+/* Refresh / Excel / PDF / Print buttons */
+.btn-outline-secondary.btn-sm,
+.btn-outline-success.btn-sm,
+.btn-outline-danger.btn-sm,
+.btn-outline-primary.btn-sm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+}
+
+  .btn-outline-secondary.btn-sm i,
+  .btn-outline-success.btn-sm i,
+  .btn-outline-danger.btn-sm i,
+  .btn-outline-primary.btn-sm i {
+    margin: 0;
+    padding: 0;
+  }
+
+/* ========================================================= */
+/*  CARD + TABLE                                              */
+/* ========================================================= */
+
+.card {
+  border-radius: 6px;
+}
+
+.table {
+  font-size: 0.82rem;
+}
+
+  .table th {
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  .table td {
+    vertical-align: middle;
+  }
+
+/* Hover effect */
+.table-hover tbody tr:hover {
+  background-color: #f6faff !important;
+}
+
+/* Status badge */
+.badge {
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* Action buttons */
+.table .btn-sm {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Align actions center */
+.text-center .btn {
+  margin-right: 3px;
+}
+
+/* ========================================================= */
+/*  PAGINATION                                                */
+/* ========================================================= */
+
+.pagination-sm .page-link {
+  padding: 2px 8px !important;
+  font-size: 0.75rem !important;
+}
+
+.pagination-sm .page-item.active .page-link {
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+}
+
+.pagination-sm .page-link:hover {
+  background-color: #e9f1ff;
+}
+
+/* ========================================================= */
+/*  MODALS                                                    */
+/* ========================================================= */
+
+.modal-header {
+  padding: 0.5rem 1rem !important;
+}
+
+.modal-title {
+  font-size: 1rem;
+}
+
+.modal-body {
+  font-size: 0.85rem;
+}
+
+.modal-content {
+  border-radius: 6px !important;
+}
+
+/* Reduce form input sizes inside modal */
+.modal-body .form-control,
+.modal-body .form-select {
+  padding: 3px 6px;
+  font-size: 0.8rem;
+  height: 32px !important;
+}
+
+/* Label style */
+.form-label {
+  font-size: 0.8rem;
+  margin-bottom: 3px;
+}
+
+/* Modal action buttons */
+.modal-footer .btn-sm {
+  padding: 3px 10px !important;
+  font-size: 0.8rem;
+}
+
+/* ========================================================= */
+/*  DETAILS MODAL                                             */
+/* ========================================================= */
+
+#customerDetailModal .row {
+  font-size: 0.85rem;
+}
+
+#customerDetailModal .fw-bold {
+  color: #495057;
+}
+
+/* ========================================================= */
+/*  EMPTY TABLE MESSAGE                                       */
+/* ========================================================= */
+
+.table tbody tr td.text-muted {
+  font-size: 0.85rem;
+  padding: 1.5rem 0;
+}
+
+/* ========================================================= */
+/*  RESPONSIVE FIXES                                          */
+/* ========================================================= */
+
+@media (max-width: 768px) {
+  .input-group-sm {
+    max-width: 100% !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-select-sm {
+    max-width: 100% !important;
+  }
+
+  .row.align-items-center h4 {
+    margin-bottom: 0.5rem;
+  }
+}

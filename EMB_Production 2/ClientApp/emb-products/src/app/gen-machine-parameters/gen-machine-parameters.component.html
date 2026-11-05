@@ -1,0 +1,492 @@
+<div class="container-fluid">
+
+  <!-- ===================== TOOLBAR ===================== -->
+  <div class="row align-items-end mb-3">
+
+    <div class="col-md-3 pe-0">
+      <h5 class="d-flex align-items-center mb-1">
+        <i class="bi bi-sliders me-2 text-primary"></i>
+        Machine Parameters
+      </h5>
+    </div>
+
+    <div class="col-md-9 d-flex justify-content-end gap-2 flex-wrap">
+
+      <!-- Add -->
+      <button class="btn btn-primary btn-sm d-flex align-items-center"
+              (click)="openCreate()">
+        <i class="bi bi-plus-lg"></i>
+        <span class="ms-1">Add</span>
+      </button>
+
+      <!-- Refresh -->
+      <button class="btn btn-outline-secondary btn-sm"
+              (click)="refresh()">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+
+      <!-- Search -->
+      <div class="d-flex flex-column toolbar-field">
+        <span class="toolbar-label">Search</span>
+        <div class="input-group input-group-sm" style="width:170px;">
+          <input type="text"
+                 class="form-control"
+                 placeholder="Search..."
+                 [(ngModel)]="searchText" />
+          <button class="btn btn-outline-secondary" (click)="loadRows()">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="d-flex flex-column toolbar-field">
+        <span class="toolbar-label">Status</span>
+        <select class="form-select form-select-sm"
+                style="width:110px;"
+                [(ngModel)]="activeFilter"
+                (change)="loadRows()">
+          <option value="">All</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <!-- Machine Filter -->
+      <div class="d-flex flex-column toolbar-field">
+        <span class="toolbar-label">Machine</span>
+        <select class="form-select form-select-sm"
+                style="width:150px;"
+                [(ngModel)]="machineFilter"
+                (change)="loadRows()">
+          <option [ngValue]="null">All</option>
+          <option *ngFor="let m of machineList" [ngValue]="m.id">
+            {{ m.code }} - {{ m.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Export -->
+      <div class="d-flex align-items-end gap-1">
+        <button class="btn btn-success btn-sm" (click)="exportExcel()">
+          <i class="bi bi-file-earmark-excel"></i>
+        </button>
+        <button class="btn btn-danger btn-sm" (click)="exportPDF()">
+          <i class="bi bi-file-earmark-pdf"></i>
+        </button>
+        <button class="btn btn-secondary btn-sm" (click)="printTable()">
+          <i class="bi bi-printer"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Phase R.5 - Summary Strip -->
+  <div class="mp-summary-strip d-flex flex-wrap gap-2 align-items-center mb-3">
+    <span class="badge bg-primary-subtle text-primary">
+      <i class="bi bi-list-ul me-1"></i> Total <strong>{{ summary.count }}</strong>
+    </span>
+    <span class="badge bg-success-subtle text-success">
+      <i class="bi bi-check2-circle me-1"></i> Active <strong>{{ summary.activeCount }}</strong>
+    </span>
+    <span class="badge bg-secondary-subtle text-secondary">
+      <i class="bi bi-slash-circle me-1"></i> Inactive <strong>{{ summary.inactiveCount }}</strong>
+    </span>
+    <span class="badge bg-info-subtle text-info">
+      <i class="bi bi-cpu me-1"></i> Machines <strong>{{ summary.distinctMachines }}</strong>
+    </span>
+    <span class="badge bg-light text-dark border" *ngFor="let h of summary.byHeadToHead | slice:0:4">
+      {{ h.headToHead }}: <strong>{{ h.count }}</strong>
+    </span>
+  </div>
+
+  <!-- Sprint-3: bulk action strip. -->
+  <div *ngIf="selectedIds.size > 0"
+       class="alert alert-info d-flex flex-wrap align-items-center gap-2 py-2 mb-2"
+       role="status">
+    <span class="me-2"><strong>{{ selectedIds.size }}</strong> selected</span>
+    <button class="btn btn-sm btn-success" (click)="bulkActivate()" [disabled]="bulkBusy">
+      <i class="bi bi-check-circle me-1"></i>Activate
+    </button>
+    <button class="btn btn-sm btn-secondary" (click)="bulkDeactivate()" [disabled]="bulkBusy">
+      <i class="bi bi-pause-circle me-1"></i>Deactivate
+    </button>
+    <button class="btn btn-sm btn-outline-danger" (click)="bulkDeleteRows()" [disabled]="bulkBusy">
+      <i class="bi bi-trash me-1"></i>Delete
+    </button>
+    <button class="btn btn-sm btn-light ms-auto" (click)="clearSelection()" [disabled]="bulkBusy">
+      Clear
+    </button>
+  </div>
+
+  <!-- ===================== TABLE ===================== -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover table-sm align-middle">
+
+      <thead class="table-light">
+        <tr>
+          <th class="text-center" style="width:30px;">
+            <input type="checkbox" class="form-check-input"
+                   [checked]="allVisibleSelected()"
+                   (change)="toggleSelectAll()" />
+          </th>
+          <th style="width: 120px;">Machine</th>
+          <th style="width: 120px;">Head To Head</th>
+          <th style="width: 120px;">Frame Height</th>
+          <th style="width: 120px;">Status</th>
+          <th style="width: 140px;">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let r of rows">
+          <td class="text-center">
+            <input type="checkbox" class="form-check-input"
+                   [checked]="isSelected(r.Id)"
+                   (change)="toggleSelect(r.Id)" />
+          </td>
+          <td>{{ r.MachineCode || '-' }}</td>
+          <td>{{ r.HeadToHead || '-' }}</td>
+          <td>{{ r.FrameHeight != null ? (r.FrameHeight + ' mm') : '-' }}</td>
+
+          <td>
+            <span class="badge"
+                  [ngClass]="r.Active ? 'bg-success' : 'bg-danger'">
+              {{ r.Active ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+
+          <td>
+            <button class="btn btn-info btn-sm me-1" (click)="openProfile(r.Id)" title="360 Profile">
+              <i class="bi bi-eye"></i>
+            </button>
+            <button class="btn btn-warning btn-sm me-1" (click)="openEdit(r.Id)">
+              Edit
+            </button>
+            <button class="btn btn-danger btn-sm" (click)="openDelete(r.Id)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="rows.length === 0">
+          <td colspan="5" class="text-center text-muted py-3">
+            No records found
+          </td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+
+  <!-- ===================== PAGINATION ===================== -->
+  <div class="d-flex justify-content-between align-items-center mt-2"
+       *ngIf="pages.length > 1">
+
+    <div class="small text-muted">
+      Page {{ page }} of {{ pages.length }} • Total {{ totalItems }} records
+    </div>
+
+    <ul class="pagination pagination-sm mb-0">
+      <li class="page-item" [class.disabled]="page === 1">
+        <button class="page-link" (click)="onPageChange(page - 1)">Previous</button>
+      </li>
+
+      <li class="page-item"
+          *ngFor="let p of pages"
+          [class.active]="p === page">
+        <button class="page-link" (click)="onPageChange(p)">{{ p }}</button>
+      </li>
+
+      <li class="page-item" [class.disabled]="page === pages.length">
+        <button class="page-link" (click)="onPageChange(page + 1)">Next</button>
+      </li>
+    </ul>
+
+  </div>
+
+</div>
+
+<!-- ===================== CREATE / EDIT MODAL ===================== -->
+<div class="modal fade" #formModal tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header bg-modal">
+        <h5 class="modal-title">
+          {{ modalMode === 'create' ? 'Add Machine Parameter' : 'Edit Machine Parameter' }}
+        </h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="mb-3">
+          <label class="form-label">Machine <span class="text-danger">*</span></label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="formModel.MachineId">
+            <option [ngValue]="null">-- Select Machine --</option>
+            <option *ngFor="let m of machineList" [ngValue]="m.id">
+              {{ m.code }} - {{ m.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Head To Head</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="formModel.HeadToHead">
+            <option [ngValue]="''">-- Select --</option>
+            <option *ngFor="let h of headToHeadOptions" [ngValue]="h">
+              {{ h }}
+            </option>
+          </select>
+        </div>
+
+        <!-- FRAME HEIGHT -->
+        <div class="col-md-4">
+          <label class="form-label">Frame Height (mm)</label>
+          <input type="number"
+                 step="0.1"
+                 class="form-control"
+                 [(ngModel)]="formModel.FrameHeight">
+        </div>
+
+
+        <div class="form-check mb-2">
+          <input type="checkbox" class="form-check-input" id="activeCheck"
+                 [(ngModel)]="formModel.Active">
+          <label class="form-check-label" for="activeCheck">Active</label>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary btn-sm" (click)="saveForm()">Save</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===================== DETAIL MODAL ===================== -->
+<div class="modal fade" #detailModal tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header bg-modal">
+        <h5 class="modal-title">Machine Parameter Detail</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body" *ngIf="detailModel">
+        <div class="card mb-3">
+          <div class="card-body">
+
+            <div class="row mb-2">
+              <div class="col-md-3"><strong>ID:</strong><br>{{ detailModel.Id }}</div>
+              <div class="col-md-3"><strong>Machine:</strong><br>{{ detailModel.MachineCode }}</div>
+              <div class="col-md-3"><strong>Head To Head:</strong><br>{{ detailModel.HeadToHead }}</div>
+              <div class="col-md-3"><strong>Frame Height:</strong><br>{{ detailModel.FrameHeight }}</div>
+            </div>
+
+            <hr>
+
+            <div class="row mb-2">
+              <div class="col-md-3">
+                <strong>Status:</strong><br>
+                <span class="text-success" *ngIf="detailModel.Active">Active</span>
+                <span class="text-danger" *ngIf="!detailModel.Active">Inactive</span>
+              </div>
+              <div class="col-md-3">
+                <strong>Deleted:</strong><br>
+                <span class="text-danger" *ngIf="detailModel.Deleted">Yes</span>
+                <span class="text-success" *ngIf="!detailModel.Deleted">No</span>
+              </div>
+              <div class="col-md-3"><strong>Created By:</strong><br>{{ detailModel.CreatedByEmployeeId || '-' }}</div>
+              <div class="col-md-3"><strong>Updated By:</strong><br>{{ detailModel.UpdatedByEmployeeId || '-' }}</div>
+            </div>
+
+            <hr>
+
+            <div class="row mb-2">
+              <div class="col-md-6"><strong>Created Date:</strong><br>{{ detailModel.CreatedDate || '-' }}</div>
+              <div class="col-md-6"><strong>Updated Date:</strong><br>{{ detailModel.UpdatedDate || '-' }}</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===================== DELETE MODAL ===================== -->
+<div class="modal fade" #deleteModal tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Confirm Delete</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        Are you sure you want to delete this parameter?
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-danger btn-sm" (click)="confirmDelete()">Delete</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     Phase R.5 - 360 PROFILE DRAWER
+     ============================================================ -->
+<div class="modal mp-profile-modal" *ngIf="showProfile"
+     [class.show]="showProfile" [class.d-block]="showProfile"
+     (click)="closeProfile()" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-sliders me-2"></i>
+          Machine Parameter 360 Profile
+          <span *ngIf="profile?.header?.id" class="badge bg-light text-dark ms-2">#{{ profile.header.id }}</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeProfile()"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div *ngIf="profileLoading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <div class="mt-2 text-muted small">Loading profile…</div>
+        </div>
+
+        <ng-container *ngIf="!profileLoading && profile as p">
+
+          <!-- HEADER CARD -->
+          <div class="card mp-section-card mb-3">
+            <div class="card-header">Header</div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <div class="mp-label">Machine</div>
+                  <div class="mp-value">
+                    <span class="text-muted">{{ p.header?.machineCode || '-' }}</span>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mp-label">Brand</div>
+                  <div class="mp-value">{{ p.header?.brandName || '-' }}</div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mp-label">Head to Head</div>
+                  <div class="mp-value">{{ p.header?.headToHead || '-' }}</div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mp-label">Frame Height</div>
+                  <div class="mp-value">{{ p.header?.frameHeight ?? '-' }} mm</div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mp-label">Status</div>
+                  <div class="mp-value">
+                    <span class="badge" [ngClass]="p.header?.active ? 'bg-success' : 'bg-secondary'">
+                      {{ p.header?.active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mp-label">Created</div>
+                  <div class="mp-value">{{ p.header?.createdDateText || '-' }}</div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mp-label">Updated</div>
+                  <div class="mp-value">{{ p.header?.updatedDateText || '-' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPI TILES -->
+          <div class="row g-3 mp-kpi-row mb-3">
+            <div class="col-md-4">
+              <div class="card kpi-tile kpi-tile-primary p-3">
+                <div class="kpi-label">Frame Height</div>
+                <div class="kpi-value">{{ p.kpis?.frameHeight ?? '-' }} mm</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card kpi-tile kpi-tile-info p-3">
+                <div class="kpi-label">Sibling Parameters</div>
+                <div class="kpi-value">{{ p.kpis?.siblingCount ?? 0 }}</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card kpi-tile kpi-tile-success p-3">
+                <div class="kpi-label">Total on Machine</div>
+                <div class="kpi-value">{{ p.kpis?.machineParamCount ?? 0 }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SIBLINGS -->
+          <div class="card mp-section-card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-stack me-1"></i> Other Parameters on Same Machine</span>
+              <span class="badge bg-secondary">{{ p.siblings?.length || 0 }}</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:70px;">ID</th>
+                    <th>Head to Head</th>
+                    <th>Frame Height</th>
+                    <th style="width:90px;">Status</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngIf="!p.siblings || p.siblings.length === 0">
+                    <td colspan="5" class="text-center text-muted py-3">No sibling parameters.</td>
+                  </tr>
+                  <tr *ngFor="let s of p.siblings">
+                    <td>{{ s.Id }}</td>
+                    <td>{{ s.HeadToHead || '-' }}</td>
+                    <td>{{ s.FrameHeight ?? '-' }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="s.Active ? 'bg-success' : 'bg-secondary'">
+                        {{ s.Active ? 'Active' : 'Inactive' }}
+                      </span>
+                    </td>
+                    <td>{{ s.createdDateText || '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </ng-container>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" (click)="closeProfile()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+

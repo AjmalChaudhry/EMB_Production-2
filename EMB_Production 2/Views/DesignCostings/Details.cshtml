@@ -1,0 +1,138 @@
+﻿@model EMB_Production.Models.DesignCosting
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>DesignCosting</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.ThreadCost)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ThreadCost)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MachineCost)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MachineCost)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.LaborCost)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.LaborCost)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ElectricityCost)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ElectricityCost)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OtherCost)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OtherCost)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TotalCost)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TotalCost)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Active)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Active)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Deleted)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Deleted)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.UpdatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.UpdatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.RecordTimeStamp)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.RecordTimeStamp)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CostPerUnit)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CostPerUnit)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Adm_Users.UserName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Adm_Users.UserName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Adm_Users1.UserName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Adm_Users1.UserName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Gen_Design.D_Code)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Gen_Design.D_Code)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

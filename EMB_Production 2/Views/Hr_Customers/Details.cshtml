@@ -1,0 +1,111 @@
+﻿@model EMB_Production.Models.Hr_Customers
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Customer Details";
+    var currentFilter = Request.QueryString["search"] ?? "";
+    var activeFilter = Request.QueryString["activeFilter"] ?? "";
+}
+
+<style>
+    .detail-card {
+        background: #fff;
+        border-left: 5px solid #007bff;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        margin-top: 1rem;
+    }
+
+    .details-header {
+        font-size: 1.25rem;
+        font-weight: 600;
+        background: #007bff;
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 6px 6px 0 0;
+        margin: -1.5rem -1.5rem 1rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #2c3e50;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        color: #34495e;
+        word-wrap: break-word;
+    }
+</style>
+<!-- Detail Card -->
+<div class="detail-card">
+    <div class="details-header">Customer Details</div>    
+        <!-- Toolbar -->
+    <div class="toolbar-container d-flex align-items-center justify-content-end mb-3">
+       @using (Html.BeginForm("Index", "Hr_Customers", FormMethod.Get, new { @class = "d-flex align-items-center" }))
+        {           
+            <a href="@Url.Action("Index","Hr_Customers")"
+               class="btn btn-outline-secondary btn-sm me-2">
+                <i class="bi bi-x-circle"></i>
+            </a>
+            <button type="button" onclick="location.reload()"
+                    class="btn btn-outline-secondary btn-sm me-2">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button type="button" onclick="window.print()"
+                    class="btn btn-outline-secondary btn-sm me-2">
+                <i class="bi bi-printer"></i>
+            </button>
+            <a href="@Url.Action("ExportToExcel","Hr_Customers", new { search = currentFilter, activeFilter = activeFilter })"
+               class="btn btn-success btn-sm me-2">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+            </a>
+            <a href="@Url.Action("ExportToPdf","Hr_Customers", new { search = currentFilter, activeFilter = activeFilter })"
+               class="btn btn-danger btn-sm">
+                <i class="bi bi-file-earmark-pdf"></i>
+            </a>
+
+        }
+    </div>
+
+
+        <div class="row gy-4">
+            @foreach (var prop in ViewData.ModelMetadata.Properties
+                                           .Where(p => p.ShowForDisplay && p.PropertyName != "Id" && p.PropertyName != "Gen_ServiceRates" && p.PropertyName != "Branches"))
+            {
+                <div class="col-md-3">
+                    <div class="detail-label">@prop.GetDisplayName()</div>
+                    @if (prop.PropertyName == "Customer_Address")
+                    {
+                        <div class="detail-value text-break">
+                            @prop.Model
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="detail-value">
+                            @prop.Model
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        <div class="mt-4 d-flex justify-content-center action-links">
+            @Html.ActionLink("Edit", "Index", new { showEdit = true, editId = Model.Id }, new { @class = "btn btn-primary me-3" })
+            @Html.ActionLink("Back to List", "Index", "Hr_Customers", null, new { @class = "btn btn-outline-secondary" })
+        </div>
+    
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('.detail-value').hover(
+                function () { $(this).addClass('bg-light rounded'); },
+                function () { $(this).removeClass('bg-light rounded'); }
+            );
+        });
+    </script>
+}

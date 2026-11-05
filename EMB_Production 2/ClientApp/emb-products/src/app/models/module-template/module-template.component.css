@@ -1,0 +1,71 @@
+/* =============================================
+   MODULE TEMPLATE PAGE WRAPPER
+============================================= */
+.module-template-page {
+  width: 100%;
+}
+
+  /* =============================================
+   SEARCH GROUP (INPUT + BUTTON)
+============================================= */
+  .module-template-page .search-group {
+    min-width: 220px;
+    max-width: 260px;
+  }
+
+    .module-template-page .search-group input {
+      border-radius: 4px 0 0 4px;
+    }
+
+    .module-template-page .search-group button {
+      border-radius: 0 4px 4px 0;
+    }
+
+  /* =============================================
+   FILTER DROPDOWNS
+============================================= */
+  .module-template-page .status-filter {
+    min-width: 120px;
+    max-width: 150px;
+    height: 31px; /* matches btn-sm */
+    padding: 2px 8px;
+  }
+
+  /* =============================================
+   ACTION BUTTONS (Refresh, Excel, PDF, Print, Add)
+============================================= */
+  .module-template-page .action-btn-sm {
+    height: 31px; /* consistency with btn-sm height */
+    padding: 3px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+/* =============================================
+   RESPONSIVE BEHAVIOR
+============================================= */
+@media (max-width: 992px) {
+  .module-template-page .search-group {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .module-template-page .status-filter {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .module-template-page .header-actions {
+    flex-direction: column !important;
+    width: 100%;
+    gap: 8px !important;
+  }
+
+  .module-template-page .search-group,
+  .module-template-page .status-filter {
+    width: 100%;
+  }
+}

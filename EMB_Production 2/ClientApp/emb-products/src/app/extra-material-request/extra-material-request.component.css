@@ -1,0 +1,157 @@
+:root {
+  --sidebar-width: 260px;
+  --topbar-height: 72px;
+}
+
+.page-wrap {
+  padding: 10px 6px;
+}
+
+.emr-filter-bar .form-label.small {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.78rem;
+}
+
+.emr-summary-strip .badge {
+  font-weight: 500;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.78rem;
+}
+.emr-summary-strip .badge strong { font-weight: 700; }
+
+.emr-list-table {
+  font-size: 0.88rem;
+}
+.emr-list-table th,
+.emr-list-table td {
+  padding: 0.55rem 0.6rem !important;
+  vertical-align: middle;
+}
+
+.emr-items-card .table-sm > :not(caption) > * > * {
+  padding: 0.3rem 0.4rem;
+}
+
+/* =====================================================
+   360 PROFILE DRAWER
+===================================================== */
+.emr-profile-modal {
+  background: rgba(0, 0, 0, 0.4);
+  padding-top: 60px;
+  overflow-y: auto;
+  z-index: 1080;
+}
+.emr-profile-modal .modal-content { border-radius: 12px; overflow: hidden; }
+.emr-profile-modal .modal-body { background: #f4f6f9; }
+
+.emr-profile-modal .profile-section.card {
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+.emr-profile-modal .profile-section .card-header {
+  background: #f8f9fb;
+  border-bottom: 1px solid #eef1f4;
+  font-size: 0.86rem;
+}
+.emr-profile-modal .profile-field-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  font-weight: 600;
+}
+.emr-profile-modal .profile-field-value {
+  font-size: 0.92rem;
+  color: #212529;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.emr-profile-modal .profile-kpi-row .kpi-tile {
+  border: 1px solid #e9ecef;
+  border-left-width: 4px;
+  border-radius: 8px;
+  background: #fff;
+  transition: transform 0.15s ease;
+}
+.emr-profile-modal .profile-kpi-row .kpi-tile:hover { transform: translateY(-1px); }
+.emr-profile-modal .profile-kpi-row .kpi-tile-primary { border-left-color: #0d6efd; }
+.emr-profile-modal .profile-kpi-row .kpi-tile-success { border-left-color: #198754; }
+.emr-profile-modal .profile-kpi-row .kpi-tile-danger  { border-left-color: #dc3545; }
+.emr-profile-modal .profile-kpi-row .kpi-tile-info    { border-left-color: #0dcaf0; }
+.emr-profile-modal .profile-kpi-row .kpi-tile-warning { border-left-color: #ffc107; }
+.emr-profile-modal .profile-kpi-row .kpi-tile-muted   { border-left-color: #adb5bd; }
+.emr-profile-modal .profile-kpi-row .kpi-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  font-weight: 600;
+}
+.emr-profile-modal .profile-kpi-row .kpi-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #212529;
+}
+.emr-profile-modal .profile-kpi-row .kpi-sub {
+  font-size: 0.68rem;
+  margin-top: 2px;
+}
+.emr-profile-modal .profile-table { font-size: 0.85rem; }
+.emr-profile-modal .profile-table thead th {
+  background: #f8f9fb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #495057;
+  border-bottom: 1px solid #e9ecef;
+  white-space: nowrap;
+}
+.emr-profile-modal .profile-table tbody tr:hover { background: #fcfcfd; }
+
+/* Timeline */
+.timeline-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.timeline-list li {
+  position: relative;
+  padding: 6px 0 6px 22px;
+  border-left: 2px dashed #ced4da;
+  margin-left: 6px;
+}
+.timeline-list li .dot {
+  position: absolute;
+  left: -7px;
+  top: 10px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ced4da;
+  border: 2px solid #fff;
+}
+.timeline-list li.done .dot { background: #198754; }
+.timeline-list li.done { border-left-color: #198754; }
+.timeline-list .step-title { font-weight: 600; font-size: 0.88rem; }
+.timeline-list .step-meta  { font-size: 0.76rem; }
+
+/* Modal positioning to sit below sticky topbar */
+.page-wrap .modal {
+  top: var(--topbar-height);
+}
+@media (min-width: 992px) {
+  .page-wrap .modal {
+    left: var(--sidebar-width);
+  }
+}
+.page-wrap .modal.show .modal-dialog-centered {
+  min-height: calc(100vh - var(--topbar-height) - 1rem);
+}
+.page-wrap .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1056;
+}

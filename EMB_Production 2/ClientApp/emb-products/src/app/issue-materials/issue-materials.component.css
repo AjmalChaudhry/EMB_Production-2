@@ -1,0 +1,52 @@
+:root {
+  --topbar-height: 72px;
+  --sidebar-width: 260px;
+}
+
+.issue-materials-page {
+  padding: 10px 4px;
+}
+
+.issue-table {
+  font-size: 0.85rem;
+}
+.issue-table th,
+.issue-table td {
+  padding: 0.45rem 0.55rem !important;
+  vertical-align: middle;
+}
+.issue-table .nowrap-cell { white-space: nowrap; }
+.issue-table input.form-control-sm { padding: 0.2rem 0.4rem; }
+
+/* Detail modal — pin the modal FRAME below the topbar (and beside the
+   sidebar on desktop) so its dialog can use the available area without
+   ever overlapping the sticky topbar. */
+.issue-detail-modal {
+  background: rgba(0, 0, 0, 0.4);
+  top: var(--topbar-height);
+  overflow-y: auto;
+}
+@media (min-width: 992px) {
+  .issue-detail-modal { left: var(--sidebar-width); }
+}
+.issue-detail-modal .modal-dialog {
+  margin: 1rem auto;
+  max-width: 1150px;
+}
+.issue-detail-modal .modal-content {
+  border-radius: 10px;
+  overflow: hidden;
+}
+.issue-detail-modal .modal-body {
+  max-height: calc(100vh - var(--topbar-height) - 140px);
+  overflow-y: auto;
+}
+
+/* Backdrop also needs to start below the topbar so the topbar itself
+   isn't dimmed (otherwise it looks "covered" even if technically below). */
+.modal-backdrop.show {
+  top: var(--topbar-height);
+}
+@media (min-width: 992px) {
+  .modal-backdrop.show { left: var(--sidebar-width); }
+}

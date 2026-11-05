@@ -1,0 +1,135 @@
+/* ========================================================= */
+/* PAGE WRAPPER */
+/* ========================================================= */
+.suppliers-page {
+  padding: 0.75rem 0;
+}
+
+
+/* ========================================================= */
+/* TOOLBAR COMPACT LAYOUT */
+/* ========================================================= */
+.toolbar-compact .btn,
+.toolbar-compact .form-select,
+.toolbar-compact .input-group {
+  font-size: 0.85rem;
+  height: 32px; /* Unified compact height */
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+  .toolbar-compact .btn i {
+    font-size: 0.9rem;
+  }
+
+.search-group input {
+  padding-right: 6px;
+}
+
+
+/* ========================================================= */
+/* TABLE HEADER */
+/* ========================================================= */
+.table-header {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+}
+
+
+/* ========================================================= */
+/* LOADING SPINNER */
+/* ========================================================= */
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* ========================================================= */
+/* TABLE STYLING */
+/* ========================================================= */
+.table-hover tbody tr:hover {
+  background-color: #fafafa;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+  font-size: 0.85rem;
+}
+
+
+/* ========================================================= */
+/* MODAL STYLING */
+/* ========================================================= */
+.modal-header {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-title {
+  font-size: 1rem;
+}
+
+.modal-body .form-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.modal-body input,
+.modal-body select {
+  font-size: 0.9rem;
+}
+
+
+/* ========================================================= */
+/* BADGE (STATUS) */
+/* ========================================================= */
+.badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+
+/* ========================================================= */
+/* BUTTON GROUP (ACTIONS) */
+/* ========================================================= */
+.btn-group .btn {
+  padding: 3px 6px;
+}
+
+  .btn-group .btn i {
+    font-size: 0.85rem;
+  }
+
+
+/* ========================================================= */
+/* PAGINATION */
+/* ========================================================= */
+.pagination .page-link {
+  font-size: 0.75rem;
+  padding: 4px 8px;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+.modal-header {
+  border-bottom: none;
+}
+
+.modal-body strong {
+  color: #34495e;
+}
+
+.modal-body span {
+  font-size: 0.95rem;
+}

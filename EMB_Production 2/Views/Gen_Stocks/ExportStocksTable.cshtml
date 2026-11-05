@@ -1,0 +1,69 @@
+﻿@model EMB_Production.ViewModels.StocksPageViewModel
+
+@{
+    Layout = null;
+}
+
+<div class="table-responsive shadow-sm rounded">
+    <table class="table table-striped table-hover align-middle small mb-0">
+        <thead class="table-secondary">
+            <tr>
+                <th>Product</th>
+                <th class="text-center">InStock</th>
+                <th class="text-center">New</th>
+                <th class="text-center">In</th>
+                <th class="text-center">Out</th>
+                <th>Description</th>
+                <th>Rack</th>
+                <th>Shelf</th>
+                <th class="text-end">Measure</th>
+                <th class="text-end">Total</th>
+                <th class="text-end">Price</th>
+                <th>Bill#</th>
+                <th>GatePass</th>
+                <th>Branch</th>
+                <th class="text-center">Active</th>
+                <th class="text-center">Deleted</th>
+                <th>Created By</th>
+                <th>Created Date</th>
+                <th>Updated By</th>
+                <th>Updated Date</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+           @foreach (var r in Model.Rows)
+            {
+                <tr>
+                    <td>@r.ProdName</td>
+                    <td class="text-center">@(r.InStock == 1 ? "✔" : "")</td>
+                    <td class="text-center">@(r.IsNew   == 1 ? "✔" : "")</td>
+                    <td class="text-center">@(r.IsIn    == 1 ? "✔" : "")</td>
+                    <td class="text-center">@(r.IsOut   == 1 ? "✔" : "")</td>
+                    <td>@r.StockDescription</td>
+                    <td>@r.Rack</td>
+                    <td>@r.Shelf</td>
+                    <td class="text-end">
+                        @(r.MeasureValue.HasValue ? r.MeasureValue.Value.ToString("F2") : "")
+                    </td>
+                    <td class="text-end">
+                        @(r.TotalStock.HasValue? r.TotalStock.Value.ToString("F2"): "")
+                    </td>
+                    <td class="text-end">
+                        @(r.TotalPrice.HasValue? r.TotalPrice.Value.ToString("F2"): "")
+                    </td>
+                    <td>@r.BillNumber</td>
+                    <td>@r.GatePass</td>
+                    <td>@r.BranchName</td>
+                    <td class="text-center">@(r.Active  ? "Yes" : "No")</td>
+                    <td class="text-center">@(r.Deleted ? "Yes" : "No")</td>
+                    <td>@r.CreatedBy</td>
+                    <td>@r.CreatedDate?.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@r.UpdatedBy</td>
+                    <td>@r.UpdatedDate?.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@r.RecordTimeStamp?.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                </tr>
+             }
+        </tbody>
+    </table>
+</div>

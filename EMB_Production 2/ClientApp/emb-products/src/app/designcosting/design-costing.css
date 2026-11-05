@@ -1,0 +1,145 @@
+/* Phase R.0 - filter bar + summary strip + profile drawer */
+.dc-filter-bar .form-label.small { font-weight: 600; color: #495057; font-size: 0.78rem; }
+.dc-filter-bar .form-control-sm, .dc-filter-bar .form-select-sm { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.dc-summary-strip .badge { font-weight: 500; padding: 0.5rem 0.7rem; font-size: 0.78rem; }
+.dc-summary-strip .badge strong { font-weight: 700; }
+
+.dc-profile-modal { background: rgba(0,0,0,0.4); padding-top: 60px; overflow-y: auto; }
+.dc-profile-modal .modal-content { border-radius: 12px; overflow: hidden; }
+.dc-profile-modal .modal-body { background: #f4f6f9; }
+.dc-section-card { border: 1px solid #e9ecef; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+.dc-section-card .card-header { background: #f8f9fb; border-bottom: 1px solid #eef1f4; font-weight: 600; font-size: 0.86rem; }
+.dc-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.dc-value { font-size: 0.92rem; color: #212529; font-weight: 500; margin-top: 2px; }
+.dc-kpi-row .kpi-tile { border: 1px solid #e9ecef; border-left-width: 4px; border-radius: 8px; transition: transform .15s ease; }
+.dc-kpi-row .kpi-tile:hover { transform: translateY(-1px); }
+.dc-kpi-row .kpi-tile-primary { border-left-color: #0d6efd; }
+.dc-kpi-row .kpi-tile-success { border-left-color: #198754; }
+.dc-kpi-row .kpi-tile-danger  { border-left-color: #dc3545; }
+.dc-kpi-row .kpi-tile-info    { border-left-color: #0dcaf0; }
+.dc-kpi-row .kpi-tile-warning { border-left-color: #ffc107; }
+.dc-kpi-row .kpi-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.dc-kpi-row .kpi-value { font-size: 1.15rem; font-weight: 700; line-height: 1.2; color: #212529; }
+
+/* ================= PAGE ================= */
+.page-wrap,
+.page-content.design-costing-page {
+  padding: 16px;
+}
+
+/* ================= CARD ================= */
+.card {
+  border-radius: 14px;
+  border: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* add spacing between stacked cards */
+.page-content .card + .card {
+  margin-top: 16px;
+}
+
+/* ================= TABLE ================= */
+.table {
+  font-size: 13.5px;
+}
+
+  .table th,
+  .table td {
+    vertical-align: middle;
+    padding: 0.55rem 0.6rem;
+  }
+
+  .table thead th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  /* highlight total cells */
+  .table td.text-primary {
+    font-weight: 600;
+  }
+
+/* hover */
+.table-hover tbody tr:hover {
+  background-color: #f7fbff;
+  transition: 0.15s ease-in-out;
+}
+
+/* ================= BADGES ================= */
+.badge {
+  font-weight: 600;
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 8px;
+}
+
+/* ================= FORM ================= */
+.form-label {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.form-control-sm,
+.form-select-sm {
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+/* readonly calculated fields */
+input[readonly] {
+  background-color: #f4f7fa;
+  font-weight: 600;
+}
+
+/* ================= BUTTONS ================= */
+.btn-sm {
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12.5px;
+}
+
+/* ================= MODAL ================= */
+.design-costing-modal-dialog {
+  margin-top: 80px;
+}
+
+.modal {
+  z-index: 1060 !important;
+}
+
+.modal-backdrop {
+  z-index: 1055 !important;
+}
+
+.modal-content {
+  border-radius: 14px;
+  border: 0;
+}
+
+.modal .modal-header {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.modal .modal-footer {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* ================= SUMMARY ================= */
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 991.98px) {
+  .design-costing-modal-dialog {
+    margin-top: 60px;
+  }
+}

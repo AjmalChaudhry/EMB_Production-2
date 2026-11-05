@@ -1,0 +1,161 @@
+﻿@model EMB_Production.Models.Gen_JobOrders
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Delete Job Order";
+}
+
+<style>
+    .detail-card {
+        background: #fff;
+        border-left: 5px solid #dc3545;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        margin-top: 1rem;
+    }
+
+    .details-header {
+        font-size: 1.25rem;
+        font-weight: 600;
+        background: #dc3545;
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 6px 6px 0 0;
+        margin: -1.5rem -1.5rem 1rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #2c3e50;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        color: #34495e;
+        word-wrap: break-word;
+    }
+
+        .detail-value:hover {
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+</style>
+
+<div class="detail-card">
+    <div class="details-header">Delete Job Order</div>
+
+    <div class="alert alert-warning shadow-sm rounded mb-4">
+        <strong>Are you sure you want to delete this job order?</strong>
+        <p>This action <em>cannot</em> be undone.</p>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow-sm mb-4">
+        <div class="row gy-3">
+            <!-- Code -->
+            <div class="col-md-4">
+                <div class="detail-label">Code</div>
+                <div class="detail-value">@Model.Code</div>
+            </div>
+
+            <!-- Component lookup -->
+            <div class="col-md-4">
+                <div class="detail-label">Component</div>
+                <div class="detail-value">
+                    @(Model.Gen_Components != null
+                        ? Model.Gen_Components.Name : $"(ID: {Model.CompId})")
+                </div>
+            </div>
+
+            <!-- Requested Repeats -->
+            <div class="col-md-4">
+                <div class="detail-label">Requested Repeats</div>
+                <div class="detail-value">@Model.ReqRepeats</div>
+            </div>
+
+            <!-- Requested Heads -->
+            <div class="col-md-4">
+                <div class="detail-label">Requested Heads</div>
+                <div class="detail-value">@Model.ReqHead</div>
+            </div>
+
+            <!-- Panni -->
+            <div class="col-md-4">
+                <div class="detail-label">Panni</div>
+                <div class="detail-value">@Model.Panni</div>
+            </div>
+
+            <!-- Solving -->
+            <div class="col-md-4">
+                <div class="detail-label">Solving</div>
+                <div class="detail-value">@Model.Solving</div>
+            </div>
+
+            <!-- Branch lookup -->
+            <div class="col-md-4">
+                <div class="detail-label">Branch</div>
+                <div class="detail-value">
+                    @(Model.Branches != null
+                        ? Model.Branches.Name
+                        : $"(ID: {Model.BranchId})")
+                </div>
+            </div>
+
+            <!-- Active -->
+            <div class="col-md-4">
+                <div class="detail-label">Active</div>
+                <div class="detail-value">
+                    @(Model.Active == true ? "Yes" : "No")
+                </div>
+            </div>
+
+            <!-- Deleted -->
+            <div class="col-md-4">
+                <div class="detail-label">Deleted</div>
+                <div class="detail-value">
+                    @(Model.Deleted == true ? "Yes" : "No")
+                </div>
+            </div>
+
+            <!-- Created By -->
+            <div class="col-md-4">
+                <div class="detail-label">Created By</div>
+                <div class="detail-value">@Model.CreatedBy</div>
+            </div>
+
+            <!-- Created Date -->
+            <div class="col-md-4">
+                <div class="detail-label">Created Date</div>
+                <div class="detail-value">
+                    @(Model.CreatedDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "(none)")
+                </div>
+            </div>
+
+            <!-- Updated By -->
+            <div class="col-md-4">
+                <div class="detail-label">Updated By</div>
+                <div class="detail-value">@Model.UpdatedBy</div>
+            </div>
+
+            <!-- Updated Date -->
+            <div class="col-md-4">
+                <div class="detail-label">Updated Date</div>
+                <div class="detail-value">
+                    @(Model.UpdatedDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "(none)")
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @using (Html.BeginForm("Delete", "Gen_JobOrders", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.Id)
+
+        <div class="d-flex justify-content-end mt-4">
+            <button type="submit" class="btn btn-danger me-2">Confirm Delete</button>
+            @Html.ActionLink("Cancel", "Index", null, new { @class = "btn btn-outline-secondary" })
+        </div>
+    }
+</div>

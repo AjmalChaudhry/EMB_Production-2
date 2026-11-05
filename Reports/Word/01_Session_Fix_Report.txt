@@ -1,0 +1,165 @@
+SESSION FIX REPORT
+EMB Production 2
+
+Project: EMB Production 2
+Date: 16 June 2026
+Stack: ASP.NET MVC 5 (.NET Framework 4.7.2) + Angular 20 + Entity Framework 6 (Database-First) + SQL Server
+Prepared for: Internal engineering review
+
+
+PURPOSE
+
+This report documents every defect addressed in the current working session, its root cause, and the remediation that was shipped. Each section includes the affected file(s), the symptom observed by the end user, the underlying technical reason, and the precise nature of the fix applied.
+
+
+1. DISPATCH MODAL OVERLAPPING THE TOPBAR
+
+File affected
+ClientApp/emb-products/src/app/dispatch/dispatch.component.css
+
+Symptom
+The "Create Dispatch" modal header sat directly under, or partially behind, the sticky topbar. The modal title and the close button were squashed against the top of the viewport.
+
+Root cause
+Two leftover global rules at the bottom of the component stylesheet overrode the topbar offset that was defined higher up in the same file.
+
+Conflicting rule	Effect
+.modal-dialog { margin: auto !important; }	The !important keyword killed the margin-top: calc(72px + 8px) rule above it
+.modal.show .modal-dialog { min-height: calc(100vh - 1rem); }	Centered the dialog using the full viewport height, which placed the dialog's vertical midpoint underneath the topbar
+
+Remediation
+The Bootstrap modal frame itself was shifted down by the topbar height and right by the sidebar width. The "auto" margin override was removed for the modal dialog but retained for SweetAlert popups. The min-height calculation was changed to subtract the topbar height.
+
+Outcome
+The dispatch modal now opens cleanly below the sticky topbar on every screen size.
+
+
+2. DESIGN COSTING - PRODUCT-COST FIELDS REMAINED AT ZERO
+
+Files affected
+- Controllers/DesignCostingsController.cs
+- Controllers/BaseController.cs
+- ClientApp/emb-products/src/app/services/design-costing.service.ts
+- ClientApp/emb-products/src/app/designcosting/design-costing.ts
+
+Symptom
+On clicking "Recalculate Cost", the Cost Breakdown panel populated normally with Thread, Machine, Labor, Electricity, Other, Total Cost, Cost / Unit and Selling / Unit. However the five product-cost fields (Material / Unit, Production / Unit, Service / Unit, Product Cost / Unit, Total Product Cost) remained at zero.
+
+Root causes
+There were three compounding issues:
+
+a) The Recalculate POST endpoint never returned the five product-cost fields. The Angular form had bindings for them, but the response payload contained no matching keys.
+
+b) The BaseController helper GetProductMaterialPerUnitCost reads from Gen_Stocks where StockStage equals "FINISHED". This table is empty before any QC has posted finished stock, so the helper returns zero even when the BOM is fully populated.
+
+c) The controller resolved Product ID from the design's stored ProductId, ignoring the form's product dropdown. When a costing was being calculated for a different product than the design's stored one, lookups missed.
+
+Remediation
+Action	Description
+2.1	Recalculate and Calculate endpoints now compute and return all five product-cost fields using the same formulas as Save
+2.2	New helper GetDesignBomMaterialPerUnitCost was added to BaseController. It walks the design's components, then their Gen_ComponentMaterials BOM lines, valuing each at the raw item's latest Gen_Store rate
+2.3	The view model's optional ProductId is now respected; the resolution is "VM ProductId, else design's ProductId"
+2.4	A defensive frontend math layer was added so that even without an MVC rebuild the form computes the per-unit fields locally from the cost breakdown that already populated
+
+Outcome
+The five product-cost fields populate immediately when Cost Breakdown does, regardless of whether the MVC backend has been rebuilt.
+
+
+3. DESIGN COSTING - SERVICE / UNIT REMAINED AT ZERO
+
+Files affected
+- ClientApp/emb-products/src/app/designcosting/design-costing.ts
+- ClientApp/emb-products/src/app/designcosting/design-costing.html
+
+Symptom
+PRD-0003 Casual Shirt Cotton had a Service Rate (Double Stitch, charge factor 300, Bahawalpur Branch) but the Service / Unit field on the Design Costing form remained at zero.
+
+Root causes
+- The MVC helper GetProductServicePerUnitCost matches on (productId, branchId). When the design's branch and the service rate's branch diverge, the helper returns zero.
+- The Service / Unit input was readonly, so the operator had no override path.
+
+Remediation
+Action	Description
+3.1	After Recalculate, if Service / Unit is zero, the frontend calls /emb-products/service-rates/list filtered by product, and patches the field with the sum of matching Charge Factors. This endpoint already exists, so no MVC rebuild is required
+3.2	The Service / Unit input was changed from readonly to editable. It is now two-way bound and triggers a recompute on change
+3.3	A new method recomputeProductCost was added. It recalculates Product Cost / Unit and Total Product Cost on every Service edit
+
+Outcome
+Service / Unit populates automatically when a rate exists for the product. When it does not, the operator can type the rate directly and the downstream totals update immediately.
+
+
+4. DISPATCH - ALL CALCULATION COLUMNS REMAINED AT ZERO
+
+Files affected
+- Controllers/DispatchItemsController.cs
+- ClientApp/emb-products/src/app/dispatch/dispatch.component.ts
+
+Symptom
+Creating a dispatch for Casual Shirt Cotton displayed zero for Cost / PC, Base Price, Net Sale Price and Total Amount. The Design Costing for this product was fully populated, with Product Cost / Unit at 2,188 and Selling / Unit at 2,626.
+
+Root cause
+The dispatch backend's price-resolution chain did not consult the DesignCosting table at all. It only checked QC-posted stock (empty), prior DispatchItem rows (empty), and Gen_Products.Price (also empty for this product).
+
+Remediation
+The fallback chain on both helpers was extended.
+
+GetProductCostPrice priority order
+Priority	Source
+1	Gen_Stocks.Rate (QC finished stock)
+2	Last DispatchItem.CostPrice
+3	DesignCosting.ProductCostPerUnit (NEW)
+4	Gen_Products.Price divided by 1.10
+
+GetCustomerBaseSalePrice priority order
+Priority	Source
+1	The same customer's last paid price for this product
+2	Any customer's last paid price on this branch
+3	DesignCosting.SellingPricePerUnit (NEW)
+4	Gen_Products.Price master sale price
+5	Cost multiplied by 1.10
+
+A defensive frontend layer was also added. After AvailableProducts returns rows with zero cost and zero base price, the dispatch form calls /emb-products/design-costing/list filtered by product, and patches the row from the saved costing. This works without an MVC rebuild because the endpoint already exists.
+
+Outcome
+Once the Angular bundle is redeployed, Casual Shirt Cotton dispatch will show Cost / PC at 2,188 and Base Price at 2,626, with downstream Net Sale and Total following correctly.
+
+
+5. DESIGNS MANAGEMENT - UNCLEAR USAGE INDICATOR FOR NEW DESIGNS
+
+File affected
+ClientApp/emb-products/src/app/design/gen-design.component.html
+
+Symptom
+The Usage column showed clear badges for designs in active use (JO N for job orders, the rupee symbol for costing, C N for components), but new designs simply displayed a bare dash. The meaning was unclear to the user.
+
+Root cause
+The fallback markup was a plain text muted dash with no tooltip or context.
+
+Remediation
+The dash was replaced with an explicit "New" badge using a Bootstrap light style with a border. The badge carries a tooltip that reads: "No components, costing, or job orders yet — define them to start using this design."
+
+Outcome
+DES-2026-009 now shows a clearly labelled "New" badge. The badge disappears the moment the user adds components, costing or a job order for that design.
+
+
+6. RECURRING LESSON - FRONTEND DEFENSIVE LAYERS
+
+A theme across this session: backend rebuilds add friction to the feedback loop, so any backend-only fix delays visible improvement. The pragmatic pattern that worked consistently was:
+
+1. Land the backend fix - it is correct, but invisible until the next rebuild.
+2. Land a parallel frontend defensive layer that hits existing endpoints to recover the same data without requiring the new backend code.
+3. Document the behaviour so that once the MVC backend is rebuilt, the backend value takes precedence and the frontend lookup becomes a no-op.
+
+This pattern is now applied in three places: the Design Costing service-rate lookup, the Design Costing per-unit math fallback, and the Dispatch design-costing lookup.
+
+
+BUILD AND DEPLOY STEPS
+
+1. Angular - from EMB_Production 2/ClientApp/emb-products run: npm run build:deploy
+2. MVC backend - in Visual Studio: Build, then Rebuild Solution, then restart IIS Express
+3. Hard-refresh affected pages with Ctrl + F5
+
+After both deployments, all six fix areas above are active. Without the MVC rebuild, items 1, 3.2, 3.3, 5, and the defensive layers in 2.4 and 4 still apply via the Angular build alone.
+
+
+END OF REPORT

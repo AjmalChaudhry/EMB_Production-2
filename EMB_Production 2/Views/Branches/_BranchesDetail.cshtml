@@ -1,0 +1,86 @@
+﻿@model EMB_Production.Models.Branches
+@using System
+
+@{
+    var branchName = Model.Name ?? "—";
+    var companyName = Model.Adm_CompanyProfile?.CompanyName ?? "—";
+   
+    var search = ViewBag.Search as string;
+    var activeFilter = ViewBag.ActiveFilter as string;
+    var companyFilter = ViewBag.CompanyFilter as int?;
+    var page = ViewBag.Page as int? ?? 1;
+
+    Func<DateTime?, string> pkt = dt =>
+    {
+        if (!dt.HasValue) return "—";
+        try
+        {
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("Pakistan Standard Time");
+            var utc = DateTime.SpecifyKind(dt.Value, DateTimeKind.Utc);
+            var pk = TimeZoneInfo.ConvertTimeFromUtc(utc, tz);
+            return pk.ToString("yyyy-MM-dd HH:mm");
+        }
+        catch
+        {
+            return dt.Value.ToString("yyyy-MM-dd HH:mm");
+        }
+    };
+
+    var createdAt = pkt(Model.CreatedDate);
+    var updatedAt = pkt(Model.UpdatedDate);
+
+}
+
+<div class="card mb-3">
+    <!-- Header Bar -->
+    <div class="card-header d-flex justify-content-between align-items-center bg-primary bg-gradient text-white">
+        <h5 class="mb-0">Branches Details</h5>
+        <button type="button" class="btn-close btn-close-white btn-detail-close" aria-label="Close"></button>
+    </div>
+
+    <!-- Body -->
+    <div class="card-body">
+        <div class="row mb-2">
+            <div class="col-md-3"><strong>Branch Name:</strong><br /> @Model.Name</div>
+            <div class="col-md-3"><strong>Branch Code:</strong><br /> @(Model.BranchId?.ToString() ?? "—")</div>
+            <div class="col-md-3"><strong>Location:</strong><br /> @Model.Location</div>
+            <div class="col-md-3"><strong>Contact:</strong><br /> @(Model.Contect ?? "N/A")</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-4"><strong>Company Name:</strong><br /> @(Model.Adm_CompanyProfile?.CompanyName ?? "N/A")</div>
+            <div class="col-md-4">
+                <strong>Active:</strong><br />
+                <span class="badge @(Model.IsActive == true ? "bg-success" : "bg-secondary")">
+                    @(Model.IsActive == true ? "Yes" : "No")
+                </span>
+            </div>
+            <div class="col-md-4">
+                <strong>Deleted:</strong><br />
+                <span class="badge @(Model.Deleted == true ? "bg-danger" : "bg-secondary")">
+                    @(Model.Deleted == true ? "Yes" : "No")
+                </span>
+            </div>
+        </div>
+
+        <div class="row small text-muted">
+            <div class="col-md-6"><strong>Created:</strong><br /> @(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("g") : "—") by @Model.CreatedBy</div>
+            <div class="col-md-6"><strong>Updated:</strong><br /> @(Model.UpdatedDate.HasValue ? Model.UpdatedDate.Value.ToString("g") : "—") by @Model.UpdatedBy</div>
+        </div>
+    </div>
+    <div class="detail-footer text-end p-2">
+        <button type="button" class="btn btn-secondary btn-sm btn-detail-close">
+            <i class="bi bi-arrow-left me-1"></i> Close
+        </button>
+    </div>
+</div>
+<style>
+    .detail-card .detail-label {
+        font-size: .75rem;
+        color: #6c757d;
+        margin-bottom: .25rem;
+    }
+
+    .detail-card .detail-value {
+        font-weight: 500;
+    }
+</style>

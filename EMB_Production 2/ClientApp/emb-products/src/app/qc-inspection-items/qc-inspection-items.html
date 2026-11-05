@@ -1,0 +1,450 @@
+<div class="page-wrap">
+
+  <!-- Header / Filters -->
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-body py-3">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+
+        <div>
+          <h5 class="mb-0">QC Inspection Items</h5>
+          <small class="text-muted">Manage QC item lines for product-batch inspections</small>
+        </div>
+
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <input type="text"
+                 class="form-control form-control-sm"
+                 style="width: 220px;"
+                 placeholder="Search QC item / component / WO"
+                 [(ngModel)]="searchText"
+                 (keyup.enter)="onSearchChange()" />
+
+          <button class="btn btn-sm btn-primary" (click)="openCreate()">
+            <i class="bi bi-plus-circle me-1"></i> Add Item
+          </button>
+
+          <button class="btn btn-sm btn-outline-secondary" (click)="loadData()">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+
+          <button class="btn btn-sm btn-outline-dark"
+                  (click)="goBackToQc()">
+            <i class="bi bi-arrow-left me-1"></i>
+            QC
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 60px;">#</th>
+              <th style="min-width: 120px;">QC No</th>
+              <th style="min-width: 110px;">WO</th>
+              <th style="min-width: 110px;">Production</th>
+              <th style="min-width: 150px;">Component</th>
+              <th class="text-end" style="width: 85px;">Qty</th>
+              <th class="text-end" style="width: 85px;">Pass</th>
+              <th class="text-end" style="width: 85px;">Fail</th>
+              <th class="text-end" style="width: 90px;">Rework</th>
+              <th style="width: 100px;" class="text-center">Result</th>
+              <th style="width: 95px;" class="text-center">Status</th>
+              <th style="min-width: 160px;">Created</th>
+              <th style="width: 170px;" class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngIf="loading">
+              <td colspan="13" class="text-center py-4">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Loading...
+              </td>
+            </tr>
+
+            <tr *ngFor="let row of items"
+                [ngClass]="{
+                  'table-danger-subtle': row.deleted,
+                  'table-warning-subtle': !row.active && !row.deleted
+                }">
+              <td>{{ row.id }}</td>
+              <td>{{ row.qcInspectionNo || '-' }}</td>
+              <td>{{ row.workOrderCode || '-' }}</td>
+              <td>{{ row.productionNo || '-' }}</td>
+              <td>{{ row.componentName || '-' }}</td>
+
+              <td class="text-end">{{ row.qty }}</td>
+              <td class="text-end text-success fw-semibold">{{ row.passedQty }}</td>
+              <td class="text-end text-danger fw-semibold">{{ row.failedQty }}</td>
+              <td class="text-end text-warning fw-semibold">{{ row.reworkQty }}</td>
+
+              <td class="text-center">
+                <span class="badge" [ngClass]="getResultClass(row.result)">
+                  {{ row.result || 'Pending' }}
+                </span>
+              </td>
+
+              <td class="text-center">
+                <span class="badge" [ngClass]="row.active ? 'bg-success' : 'bg-secondary'">
+                  {{ row.active ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+
+              <td>
+                <div>{{ row.createdDateText || '-' }}</div>
+                <div class="small text-muted">{{ row.createdByEmployeeId || '-' }}</div>
+              </td>
+
+              <td class="text-end">
+                <div class="d-flex justify-content-end gap-1 flex-wrap">
+                  <button class="btn btn-sm btn-outline-info"
+                          (click)="openDetail(row)"
+                          title="View">
+                    <i class="bi bi-eye"></i>
+                  </button>
+
+                  <button class="btn btn-sm btn-outline-primary"
+                          [disabled]="row.deleted"
+                          (click)="openEdit(row)"
+                          title="Edit">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+
+                  <button class="btn btn-sm"
+                          [ngClass]="row.active ? 'btn-outline-warning' : 'btn-outline-success'"
+                          [disabled]="row.deleted"
+                          (click)="toggleActive(row)"
+                          [title]="row.active ? 'Set Inactive' : 'Set Active'">
+                    <i class="bi" [ngClass]="row.active ? 'bi-pause-circle' : 'bi-play-circle'"></i>
+                  </button>
+
+                  <button class="btn btn-sm btn-outline-danger"
+                          [disabled]="row.deleted"
+                          (click)="confirmDelete(row)"
+                          title="Delete">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <tr *ngIf="!loading && items.length === 0">
+              <td colspan="13" class="text-center py-4 text-muted">No QC inspection items found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pager -->
+    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+      <div class="small text-muted">
+        Page {{ page }} of {{ totalPages }} | Total: {{ totalItems }}
+      </div>
+
+      <div class="btn-group btn-group-sm">
+        <button class="btn btn-outline-secondary" [disabled]="page <= 1" (click)="goToPage(page - 1)">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="btn btn-outline-secondary" [disabled]="page >= totalPages" (click)="goToPage(page + 1)">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create / Edit Modal -->
+<div class="modal fade" #formModal tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow-sm">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          {{ modalMode === 'create' ? 'Add QC Inspection Item' : 'Edit QC Inspection Item' }}
+        </h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+
+          <!-- Smart Selection Area -->
+          <div class="col-12">
+            <div class="card border-0 bg-light">
+              <div class="card-body py-3">
+                <div class="fw-semibold mb-3">Smart Auto-Fill</div>
+
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">QC Inspection</label>
+                    <select class="form-select"
+                            [(ngModel)]="formModel.qcInspectionId"
+                            (change)="onQcInspectionChange()">
+                      <option [ngValue]="null">-- Select QC Inspection --</option>
+                      <option *ngFor="let q of qcInspectionOptions" [ngValue]="q.id">
+                        {{ q.name }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label">Work Order Item</label>
+                    <select class="form-select"
+                            [(ngModel)]="formModel.workOrderItemId"
+                            (change)="onWorkOrderItemChange()">
+                      <option [ngValue]="null">-- Select Work Order Item --</option>
+                      <option *ngFor="let w of workOrderItemOptions" [ngValue]="w.id">
+                        {{ w.name }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label">Production</label>
+                    <select class="form-select"
+                            [(ngModel)]="formModel.productionId"
+                            (change)="onProductionChange()">
+                      <option [ngValue]="null">-- Select Production --</option>
+                      <option *ngFor="let p of productionOptions" [ngValue]="p.id">
+                        {{ p.name }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label">Component</label>
+                    <select class="form-select"
+                            [(ngModel)]="formModel.compId"
+                            (change)="onComponentChange()">
+                      <option [ngValue]="null">-- Select Component --</option>
+                      <option *ngFor="let c of componentOptions" [ngValue]="c.id">
+                        {{ c.name }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="small text-muted mt-3">
+                  Select QC Inspection first. The system will auto-load related work order items, production rows, and components.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quantity Decision Area -->
+          <div class="col-md-3">
+            <label class="form-label">Qty</label>
+            <input type="number"
+                   class="form-control"
+                   [(ngModel)]="formModel.qty"
+                   min="0"
+                   (ngModelChange)="autoResult()">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Passed Qty</label>
+            <input type="number"
+                   class="form-control"
+                   [(ngModel)]="formModel.passedQty"
+                   min="0"
+                   (ngModelChange)="autoResult()">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Failed Qty</label>
+            <input type="number"
+                   class="form-control"
+                   [(ngModel)]="formModel.failedQty"
+                   min="0"
+                   (ngModelChange)="autoResult()">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Rework Qty</label>
+            <input type="number"
+                   class="form-control"
+                   [(ngModel)]="formModel.reworkQty"
+                   min="0"
+                   (ngModelChange)="autoResult()">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Result</label>
+            <input type="text"
+                   class="form-control"
+                   [(ngModel)]="formModel.result"
+                   placeholder="Pass / Fail / Rework / Partial">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label d-block">Active</label>
+            <div class="form-check form-switch mt-2">
+              <input class="form-check-input"
+                     type="checkbox"
+                     [(ngModel)]="formModel.active"
+                     id="activeSwitch">
+              <label class="form-check-label" for="activeSwitch">
+                {{ formModel.active ? 'Active' : 'Inactive' }}
+              </label>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Remarks</label>
+            <textarea class="form-control"
+                      rows="3"
+                      [(ngModel)]="formModel.remarks"></textarea>
+          </div>
+
+          <div class="col-12">
+            <div class="small">
+              <div class="text-muted">
+                Total Decision Qty:
+                <strong>{{ decisionTotal }}</strong>
+              </div>
+
+              <div class="text-muted">
+                Qty:
+                <strong>{{ formModel.qty || 0 }}</strong>
+              </div>
+
+              <div *ngIf="validationMessage" class="text-danger mt-1">
+                {{ validationMessage }}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" (click)="closeModal()">Close</button>
+        <button class="btn btn-primary" [disabled]="!canSave()" (click)="save()">
+          <i class="bi bi-save me-1"></i>Save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal fade" #detailModal tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow-sm">
+      <div class="modal-header">
+        <h5 class="modal-title">QC Inspection Item Detail</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+
+      <div class="modal-body" *ngIf="detailModel">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <strong>QC No</strong><br>
+            {{ detailModel.qcInspectionNo || '-' }}
+          </div>
+
+          <div class="col-md-4">
+            <strong>Work Order</strong><br>
+            {{ detailModel.workOrderCode || '-' }}
+          </div>
+
+          <div class="col-md-4">
+            <strong>Production</strong><br>
+            {{ detailModel.productionNo || '-' }}
+          </div>
+
+          <div class="col-md-4">
+            <strong>Component</strong><br>
+            {{ detailModel.componentName || '-' }}
+          </div>
+
+          <div class="col-md-2">
+            <strong>Qty</strong><br>
+            {{ detailModel.qty }}
+          </div>
+
+          <div class="col-md-2">
+            <strong>Pass</strong><br>
+            <span class="text-success">{{ detailModel.passedQty }}</span>
+          </div>
+
+          <div class="col-md-2">
+            <strong>Fail</strong><br>
+            <span class="text-danger">{{ detailModel.failedQty }}</span>
+          </div>
+
+          <div class="col-md-2">
+            <strong>Rework</strong><br>
+            <span class="text-warning">{{ detailModel.reworkQty }}</span>
+          </div>
+
+          <div class="col-md-4">
+            <strong>Result</strong><br>
+            <span class="badge" [ngClass]="getResultClass(detailModel.result)">
+              {{ detailModel.result || 'Pending' }}
+            </span>
+          </div>
+
+          <div class="col-md-4">
+            <strong>Status</strong><br>
+            <span class="badge" [ngClass]="detailModel.active ? 'bg-success' : 'bg-secondary'">
+              {{ detailModel.active ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+
+          <div class="col-md-4">
+            <strong>Created By</strong><br>
+            {{ detailModel.createdByEmployeeId || '-' }}
+          </div>
+
+          <div class="col-md-4">
+            <strong>Created Date</strong><br>
+            {{ detailModel.createdDateText || '-' }}
+          </div>
+
+          <div class="col-12">
+            <strong>Remarks</strong><br>
+            {{ detailModel.remarks || '-' }}
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" (click)="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" #deleteModal tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-sm">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete QC Inspection Item</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+
+      <div class="modal-body">
+        <p class="mb-2">Are you sure you want to delete this QC inspection item?</p>
+        <div class="small text-muted" *ngIf="deleteModel">
+          QC No: <strong>{{ deleteModel.qcInspectionNo || '-' }}</strong><br>
+          Component: <strong>{{ deleteModel.componentName || '-' }}</strong>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" (click)="closeModal()">Cancel</button>
+        <button class="btn btn-danger" (click)="deleteConfirmed()">
+          <i class="bi bi-trash me-1"></i>Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,118 @@
+:root {
+  --sidebar-width: 260px;
+  --topbar-height: 72px;
+}
+
+.page-wrap { padding: 10px 6px; }
+
+.pp-filter-bar .form-label.small {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.78rem;
+}
+
+.pp-summary-strip .badge {
+  font-weight: 500;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.78rem;
+}
+.pp-summary-strip .badge strong { font-weight: 700; }
+
+.pp-list-table {
+  font-size: 0.88rem;
+}
+.pp-list-table th,
+.pp-list-table td {
+  padding: 0.55rem 0.6rem !important;
+  vertical-align: middle;
+}
+
+/* Sprint-1: row highlight when the plan's (year, weekNo) matches today's
+   ISO week. Soft blue tint so the eye lands on the active row in a long
+   list, with a stronger left edge as a visual anchor. */
+.pp-list-table tr.pp-current-week > td {
+  background-color: #f0f7ff;
+}
+.pp-list-table tr.pp-current-week > td:first-child {
+  border-left: 3px solid #0d6efd;
+}
+.pp-list-table tr.pp-current-week:hover > td {
+  background-color: #e6f0fc;
+}
+
+/* Sprint-4: workflow stepper. 4 stages: Draft → Approved → In Progress
+   → Closed. Visually communicates lifecycle position at a glance. */
+.pp-stepper-card {
+  border-color: #e3e7ec;
+  background: #fafbfc;
+}
+.pp-stepper { min-height: 56px; }
+.pp-stepper-step { min-width: 80px; }
+.pp-stepper-dot {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border-width: 2px !important;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: background-color 0.2s ease;
+}
+.pp-stepper-line {
+  height: 3px;
+  border-radius: 2px;
+  margin-bottom: 22px;   /* aligns with the dot's vertical center */
+}
+
+/* Sprint-4: audit timeline list — newest-first state-change history. */
+.pp-audit-timeline li {
+  border-bottom: 1px dashed #eef0f2;
+}
+.pp-audit-timeline li:last-child { border-bottom: none; }
+.pp-audit-pill {
+  min-width: 110px;
+  text-align: left;
+  font-size: 0.72rem;
+  padding: 0.35rem 0.55rem;
+}
+
+.pp-header-card .form-label.small,
+.pp-picker-card .form-label.small {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.75rem;
+  margin-bottom: 2px;
+}
+
+/* Modal sits below sticky topbar + beside sidebar.
+   Bootstrap defaults the modal to `width:100%; height:100%; top:0; left:0`.
+   Just overriding `top` and `left` pushes the modal off-screen on bottom
+   and right (the Close-button footer ends up below the viewport, hence
+   "close tag is not there"). Fix: also constrain `bottom`, `right`, and
+   override `height`/`width` to `auto` so those edges actually apply. */
+.modal {
+  top: var(--topbar-height);
+  bottom: 0;
+  height: auto;
+}
+@media (min-width: 992px) {
+  .modal {
+    left: var(--sidebar-width);
+    right: 0;
+    width: auto;
+  }
+}
+.modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1056;
+}
+/* The backdrop is appended to <body> by Bootstrap, so view-encapsulated
+   styles can't reach it. Use `::ng-deep` + a parent selector so the global
+   style is still scoped enough not to clobber other modules. */
+:host ::ng-deep .modal-backdrop.show {
+  top: var(--topbar-height);
+}
+@media (min-width: 992px) {
+  :host ::ng-deep .modal-backdrop.show {
+    left: var(--sidebar-width);
+  }
+}

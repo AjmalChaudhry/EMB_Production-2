@@ -1,0 +1,189 @@
+﻿@model EMB_Production.Models.Gen_Products
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Product Details";
+    var currentFilter = Request.QueryString["search"] ?? "";
+    var activeFilter = Request.QueryString["activeFilter"] ?? "";
+}
+
+<style>
+    .detail-card {
+        background: #fff;
+        border-left: 5px solid #007bff;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        margin-top: 1rem;
+    }
+
+    .details-header {
+        font-size: 1.25rem;
+        font-weight: 600;
+        background: #007bff;
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 6px 6px 0 0;
+        margin: -1.5rem -1.5rem 1rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #2c3e50;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        color: #34495e;
+        word-wrap: break-word;
+    }
+
+    .toolbar-container .btn {
+        margin-left: .5rem;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="detail-card">
+        <div class="details-header">Product Details</div>
+
+        <!-- toolbar -->
+        <div class="toolbar-container d-flex justify-content-end mb-3">
+            <button type="button" onclick="location.reload()" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button type="button" onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-printer"></i>
+            </button>
+            <!-- detail export -->
+            <a href="@Url.Action("ExportToExcel","Gen_Products", new { id = Model.Id })"
+               class="btn btn-success btn-sm">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+            </a>
+            <a href="@Url.Action("ExportToPdf","Gen_Products", new { id = Model.Id })"
+               class="btn btn-danger btn-sm">
+                <i class="bi bi-file-earmark-pdf"></i>
+            </a>
+        </div>
+
+        <div class="row gy-4">
+            <!-- Category -->
+            <div class="col-md-3">
+                <div class="detail-label">Category</div>
+                <div class="detail-value">
+                    @( Model.Gen_Catagories?.Name ?? "(none)" )
+                </div>
+            </div>
+
+            <!-- Branch -->
+            <div class="col-md-3">
+                <div class="detail-label">Branch</div>
+                <div class="detail-value">
+                    @( Model.Branches?.Name ?? "(none)" )
+                </div>
+            </div>
+
+            <!-- Record Timestamp -->
+            <div class="col-md-3">
+                <div class="detail-label">Record Timestamp</div>
+                <div class="detail-value">
+                    @(
+            Model.RecordTimeStamp.HasValue
+              ? Model.RecordTimeStamp.Value.ToString("yyyy-MM-dd HH:mm:ss")
+              : "(none)"
+          )
+                </div>
+            </div>
+
+            @* All other scalar properties *@
+            @foreach (var prop in ViewData.ModelMetadata.Properties
+                     .Where(p =>
+                         p.ShowForDisplay
+                         && !new[] {
+                       nameof(Model.Id),
+                       nameof(Model.CatId),
+                       nameof(Model.Gen_Catagories),
+                       nameof(Model.BranchId),
+                       nameof(Model.Branches),
+                       nameof(Model.Gen_Stocks),
+                       nameof(Model.RecordTimeStamp)
+                           }.Contains(p.PropertyName)))
+            {
+                <div class="col-md-3">
+                    <div class="detail-label">@prop.GetDisplayName()</div>
+                    <div class="detail-value">
+                        @{
+                            var val = prop.Model;
+                            if (val is DateTime dt)
+                            {
+                                @dt.ToString("yyyy-MM-dd HH:mm")
+                            }
+                            else
+                            {
+                                @val
+                            }
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Stocks table -->
+            <div class="col-12">
+                <div class="detail-label">Stocks (@Model.Gen_Stocks.Count())</div>
+                @if (Model.Gen_Stocks.Any())
+                {
+                    <div class="detail-value p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var stk in Model.Gen_Stocks.OrderBy(s => s.Id))
+                                    {
+                                        <tr>
+                                            <td class="align-middle">@stk.Id</td>
+                                            <td class="align-middle">
+                                                @(
+                          stk.CreatedDate.HasValue
+                            ? stk.CreatedDate.Value.ToString("yyyy-MM-dd")
+                            : "(none)"
+                        )
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="detail-value"><em>(no stock records)</em></div>
+                }
+            </div>
+        </div>
+
+        <div class="mt-4 text-center">
+            @Html.ActionLink("Back to List", "Index", new { search = currentFilter, activeFilter },
+                             new { @class = "btn btn-outline-secondary me-3" })
+            @Html.ActionLink("Edit", "Index", new { showEdit = true, editId = Model.Id, search = currentFilter, activeFilter },
+                             new { @class = "btn btn-primary" })
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // highlight detail values on hover
+        $(function () {
+            $('.detail-value').hover(
+                function () { $(this).addClass('bg-light rounded'); },
+                function () { $(this).removeClass('bg-light rounded'); }
+            );
+        });
+    </script>
+}

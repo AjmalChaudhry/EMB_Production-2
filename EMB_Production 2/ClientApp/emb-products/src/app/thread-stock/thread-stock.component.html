@@ -1,0 +1,125 @@
+<div class="container-fluid py-3 thread-stock-page">
+
+  <div class="d-flex flex-wrap align-items-center mb-3 gap-2">
+    <h4 class="mb-0 me-3">Thread Stock</h4>
+    <div class="input-group input-group-sm" style="max-width: 280px;">
+      <input type="text" class="form-control" placeholder="Search code / name / color"
+             [(ngModel)]="search" (keyup.enter)="load()">
+      <button class="btn btn-outline-secondary" (click)="load()"><i class="bi bi-search"></i></button>
+    </div>
+    <button class="btn btn-sm btn-primary" (click)="load()">
+      <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+    </button>
+
+    <div class="ms-auto small text-muted">
+      Threads: <strong>{{ rows.length }}</strong>
+      &nbsp;|&nbsp; Total balance: <strong>{{ totalBalance | number:'1.0-2' }}</strong>
+      &nbsp;|&nbsp; Stock value: <strong>{{ totalValue | number:'1.0-0' }}</strong>
+      <span *ngIf="belowZeroCount > 0" class="text-danger ms-2">
+        ⚠ {{ belowZeroCount }} below zero
+      </span>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="alert alert-info py-2">Loading…</div>
+
+  <table class="table table-sm table-hover thread-stock-table" *ngIf="!loading">
+    <thead class="table-light">
+      <tr>
+        <th>Code</th>
+        <th>Name</th>
+        <th>Color</th>
+        <th>Material</th>
+        <th class="text-end">Unit</th>
+        <th class="text-end">In</th>
+        <th class="text-end">Out</th>
+        <th class="text-end">Balance</th>
+        <th class="text-end">Last Rate</th>
+        <th class="text-end">Value</th>
+        <th class="text-end">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let r of rows; trackBy: trackByThread"
+          [class.table-warning]="r.balance < r.unitCost"
+          [class.table-danger]="r.balance < 0">
+        <td class="nowrap-cell">{{ r.code }}</td>
+        <td>{{ r.name }}</td>
+        <td>{{ r.color }}</td>
+        <td>{{ r.material }}</td>
+        <td class="text-end">{{ r.unit }}</td>
+        <td class="text-end">{{ r.totalIn | number:'1.0-2' }}</td>
+        <td class="text-end">{{ r.totalOut | number:'1.0-2' }}</td>
+        <td class="text-end fw-semibold">{{ r.balance | number:'1.0-2' }}</td>
+        <td class="text-end">{{ r.lastRate | number:'1.0-2' }}</td>
+        <td class="text-end">{{ r.balanceValue | number:'1.0-0' }}</td>
+        <td class="text-end">
+          <button class="btn btn-sm btn-outline-primary" (click)="openHistory(r)">
+            <i class="bi bi-clock-history"></i>
+          </button>
+        </td>
+      </tr>
+      <tr *ngIf="rows.length === 0">
+        <td colspan="11" class="text-center text-muted py-3">No threads found.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- History modal -->
+  <div *ngIf="historyOpen" class="modal show d-block thread-history-modal" tabindex="-1"
+       (click)="closeHistory()">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white py-2">
+          <h5 class="modal-title">
+            Ledger:
+            <span *ngIf="history">{{ history.code }} · {{ history.name }} ({{ history.color }})</span>
+          </h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeHistory()"></button>
+        </div>
+        <div class="modal-body">
+          <div *ngIf="historyLoading" class="alert alert-info py-2">Loading ledger…</div>
+          <ng-container *ngIf="history && !historyLoading">
+            <div class="mb-2 small">
+              Total In: <strong>{{ history.totalIn | number:'1.0-2' }}</strong>
+              &nbsp;|&nbsp; Total Out: <strong>{{ history.totalOut | number:'1.0-2' }}</strong>
+              &nbsp;|&nbsp; Balance: <strong>{{ history.balance | number:'1.0-2' }}</strong> {{ history.unit }}
+            </div>
+            <table class="table table-sm">
+              <thead class="table-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Ref</th>
+                  <th class="text-end">In</th>
+                  <th class="text-end">Out</th>
+                  <th class="text-end">Balance</th>
+                  <th class="text-end">Rate</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let l of history.ledger">
+                  <td class="nowrap-cell">{{ l.dateText }}</td>
+                  <td><span class="badge" [class.bg-success]="l.transactionType === 'IN'" [class.bg-danger]="l.transactionType === 'OUT'">
+                      {{ l.transactionType }}</span></td>
+                  <td>{{ l.referenceType }} · {{ l.referenceNo }}</td>
+                  <td class="text-end">{{ l.inQty | number:'1.0-2' }}</td>
+                  <td class="text-end">{{ l.outQty | number:'1.0-2' }}</td>
+                  <td class="text-end fw-semibold">{{ l.balance | number:'1.0-2' }}</td>
+                  <td class="text-end">{{ l.rate | number:'1.0-2' }}</td>
+                  <td class="small text-muted">{{ l.remarks }}</td>
+                </tr>
+                <tr *ngIf="history.ledger.length === 0">
+                  <td colspan="8" class="text-center text-muted py-3">No transactions yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="historyOpen" class="modal-backdrop show"></div>
+
+</div>

@@ -1,0 +1,348 @@
+﻿@using System.Web.Helpers
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EMB Production</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <!-- Site stylesheet -->
+    <link rel="stylesheet" href='@Url.Content("~/Content/Site.css")' />
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    @RenderSection("Styles", required: false)
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --brand-green: #28a745;
+            --brand-blue: #007bff;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        .navbar-top {
+            background-color: var(--brand-green);
+            height: 56px;
+        }
+
+            .navbar-top .navbar-brand {
+                color: #fff;
+                font-weight: 700;
+                margin-left: 1rem;
+                font-size: 1.25rem;
+            }
+
+            .navbar-top .nav-link {
+                color: #f8f9fa;
+                font-weight: 500;
+                margin: 0 .5rem;
+            }
+
+                .navbar-top .nav-link.active, .navbar-top .nav-link:hover {
+                    color: #e2e6ea;
+                }
+
+            .navbar-top .auth-btn {
+                color: #f8f9fa;
+                font-size: 1.25rem;
+                margin-right: 1rem;
+            }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            position: fixed;
+            top: 56px;
+            bottom: 0;
+            background-color: var(--brand-green);
+            padding-top: 1rem;
+        }
+
+            .sidebar .nav-link {
+                color: #fff;
+                font-weight: 500;
+                padding: .75rem 1rem;
+            }
+
+                .sidebar .nav-link:hover, .sidebar .nav-link.active {
+                    background-color: #0056b3;
+                    color: #fff;
+                }
+
+            .sidebar a {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+        #sidebarFilter {
+            margin: 0 1rem 1rem;
+        }
+
+        .main-content {
+            margin-top: 56px;
+            margin-left: var(--sidebar-width);
+            padding: 1.5rem;
+        }
+
+        .footer {
+            text-align: center;
+            padding: .75rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- MVC Anti-forgery token for Angular/JS -->
+    @Html.AntiForgeryToken()
+
+    <!-- Topbar -->
+    <nav class="navbar navbar-expand navbar-top fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="@Url.Action("Index","Home")"><i class="bi bi-gear-fill"></i> EMB Production</a>
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["action"].ToString()=="Index"?"active":"")"
+                       href="@Url.Action("Index","Home")">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["action"].ToString()=="About"?"active":"")"
+                       href="@Url.Action("About","Home")">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["action"].ToString()=="Contact"?"active":"")"
+                       href="@Url.Action("Contact","Home")">Contact</a>
+                </li>
+                <li class="nav-item d-flex align-items-center">
+                    <span id="navbarClock" class="text-light me-3"></span>
+                </li>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("ChangePassword","Adm_Users")" title="Change Password">
+                            <i class="bi bi-shield-lock"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="auth-btn nav-link" href="@Url.Action("Logout","Home")" title="Logout">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </a>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="auth-btn nav-link" href="@Url.Action("Login","Home")" title="Login">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </nav>
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <input id="sidebarFilter" type="text" class="form-control form-control-sm" placeholder="Filter menu…" style="max-width: 150px;" />
+            <nav class="nav flex-column">
+                <div class="px-3 py-2">
+                    <div class="row g-2 row-cols-1">
+                        <!-- Company Perfile -->
+                        <div class="col">
+                            <div class="nav-item">
+                                <a class="d-flex align-items-center text-light text-decoration-none py-1 px-2 rounded"
+                                   data-bs-toggle="collapse"
+                                   href="#submenuTypes"
+                                   aria-expanded="false"
+                                   aria-controls="submenuTypes">
+                                    <i class="bi bi-tags-fill fs-5 me-2"></i>
+                                    <span>Company Profile</span>
+                                    <i class="bi bi-chevron-down ms-auto"></i>
+                                </a>
+                                <div class="collapse ps-4" id="submenuTypes">
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Home")">
+                                        Daishboard
+                                    </a>
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Adm_CompanyProfile")">
+                                        Company
+                                    </a>
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Branches")">
+                                        Branches
+                                    </a>
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Adm_Users")">
+                                        Users
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Products -->
+                        <div class="col">
+                            <div class="nav-item">
+                                <a class="d-flex align-items-center text-light text-decoration-none py-1 px-2 rounded"
+                                   data-bs-toggle="collapse"
+                                   href="#submenuProducts"
+                                   aria-expanded="false"
+                                   aria-controls="submenuProducts">
+                                    <i class="bi bi-box-seam fs-5 me-2"></i>
+                                    <span>Products</span>
+                                    <i class="bi bi-chevron-down ms-auto"></i>
+                                </a>
+                                <div class="collapse ps-4" id="submenuProducts">
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Gen_Products")">
+                                        Products
+                                    </a>
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Gen_Catagories")">
+                                        Catagories
+                                    </a>
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Gen_Components")">
+                                        Components
+                                    </a>
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Gen_Design")">
+                                        Design
+                                    </a>
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Gen_Brands")">
+                                        Brands
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Services -->
+                        <div class="col">
+                            <div class="nav-item">
+                                <a class="d-flex align-items-center text-light text-decoration-none py-1 px-2 rounded"
+                                   data-bs-toggle="collapse"
+                                   href="#submenuServices"
+                                   aria-expanded="false"
+                                   aria-controls="submenuServices">
+                                    <i class="bi bi-gear-fill fs-5 me-2"></i>
+                                    <span>Sales</span>
+                                    <i class="bi bi-chevron-down ms-auto"></i>
+                                </a>
+                                <div class="collapse ps-4" id="submenuServices">
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Hr_Customers")">
+                                        Customers
+                                    </a>
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Gen_TheServices")">
+                                        Service
+                                    </a>
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Gen_ServiceType")">
+                                        Service Types
+                                    </a>
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Gen_ServiceRates")">
+                                        Service Rates
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rates -->
+                        <div class="col">
+                            <div class="nav-item">
+                                <a class="d-flex align-items-center text-light text-decoration-none py-1 px-2 rounded"
+                                   data-bs-toggle="collapse"
+                                   href="#submenuRates"
+                                   aria-expanded="false"
+                                   aria-controls="submenuRates">
+                                    <i class="bi bi-file-earmark-text fs-5 me-2"></i>
+                                    <span>Operations</span>
+                                    <i class="bi bi-chevron-down ms-auto"></i>
+                                </a>
+                                <div class="collapse ps-4" id="submenuRates">
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Gen_Machines")">
+                                        Machines
+                                    </a>
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Gen_MachineParameters")">
+                                        Machine Parameters
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stocks -->
+                        <div class="col">
+                            <div class="nav-item">
+                                <a class="d-flex align-items-center text-light text-decoration-none py-1 px-2 rounded"
+                                   data-bs-toggle="collapse"
+                                   href="#submenuStocks"
+                                   aria-expanded="false"
+                                   aria-controls="submenuStocks">
+                                    <i class="bi bi-stack fs-5 me-2"></i>
+                                    <span>Stocks</span>
+                                    <i class="bi bi-chevron-down ms-auto"></i>
+                                </a>
+                                <div class="collapse ps-4" id="submenuStocks">
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Gen_JobOrders")">
+                                        JobOrders
+                                    </a>
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Gen_Stocks")">
+                                        Stock
+                                    </a>
+                                    <a class="d-block text-light text-decoration-none py-1 px-2 rounded"
+                                       href="@Url.Action("Index","Gen_Threads")">
+                                        Threads
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </nav>
+        </aside>
+
+    }
+
+    <main class="main-content">
+        @RenderBody()
+    </main>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <!-- Layout Scripts -->
+    <script>
+        // Clock
+        setInterval(function () { $('#navbarClock').text(new Date().toLocaleTimeString()); }, 1000);
+
+        // Sidebar Filter
+        $('#sidebarFilter').on('input', function () {
+            var term = this.value.toLowerCase();
+            $('.sidebar .nav-link').each(function () {
+                $(this).toggle($(this).text().toLowerCase().includes(term));
+            });
+        });
+    </script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
+

@@ -1,0 +1,295 @@
+/* =====================================================
+   GLOBAL LAYOUT VARIABLES
+   ===================================================== */
+:root {
+  --sidebar-width: 260px;
+  --topbar-height: 72px;
+}
+
+/* =====================================================
+   PAGE WRAPPER (used in Dispatch pattern)
+   ===================================================== */
+.page-wrap {
+  padding: 10px 6px;
+}
+
+/* =====================================================
+   MODAL POSITIONING FIX (CRITICAL)
+   ===================================================== */
+
+/* ❌ NEVER make modal-header sticky globally */
+.modal-header {
+  position: relative;
+}
+
+/* ✅ Offset ONLY scrollable modals from fixed topbar */
+.modal-dialog-scrollable {
+  margin-top: calc(var(--topbar-height) + 10px);
+}
+
+/* Desktop: shift modals right because of sidebar */
+@media (min-width: 992px) {
+  .modal-dialog-scrollable {
+    margin-left: calc(var(--sidebar-width) + 1rem);
+    margin-right: 1rem;
+  }
+}
+
+/* Mobile: center normally */
+@media (max-width: 991.98px) {
+  .modal-dialog-scrollable {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* =====================================================
+   STICKY HEADERS (SAFE VERSION)
+   ===================================================== */
+
+/* Sticky header ONLY inside scrollable modals */
+.modal-dialog-scrollable .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1056;
+  background: inherit;
+}
+
+/* =====================================================
+   DETAIL MODAL (CENTERED – DO NOT OFFSET)
+   ===================================================== */
+
+/* Centered modals should remain untouched */
+.modal-dialog-centered {
+  margin-top: auto !important;
+  margin-bottom: auto !important;
+}
+
+/* ================= USER DETAIL HEADER (FIXED) ================= */
+
+.user-detail-header {
+  background-color: #0d6efd !important; /* FORCE color */
+  background-image: linear-gradient( 135deg, #0d6efd, #084298 ) !important;
+  padding: 15px 20px;
+  min-height: 90px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #06357a;
+  position: sticky;
+  top: 0;
+  z-index: 1057;
+}
+
+  /* Force text color */
+  .user-detail-header h4,
+  .user-detail-header i {
+    color: #ffffff !important;
+  }
+
+
+/* =====================================================
+   MODAL BODY & TABLE POLISH
+   ===================================================== */
+
+/* Reduce padding for dense forms */
+.modal-body {
+  padding-bottom: 0.75rem;
+}
+
+/* Compact tables */
+.table-sm td,
+.table-sm th {
+  padding: 0.35rem;
+}
+
+/* Ensure buttons stay clickable */
+.table button {
+  pointer-events: auto;
+}
+
+/* =====================================================
+   CARD / DETAIL STYLING
+   ===================================================== */
+
+/* Clip ONLY modal body, not header */
+.premium-wrapper .modal-body {
+  overflow-x: hidden;
+}
+
+
+.info-card {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 18px 22px;
+  border: 1px solid #e6e6e6;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0d6efd;
+  margin-bottom: 12px;
+}
+
+.row.g-3 > div {
+  font-size: 0.93rem;
+}
+
+/* =====================================================
+   PRINT SAFETY
+   ===================================================== */
+@media print {
+  .btn,
+  .modal,
+  .search-group,
+  .status-filter,
+  .deleted-filter,
+  .card .card-body > .d-flex {
+    display: none !important;
+  }
+
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+
+
+/* ============ PHASE R ============ */
+
+/* Filter bar */
+.user-filter-bar {
+  border-radius: 8px;
+}
+.user-filter-bar .form-label {
+  color: #6c757d;
+  margin-bottom: 2px;
+}
+
+/* Summary chips */
+.user-summary-strip .badge {
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+.user-summary-strip .badge strong {
+  font-weight: 700;
+}
+
+/* 360 Profile drawer — sits BELOW the 60px topbar instead of
+   covering it. The wrapper does NOT scroll: it gives the dialog
+   a fixed height so Bootstrap's modal-dialog-scrollable can
+   pin the header at the top, the footer at the bottom, and let
+   only the body scroll between them. */
+.user-profile-modal {
+  position: fixed;
+  top: 60px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1080;
+  overflow: hidden;
+  padding: 1rem;
+  display: flex;
+}
+
+  /* Override the global .modal-dialog-scrollable margin-top from the
+     shared CSS (calc(72px + 10px)) — we're already inside a host that
+     starts below the topbar, so no extra offset needed. */
+  .user-profile-modal .modal-dialog {
+    margin: 0 auto !important;
+    width: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .user-profile-modal .modal-content {
+    max-height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .user-profile-modal .modal-header,
+  .user-profile-modal .modal-footer {
+    flex: 0 0 auto;
+  }
+
+  .user-profile-modal .modal-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+
+.user-section-card {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+.user-section-card .card-header {
+  background-color: #f8f9fa;
+  font-size: 0.82rem;
+  color: #495057;
+}
+
+.user-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6c757d;
+  margin-bottom: 2px;
+}
+.user-value {
+  font-size: 0.92rem;
+  color: #212529;
+  font-weight: 500;
+}
+
+/* KPI tiles */
+.user-kpi-tile {
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  border-left-width: 4px;
+}
+.user-kpi-tile .user-kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #212529;
+  line-height: 1;
+  margin-top: 4px;
+}
+.user-kpi-tile-primary { border-left-color: #0d6efd; }
+.user-kpi-tile-info    { border-left-color: #0dcaf0; }
+.user-kpi-tile-warning { border-left-color: #ffc107; }
+.user-kpi-tile-success { border-left-color: #198754; }
+
+
+/* ===================================================
+   360 Profile drawer — avatar
+=================================================== */
+.profile-avatar-wrap {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: #f1f3f5;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-avatar-fallback {
+  font-size: 70px;
+  color: #adb5bd;
+  line-height: 1;
+}

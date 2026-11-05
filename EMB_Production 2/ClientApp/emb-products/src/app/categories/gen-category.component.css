@@ -1,0 +1,196 @@
+/* Phase R.12 - summary strip + profile drawer */
+.cat-summary-strip .badge { font-weight: 500; padding: 0.5rem 0.7rem; font-size: 0.78rem; }
+.cat-summary-strip .badge strong { font-weight: 700; }
+.cat-profile-modal { background: rgba(0,0,0,0.4); padding-top: 60px; overflow-y: auto; }
+.cat-profile-modal .modal-content { border-radius: 12px; overflow: hidden; }
+.cat-profile-modal .modal-body { background: #f4f6f9; }
+.cat-section-card { border: 1px solid #e9ecef; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+.cat-section-card .card-header { background: #f8f9fb; border-bottom: 1px solid #eef1f4; font-weight: 600; font-size: 0.86rem; }
+.cat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.cat-value { font-size: 0.92rem; color: #212529; font-weight: 500; margin-top: 2px; }
+.cat-kpi-row .kpi-tile { border: 1px solid #e9ecef; border-left-width: 4px; border-radius: 8px; transition: transform .15s ease; }
+.cat-kpi-row .kpi-tile:hover { transform: translateY(-1px); }
+.cat-kpi-row .kpi-tile-primary { border-left-color: #0d6efd; }
+.cat-kpi-row .kpi-tile-success { border-left-color: #198754; }
+.cat-kpi-row .kpi-tile-info    { border-left-color: #0dcaf0; }
+.cat-kpi-row .kpi-tile-warning { border-left-color: #ffc107; }
+.cat-kpi-row .kpi-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.cat-kpi-row .kpi-value { font-size: 1.15rem; font-weight: 700; line-height: 1.2; color: #212529; }
+
+/* =====================================================
+   ROOT VARIABLES (layout alignment)
+   ===================================================== */
+:root {
+  --topbar-height: 60px; /* MUST match fixed topbar height */
+  --sidebar-width: 240px; /* MUST match sidebar width */
+}
+
+/* =====================================================
+   GENERAL TABLE STYLING
+   ===================================================== */
+table {
+  font-size: 0.9rem;
+}
+
+.table th {
+  background: #f8f9fa;
+  font-weight: 600;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+.table tbody tr:hover {
+  background: #f1f3f5;
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* =====================================================
+   BUTTONS & ICONS
+   ===================================================== */
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  border-radius: 4px;
+}
+
+.bi {
+  font-size: 1rem;
+}
+
+/* Hover effects */
+.btn-outline-primary:hover {
+  background-color: #0d6efd;
+  color: #ffffff;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
+.btn-outline-info:hover {
+  background-color: #0dcaf0;
+  color: #ffffff;
+}
+
+/* =====================================================
+   PAGINATION
+   ===================================================== */
+.pagination .page-link {
+  color: #343a40;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #343a40;
+  border-color: #343a40;
+  color: #ffffff;
+}
+
+.pagination .page-item.disabled .page-link {
+  opacity: 0.6;
+}
+
+/* =====================================================
+   MODAL POSITIONING (CRITICAL FIX)
+   ===================================================== */
+
+/* Offset ALL modals from fixed topbar */
+.modal-dialog {
+  margin-top: calc(var(--topbar-height) + 12px);
+}
+
+/* Desktop: shift modals due to sidebar */
+@media (min-width: 992px) {
+  .modal-dialog {
+    margin-left: calc(var(--sidebar-width) + 16px);
+    margin-right: 16px;
+  }
+}
+
+/* Mobile: center modals normally */
+@media (max-width: 991.98px) {
+  .modal-dialog {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* =====================================================
+   MODAL STYLING
+   ===================================================== */
+.modal-header {
+  background-color: #212529; /* Dark header */
+  color: #ffffff; /* White text */
+  border-bottom: 2px solid #495057;
+}
+
+  .modal-header .modal-title,
+  .modal-header .modal-title i {
+    color: #ffffff;
+  }
+
+.modal-footer {
+  border-top: 2px solid #dee2e6;
+}
+
+.modal-title i {
+  font-size: 1.2rem;
+}
+
+/* Large modal width */
+.modal-xl {
+  max-width: 1200px !important;
+}
+
+/* =====================================================
+   MODAL BODY CONTENT
+   ===================================================== */
+.modal-body strong {
+  color: #343a40;
+  font-weight: 600;
+}
+
+.modal-body .row > div {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* Section separators */
+.modal-body hr,
+.detail-hr {
+  margin: 8px 0;
+  border: 0;
+  border-top: 2px solid #444;
+}
+
+/* =====================================================
+   STATUS LABELS
+   ===================================================== */
+.text-status-active {
+  color: #198754;
+  font-weight: 600;
+}
+
+.text-status-inactive {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+/* =====================================================
+   SEARCH BAR & EXPORTS
+   ===================================================== */
+.input-group input {
+  border-radius: 4px;
+}
+
+.btn-outline-secondary {
+  border-radius: 4px;
+}
+
+.export-btn i {
+  font-size: 1.1rem;
+  margin-right: 4px;
+}

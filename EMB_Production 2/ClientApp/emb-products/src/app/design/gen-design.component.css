@@ -1,0 +1,184 @@
+/* ==================================================
+   HEADER BAR + CONTROLS
+================================================== */
+
+.header-row {
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.search-group input {
+  border-right: 0;
+}
+
+.search-group .btn {
+  border-left: 0;
+}
+
+.filter-select {
+  min-width: 120px;
+}
+
+/* ==================================================
+   TABLE STYLING
+================================================== */
+
+/* Base table appearance */
+.table thead th {
+  background: #f2f4f7;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+  background: #f8f9fa !important;
+}
+
+/* Fixed layout support (opt-in) */
+.table-fixed {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* Reduce Code column width */
+.col-code {
+  width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Action buttons inside table */
+.table .btn-sm {
+  padding: 0.25rem 0.5rem;
+}
+
+/* ==================================================
+   CARD + WRAPPER
+================================================== */
+
+.card {
+  border-radius: 8px;
+  border: 1px solid #e3e6ea;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+  padding: 0.75rem 1rem;
+}
+
+/* ==================================================
+   MODAL STYLING
+================================================== */
+
+/* Push modal below the 60px fixed topbar so the header isn't clipped.
+   Padding on the .modal container is more reliable than margin on the
+   dialog (which can be overridden by modal-dialog-scrollable height rules). */
+.design-modal {
+  padding-top: 60px !important;
+}
+.design-modal .design-modal-dialog {
+  margin-top: 20px;
+}
+.design-modal .modal-dialog-scrollable {
+  max-height: calc(100vh - 100px);
+}
+.design-modal .modal-dialog-scrollable .modal-content {
+  max-height: calc(100vh - 100px);
+}
+
+.modal-content {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.modal-header {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #e1e5ea;
+}
+
+.modal-body {
+  padding: 1.2rem;
+}
+
+.modal-footer {
+  padding: 0.75rem 1rem;
+}
+
+/* Modal form controls */
+.modal-body .form-label {
+  font-weight: 500;
+}
+
+.modal-body .form-control,
+.modal-body .form-select {
+  border-radius: 6px;
+}
+
+/* Active checkbox spacing */
+.active-checkbox {
+  margin-top: 0.75rem;
+}
+
+/* ==================================================
+   PAGINATION
+================================================== */
+
+.pagination .page-item .page-link {
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* ==================================================
+   STATUS BADGES
+================================================== */
+
+.badge-active {
+  background-color: #28a745 !important;
+}
+
+.badge-inactive {
+  background-color: #dc3545 !important;
+}
+
+/* ==================================================
+   SMALL INPUTS (SEARCH / FILTERS)
+================================================== */
+
+.input-group-sm .form-control,
+.input-group-sm .form-select,
+.input-group-sm .btn {
+  padding: 0.25rem 0.5rem;
+}
+
+/* ==================================================
+   RESPONSIVE ADJUSTMENTS
+================================================== */
+
+@media (max-width: 768px) {
+
+  .header-row {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .header-buttons {
+    justify-content: center !important;
+  }
+
+  .modal-body .row {
+    row-gap: 0.75rem;
+  }
+}

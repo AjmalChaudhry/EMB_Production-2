@@ -1,0 +1,89 @@
+﻿@model EMB_Production.ViewModels.BranchesPageViewModel
+@using PagedList.Mvc
+
+<div id="branches-table-container">
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-hover table-sm mb-0">
+            <thead class="table-secondary">
+                <tr>
+                    <th>Name</th>
+                    <th>Branch Code</th>
+                    <th>Location</th>
+                    <th>Contect</th>
+                    <th>Company</th>
+                    <th>Active</th>
+
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model.Branches)
+                {
+                    <tr data-branch-id="@b.Id">
+                        <td class="align-middle">@b.Name</td>
+                        <td class="align-middle">@b.BranchCode</td>
+                        <td class="align-middle">@b.Location</td>
+                        <td class="align-middle">@b.Contect</td>
+                        <td class="align-middle">@b.CompanyName</td>
+                        <td class="align-middle">
+                            <span class="badge @(b.Active ? "bg-success" : "bg-secondary")">
+                                @(b.Active ? "Yes" : "No")
+                            </span>
+                        </td>
+
+                        <td class="align-middle text-center">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <!-- Edit -->
+                                <button type="button"
+                                        class="btn btn-outline-primary btn-edit-ajax"
+                                        data-url="@Url.Action("Index", "Branches", new {showEdit = true,editId = b.Id,search = Model.Search,
+                                                activeFilter = Model.ActiveFilter,page = Model.Branches.PageNumber})"
+                                        title="Edit @b.Name">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+
+                                <!-- Delete -->
+                                <button type="button"
+                                        class="btn btn-outline-danger btn-sm btn-delete-ajax"
+                                        data-url="@Url.Action("Delete","Branches", new {id = b.Id,search = Model.Search,
+                                                    activeFilter = Model.ActiveFilter,companyFilter = Model.CompanyFilter,
+                                                    page = Model.Branches.PageNumber})" title="Delete @b.Name">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+
+                                <!-- Detail -->
+                                <button type="button"
+                                        class="btn btn-outline-info btn-sm btn-detail-ajax"
+                                        data-detail-url="@Url.Action("DetailsFromIndex", "Branches", new {id = b.Id,search = Model.Search,
+                                                    activeFilter = Model.ActiveFilter,page = Model.Branches.PageNumber})"
+                                        title="Details for @b.Name">
+                                    <i class="bi bi-info-circle"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.Branches?.Any() == true)
+    {
+        <div class="d-flex justify-content-center my-3">
+            @Html.PagedListPager(Model.Branches, page => Url.Action("Index", new
+            {
+                page,
+                search = Model.Search,
+                activeFilter = Model.ActiveFilter,
+                companyFilter = Model.CompanyFilter
+            }),
+            new PagedListRenderOptions
+            {
+                UlElementClasses = new[] { "pagination" },
+                LiElementClasses = new[] { "page-item" }
+            })
+        </div>
+    }
+</div>
+
+<div id="branches-detail-container"></div>

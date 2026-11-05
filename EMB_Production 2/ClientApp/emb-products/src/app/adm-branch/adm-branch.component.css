@@ -1,0 +1,169 @@
+/* ====== General Layout ====== */
+.dashboard-card {
+  background-color: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #dee2e6;
+  transition: box-shadow 0.3s ease;
+}
+
+  .dashboard-card:hover {
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+  }
+
+.dashboard-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #198754, #28a745);
+  color: #fff;
+  padding: 0.6rem 1rem;
+  border-radius: 8px 8px 0 0;
+}
+
+  .dashboard-card-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  .dashboard-card-header .btn {
+    transition: all 0.2s ease;
+  }
+
+    .dashboard-card-header .btn:hover {
+      transform: scale(1.05);
+    }
+
+/* ====== Table Styles ====== */
+.table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.table td {
+  vertical-align: middle;
+  font-size: 0.88rem;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+.table .text-success {
+  font-weight: 600;
+  color: #198754 !important;
+}
+
+.table .text-danger {
+  font-weight: 600;
+  color: #dc3545 !important;
+}
+
+/* ====== Pagination ====== */
+.pagination .page-link {
+  color: #198754;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #198754;
+  border-color: #198754;
+  color: white;
+}
+
+.pagination .page-link:hover {
+  background-color: #e9f7ef;
+  color: #0b6b41;
+}
+
+/* ====== Buttons ====== */
+.btn-outline-info {
+  border-color: #0dcaf0;
+  color: #0dcaf0;
+}
+
+  .btn-outline-info:hover {
+    background-color: #0dcaf0;
+    color: white;
+  }
+
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* ====== Search Input ====== */
+.input-group .form-control:focus {
+  border-color: #198754;
+  box-shadow: 0 0 0 0.1rem rgba(25, 135, 84, 0.25);
+}
+
+/* ====== Modal Headers ====== */
+.modal-header {
+  border-bottom: none;
+}
+
+.modal-content {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.modal-body {
+  background-color: #f8f9fa;
+}
+
+/* ====== Form Styling ====== */
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.form-control,
+.form-select {
+  font-size: 0.85rem;
+}
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.1rem rgba(25, 135, 84, 0.25);
+  }
+
+textarea.form-control {
+  resize: none;
+}
+
+/* ====== Hover and Focus States ====== */
+.btn-success:hover,
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* ====== Delete Modal ====== */
+.modal-footer .btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+  .modal-footer .btn-danger:hover {
+    background-color: #b02a37;
+  }
+
+/* ====== Responsive Tweaks ====== */
+@media (max-width: 768px) {
+  .dashboard-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+    .dashboard-card-header .input-group {
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+}

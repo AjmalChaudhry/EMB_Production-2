@@ -1,0 +1,45 @@
+﻿@model EMB_Production.Models.Branches
+
+@{
+    // Pull values (so they're in scope for attributes)
+    var search = ViewBag.Search as string ?? "";
+    var activeFilter = ViewBag.ActiveFilter as string ?? "";
+    var page = ViewBag.Page as int? ?? 1;
+}
+
+<div class="modal fade" id="branchesDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            @* keep a token in the modal so $('input[name="__RequestVerificationToken"]') finds one *@
+            @Html.AntiForgeryToken()
+
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>@Model.Name</strong>?</p>
+                <!-- details... -->
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Cancel
+                </button>
+
+                <!-- Your JS reads data-id, data-search, data-activefilter, data-page -->
+                <button type="button"
+                        id="confirm-delete-btn"
+                        class="btn btn-danger"
+                        data-id="@(Model.Id)"
+                        data-search="@(search)"
+                        data-activefilter="@(activeFilter)"
+                        data-page="@(page)"
+                        data-bs-dismiss="modal">
+                    <i class="bi bi-trash-fill me-1"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

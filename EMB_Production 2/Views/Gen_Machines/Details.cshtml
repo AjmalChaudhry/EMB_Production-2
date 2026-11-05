@@ -1,0 +1,164 @@
+﻿@model EMB_Production.Models.Gen_Machines
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Machine Details";
+    var currentFilter = Request.QueryString["search"] ?? "";
+    var activeFilter = Request.QueryString["activeFilter"] ?? "";
+}
+
+<style>
+    /* Toolbar styling */
+    .toolbar-container {
+        background: #f5f7fa;
+        border-radius: 8px;
+        padding: 10px 15px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+        .toolbar-container .btn {
+            border-radius: 4px;
+        }
+
+    /* Detail card styling */
+    .detail-card {
+        background-color: #ffffff;
+        padding: 30px;
+        border-left: 5px solid #007bff;
+        border-radius: 8px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        margin-top: 10px;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.95rem;
+    }
+
+    .detail-value {
+        color: #34495e;
+        font-size: 1rem;
+    }
+
+    .details-header {
+        background: #007bff;
+        color: #ffffff;
+        padding: 12px;
+        border-radius: 6px 6px 0 0;
+        margin: -30px -30px 20px;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .action-links .btn {
+        min-width: 100px;
+    }
+    </style >
+<div class="detail-card">
+    <div class="details-header"> Machine Details</div>
+    <div class="toolbar-container d-flex justify-content-end">
+        <button type="button" onclick="location.reload()"
+                class="btn btn-outline-secondary btn-sm me-2">
+            <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        <button type="button" onclick="window.print()"
+                class="btn btn-outline-secondary btn-sm me-2">
+            <i class="bi bi-printer"></i>
+        </button>
+
+        <!-- DETAIL‐EXPORT Excel -->
+        <a href="@Url.Action("ExportMachinesToExcel","Gen_Machines", new { id = Model.Id })"
+           class="btn btn-success btn-sm me-2">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Excel
+        </a>
+        <a href="@Url.Action("ExportMachinesToPdf","Gen_Machines", new { id = Model.Id })"
+           class="btn btn-danger btn-sm">
+            <i class="bi bi-file-earmark-pdf"></i> PDF
+        </a>
+    </div>
+   
+    <div class="row gy-4">
+        @* scalar properties *@
+        @foreach (var prop in ViewData.ModelMetadata.Properties
+                       .Where(p => p.ShowForDisplay
+                                && p.PropertyName != nameof(Model.Id)
+                              && p.PropertyName != nameof(Model.Gen_Brands)
+                              && p.PropertyName != nameof(Model.Gen_TheServices)
+                              && p.PropertyName != nameof(Model.Gen_MachineParameters)))
+
+        {
+            <div class="col-md-3">
+                <div class="detail-label">@prop.GetDisplayName() </div>
+                <div class="detail-value">@prop.Model </div>
+            </div>
+        }
+        @* — Brand lookup — *@
+        <div class="col-md-3">
+            <div class="detail-label">Brand</div>
+            <div class="detail-value">
+                @(Model.Gen_Brands != null)
+                {
+                @Model.Gen_Brands.BrandName
+                }
+                else
+                {
+                (none)
+                }
+            </div>
+        </div>
+
+        @* — Linked Service lookup — *@
+        <div class="col-md-3">
+            <div class="detail-label">@Html.DisplayNameFor(m => m.Gen_TheServices.Service_Name)</div>
+            <div class="detail-value">
+                @(Model.Gen_TheServices != null ? Model.Gen_TheServices.Service_Name : "(none)")
+            </div>
+        </div>
+
+        @* — MachineParameters table (if any) — *@
+        @if (Model.Gen_MachineParameters?.Any() == true)
+        {
+            <div class="col-12">
+                <div class="detail-label mb-2">
+                    Machine Parameters (@Model.Gen_MachineParameters.Count)
+                </div>
+                <table class="table table-sm table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>@Html.DisplayNameFor(m => m.Gen_MachineParameters.First().HeadToHead)</th>
+                            <th>@Html.DisplayNameFor(m => m.Gen_MachineParameters.First().FrameHeight)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var param in Model.Gen_MachineParameters.OrderBy(p => p.Id))
+                        {
+                            <tr>
+                                <td>@param.HeadToHead</td>
+                                <td>
+                                    @(param.FrameHeight.HasValue
+                                               ? param.FrameHeight.Value.ToString("0.##")
+                                               : "(none)")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <div class="mt-4 d-flex justify-content-center">
+        @Html.ActionLink("Edit", "Index", new { showEdit = true, editId = Model.Id },
+                         new { @class = "btn btn-primary me-3" })
+        @Html.ActionLink("Back to List", "Index", "Gen_Machines",
+                     new { search = currentFilter, activeFilter = activeFilter },
+                     new { @class = "btn btn-outline-secondary" })
+    </div>
+</div>
+        @section Scripts {
+        <script >
+        $('.detail-value').hover( function() { $(this).addClass('bg-light rounded'); }, function() { $(this).removeClass('bg-light rounded'); } );
+        </script >
+}

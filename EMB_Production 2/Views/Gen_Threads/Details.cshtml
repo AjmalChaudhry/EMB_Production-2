@@ -1,0 +1,160 @@
+﻿@model EMB_Production.Models.Gen_Threads
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Thread Details";
+
+    var currentSearch = Request.QueryString["search"] ?? "";
+    var currentActive = Request.QueryString["activeFilter"] ?? "";
+}
+
+<style>
+    .toolbar-container {
+        background: #f5f7fa;
+        padding: .5rem;
+        border-radius: .25rem;
+        margin-bottom: 1rem;
+    }
+
+    .detail-card {
+        background: #fff;
+        border-left: 5px solid #007bff;
+        padding: 1.5rem;
+        border-radius: .5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .details-header {
+        background: #007bff;
+        color: #fff;
+        padding: .75rem 1rem;
+        margin: -1.5rem -1.5rem 1rem;
+        border-radius: .5rem .5rem 0 0;
+        font-size: 1.25rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .detail-value {
+        color: #34495e;
+    }
+</style>
+
+<div class="detail-card">
+    <div class="details-header">Thread Details</div>
+
+    <div class="toolbar-container d-flex justify-content-end gap-2">
+        @* reload / print / excel-detail / pdf-detail *@
+        <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+            <i class="bi bi-printer"></i>
+        </button>
+        <a class="btn btn-sm btn-success"
+           href="@Url.Action("ExportToExcel", "Gen_Threads",
+         new { id = Model.Id, search = currentSearch, activeFilter = currentActive })">
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+        </a>
+        <a class="btn btn-sm btn-danger"
+           href="@Url.Action("ExportToPdf", "Gen_Threads",
+         new { id = Model.Id, search = currentSearch, activeFilter = currentActive })">
+            <i class="bi bi-file-earmark-pdf"></i>
+        </a>
+    </div>
+
+    <div class="row gy-4">
+        <div class="col-md-3">
+            <div class="detail-label">Code</div>
+            <div class="detail-value">@Model.Code</div>
+        </div>
+        <div class="col-md-3">
+            <div class="detail-label">Name</div>
+            <div class="detail-value">@Model.Name</div>
+        </div>
+        <div class="col-md-3">
+            <div class="detail-label">Type</div>
+            <div class="detail-value">@Model.Type</div>
+        </div>
+        <div class="col-md-3">
+            <div class="detail-label">Material</div>
+            <div class="detail-value">@Model.Material</div>
+        </div>
+        <div class="col-md-3">
+            <div class="detail-label">Yarn Count</div>
+            <div class="detail-value">@Model.YarnCount</div>
+        </div>
+        <div class="col-md-3">
+            <div class="detail-label">Color</div>
+            <div class="detail-value">@Model.Color</div>
+        </div>
+        <div class="col-md-3">
+            <div class="detail-label">Color Code</div>
+            <div class="detail-value">@Model.ColorCode</div>
+        </div>
+        <div class="col-md-3">
+            <div class="detail-label">Unit Length</div>
+            <div class="detail-value">@Model.UnitLength</div>
+        </div>
+        <div class="col-md-3">
+            <div class="detail-label">Unit Of Measure</div>
+            <div class="detail-value">@Model.UnitOfMeasure</div>
+        </div>
+        <div class="col-md-3">
+            <div class="detail-label">Unit Cost</div>
+            <div class="detail-value">@Model.UnitCost</div>
+        </div>
+        <div class="col-md-3">
+            <div class="detail-label">Supplier ID</div>
+            <div class="detail-value">@Model.SupplierId</div>
+        </div>
+        <div class="col-md-3">
+            <div class="detail-label">Branch</div>
+                <div class="detail-value">
+                    @(Model.Branches != null? Model.Branches.Name: "(none)")
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Active</div>
+                <div class="detail-value">@((Model.Active ?? false) ? "Yes" : "No")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Deleted</div>
+                <div class="detail-value">@((Model.Deleted ?? false) ? "Yes" : "No")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Created By</div>
+                <div class="detail-value">@Model.CreatedBy</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Created Date</div>
+                <div class="detail-value">@(Model.CreatedDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "(none)")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Updated By</div>
+                <div class="detail-value">@Model.UpdatedBy</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Updated Date</div>
+                <div class="detail-value">@(Model.UpdatedDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "(none)")</div>
+            </div>
+        </div>
+
+    <div class="mt-4 d-flex justify-content-center gap-3">
+        @Html.ActionLink("Back to List", "Index", null, new { @class = "btn btn-outline-secondary btn-sm" })
+        @Html.ActionLink("Edit", "Edit", new { id = Model.Id }, new { @class = "btn btn-primary btn-sm" })
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('.detail-value').hover(
+                () => $(this).addClass('bg-light rounded'),
+                () => $(this).removeClass('bg-light rounded')
+            );
+        });
+    </script>
+}

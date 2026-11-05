@@ -1,0 +1,190 @@
+﻿@model EMB_Production.Models.Gen_Brands
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Brand Details";
+    var currentFilter = Request.QueryString["searchString"] ?? "";
+    var activeFilter = Request.QueryString["activeFilter"] ?? "";
+}
+
+<style>
+    .detail-card {
+        background: #fff;
+        border-left: 5px solid #007bff;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        margin-top: 1.5rem;
+    }
+
+    .details-header {
+        font-size: 1.25rem;
+        font-weight: 600;
+        background: #007bff;
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 6px 6px 0 0;
+        margin: -1.5rem -1.5rem 1rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: .95rem;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        color: #34495e;
+    }
+
+    .toolbar-container .btn {
+        margin-left: .5rem;
+    }
+    /* Tables inside the card */
+    .detail-card .table {
+        margin-bottom: 0;
+    }
+
+        .detail-card .table thead {
+            background: #f0f4f8;
+        }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="detail-card">
+        <div class="details-header">Brand Details</div>
+        <!-- toolbar -->
+        <div class="d-flex justify-content-end mb-3 toolbar-container">
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                <i class="bi bi-printer"></i>
+            </button>
+            <a class="btn btn-success btn-sm"
+               href="@Url.Action("ExportDetailToExcel","Gen_Brands", new { id = Model.Id })"
+               title="Export Excel">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+            </a>
+            <a class="btn btn-danger btn-sm"
+               href="@Url.Action("ExportDetailToPdf","Gen_Brands", new { id = Model.Id })"
+               title="Export PDF">
+                <i class="bi bi-file-earmark-pdf"></i>
+            </a>
+        </div>
+        <div class="row gy-4">
+            <!-- Branch -->
+            <div class="col-md-3">
+                <div class="detail-label">Branch</div>
+                <div class="detail-value">
+                    @(Model.Branches?.Name ?? "(none)")
+                </div>
+            </div>
+
+            <!-- All other scalar props -->
+            @foreach (var p in ViewData.ModelMetadata.Properties
+                        .Where(x => x.ShowForDisplay
+                                 && x.PropertyName != "Id"
+                                 && x.PropertyName != "Gen_Catagories"
+                                 && x.PropertyName != "Gen_Machines"
+                                 && x.PropertyName != "Branches"))
+            {
+                <div class="col-md-3">
+                    <div class="detail-label">@p.GetDisplayName()</div>
+                    <div class="detail-value">
+                        @{
+                            var v = p.Model;
+                            if (v is DateTime dt)
+                            {
+                                @dt.ToString("yyyy-MM-dd HH:mm:ss")
+                            }
+                            else
+                            {
+                                @(v ?? "(none)")
+                            }
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Categories table -->
+            <div class="col-3">
+                <div class="detail-label">Categories (@Model.Gen_Catagories.Count)</div>
+                <div class="table-responsive detail-value p-0">
+                    @if (Model.Gen_Catagories.Any())
+                    {
+                        <table class="table table-sm table-striped mb-0">
+                            <thead>
+                                <tr><th>ID</th><th>Name</th><th>Code</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var c in Model.Gen_Catagories.OrderBy(c => c.Id))
+                                {
+                                    <tr>
+                                        <td class="align-middle">@c.Id</td>
+                                        <td class="align-middle">@c.Name</td>
+                                        <td class="align-middle">@c.Code</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <em>(no categories)</em>
+                    }
+                </div>
+            </div>
+
+            <!-- Machines table -->
+            <div class="col-2">
+                <div class="detail-label">Machines (@Model.Gen_Machines.Count)</div>
+                <div class="table-responsive detail-value p-0">
+                    @if (Model.Gen_Machines.Any())
+                    {
+                        <table class="table table-sm table-striped mb-0">
+                            <thead>
+                                <tr><th>ID</th><th>Code</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var m in Model.Gen_Machines.OrderBy(m => m.Id))
+                                {
+                                    <tr>
+                                        <td class="align-middle">@m.Id</td>
+                                        <td class="align-middle">@m.Code</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <em>(no machines)</em>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 text-center">
+            <a class="btn btn-primary btn-custom me-2"
+               href="@Url.Action("Index","Gen_Brands", new { showEdit=true, editId=Model.Id })">
+                Edit
+            </a>
+            <a class="btn btn-secondary btn-custom"
+               href="@Url.Action("Index","Gen_Brands")">
+                Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('.detail-value').hover(
+                function () { $(this).addClass('bg-light rounded'); },
+                function () { $(this).removeClass('bg-light rounded'); }
+            );
+        });
+    </script>
+}

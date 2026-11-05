@@ -1,0 +1,54 @@
+.component-card {
+  background: #fdfdfd;
+  transition: background 0.15s;
+}
+
+.component-card:hover {
+  background: #f6f8fa;
+}
+
+/* Spec tile — one mini stat per column */
+.spec {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 4px;
+  background: #f1f5fb;
+  border: 1px solid #e0e6ee;
+  border-radius: 6px;
+  min-width: 70px;
+}
+
+.spec-num {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1f3a8a;
+  line-height: 1.1;
+}
+
+.spec-lbl {
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin-top: 2px;
+  letter-spacing: 0.3px;
+}
+
+/* Push modal content below the 60px fixed topbar.
+   Use padding on the .modal (full-screen container) so it works for
+   both regular dialogs and modal-dialog-scrollable (which overrides
+   margin via its own height-calc rules). */
+.profile-modal {
+  padding-top: 60px !important;
+}
+.profile-modal .profile-modal-dialog {
+  margin-top: 20px;
+}
+/* modal-dialog-scrollable shortens itself to (100% - 3.5rem); shorten
+   it further so its 60px top offset is honoured */
+.profile-modal .modal-dialog-scrollable {
+  max-height: calc(100vh - 100px);
+}
+.profile-modal .modal-dialog-scrollable .modal-content {
+  max-height: calc(100vh - 100px);
+}

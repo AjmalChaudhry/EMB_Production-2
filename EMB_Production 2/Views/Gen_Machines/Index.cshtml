@@ -1,0 +1,459 @@
+﻿@model EMB_Production.ViewModels.MachinesPageViewModel
+@using PagedList.Mvc
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Machines";
+    string currentFilter = Model.Search ?? "";
+    string activeFilter = Model.ActiveFilter ?? "";
+    bool showCreate = Model.ShowCreate;
+    bool showEdit = Model.ShowEdit;
+    int? editId = Model.EditId;
+}
+
+<div class="container-fluid py-4">
+    <!-- TOP TOOLBAR -->
+    <div class="d-flex align-items-center justify-content-between mb-3 bg-info text-white p-3 rounded">
+        <h2 class="mb-0">Machines</h2>
+        <div class="d-flex align-items-center">
+            @* Add New / Modify button *@
+            @if (showEdit)
+            {
+                <a class="btn btn-warning btn-sm me-3"
+                   href="@Url.Action("Index","Gen_Machines", new { showEdit = false, search = currentFilter, activeFilter })">
+                    <i class="bi bi-pencil-fill me-1"></i> Modify
+                </a>
+            }
+            else
+            {
+                <a class="btn @(showCreate ? "btn-secondary" : "btn-success") btn-sm me-3"
+                   href="@Url.Action("Index","Gen_Machines", new { showCreate = !showCreate, search = currentFilter, activeFilter })">
+                    <i class="bi @(showCreate ? "bi-x-lg" : "bi-plus-lg") me-1"></i>
+                    @(showCreate ? "Close" : "Add New")
+                </a>
+            }
+
+            @* Search / Reset / Reload / Print / Export *@
+            @using (Html.BeginForm("Index", "Gen_Machines", FormMethod.Get, new { @class = "d-flex align-items-center" }))
+            {
+                <input name="search" value="@currentFilter"
+                       class="form-control form-control-sm me-2" style="width:160px"
+                       placeholder="Search…" />
+                <select name="activeFilter" class="form-select form-select-sm me-2" style="width:120px;">
+                    <option value="">All</option>
+                    <option value="Yes" @(activeFilter == "Yes" ? "selected" : "")>Active</option>
+                    <option value="No" @(activeFilter == "No" ? "selected" : "")>Inactive</option>
+                </select>
+                <button type="submit" class="btn btn-outline-light btn-sm me-2"><i class="bi bi-search"></i></button>
+                <a href="@Url.Action("Index","Gen_Machines")" class="btn btn-outline-light btn-sm me-2"><i class="bi bi-x-circle"></i></a>
+                <button type="button" onclick="location.reload()" class="btn btn-outline-light btn-sm me-2"><i class="bi bi-arrow-clockwise"></i></button>
+                <button type="button" onclick="window.print()" class="btn btn-outline-light btn-sm me-2"><i class="bi bi-printer"></i></button>
+                <a href="@Url.Action("ExportMachinesToExcel","Gen_Machines", new { search=currentFilter, activeFilter })"
+                   class="btn btn-light btn-sm me-2" title="Excel"><i class="bi bi-file-earmark-spreadsheet text-success"></i></a>
+                <a href="@Url.Action("ExportMachinesToPdf","Gen_Machines", new { search=currentFilter, activeFilter })"
+                   class="btn btn-light btn-sm" title="PDF"><i class="bi bi-file-earmark-pdf text-danger"></i></a>
+            }
+        </div>
+    </div>
+
+    <!-- INLINE CREATE -->
+    @if (showCreate)
+    {
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                @using (Html.BeginForm("CreateFromIndex", "Gen_Machines", FormMethod.Post, new { @class = "d-flex flex-column gap-4" }))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <!-- ROW 1 -->
+                    <div class="d-flex flex-nowrap overflow-auto align-items-start gap-3">
+                        <!-- Code -->
+                        <div style="flex:0 0 100px;">
+                            @Html.LabelFor(m => m.NewMachine.Code)
+                            @Html.TextBoxFor(m => m.NewMachine.Code,
+                              new { @class = "form-control form-control-sm text-center" })
+                        </div>
+
+                        <!-- Brand -->
+                        <div style="flex:0 0 120px;">
+                            @Html.Label("Brand")
+                            @Html.DropDownListFor(m => m.NewMachine.BrandId,
+                              (SelectList)ViewBag.BrandList, "-- select --",
+                              new { @class = "form-select form-select-sm" })
+                        </div>
+
+                        <!-- Service -->
+                        <div style="flex:0 0 120px;">
+                            @Html.Label("Service")
+                            @Html.DropDownListFor(m => m.NewMachine.ServiceId,
+                              (SelectList)ViewBag.ServiceList, "-- select --",
+                              new { @class = "form-select form-select-sm" })
+                        </div>
+
+                        <!-- Head‐to‐Head -->
+                        <div style="flex:0 0 120px;">
+                            @Html.LabelFor(m => m.NewMachine.HeadtoHead)
+                            @Html.TextBoxFor(m => m.NewMachine.HeadtoHead,
+                              new { @class = "form-control form-control-sm text-center" })
+                        </div>
+
+                        <!-- Frame Height -->
+                        <div style="flex:0 0 120px;">
+                            @Html.LabelFor(m => m.NewMachine.FrameHeight)
+                            @Html.TextBoxFor(m => m.NewMachine.FrameHeight,
+                              new
+                                   {
+                                @class = "form-control form-control-sm text-center",
+                                type = "number",
+                                       step = "0.1"
+                              })
+                        </div>
+
+                        <!-- Heads Num -->
+                        <div style="flex:0 0 120px;">
+                            @Html.LabelFor(m => m.NewMachine.HeadsNum)
+                            @Html.TextBoxFor(m => m.NewMachine.HeadsNum,
+                              new { @class = "form-control form-control-sm text-center", type = "number" })
+                        </div>
+
+                        <!-- Needles Num -->
+                        <div style="flex:0 0 120px;">
+                            @Html.LabelFor(m => m.NewMachine.NeedlesNum)
+                            @Html.TextBoxFor(m => m.NewMachine.NeedlesNum,
+                              new { @class = "form-control form-control-sm text-center", type = "number" })
+                        </div>
+
+                        <!-- Branch -->
+                        <div style="flex:0 0 120px;">
+                            @Html.LabelFor(m => m.NewMachine.BranchId)
+                            @Html.DropDownListFor(m => m.NewMachine.BranchId,
+                              (SelectList)ViewBag.BranchList, "-- select --",
+                              new { @class = "form-select form-select-sm" })
+                            @Html.ValidationMessageFor(m => m.NewMachine.BranchId,
+                              "", new { @class = "text-danger small" })
+                        </div>
+                        <!-- Serial Number -->
+                        <div style="flex:0 0 120px;">
+                            @Html.LabelFor(m => m.NewMachine.Serial_Number)
+                            @Html.TextBoxFor(m => m.NewMachine.Serial_Number,
+                              new { @class = "form-control form-control-sm text-center" })
+                        </div>
+                    </div>
+
+                    <!-- ROW 2 -->
+                    <div class="d-flex flex-nowrap overflow-auto align-items-start gap-3">
+
+                        <!-- Calling Number -->
+                        <div style="flex:0 0 150px;">
+                            @Html.LabelFor(m => m.NewMachine.Calling_Number)
+                            @Html.TextBoxFor(m => m.NewMachine.Calling_Number,
+                              new { @class = "form-control form-control-sm text-center" })
+                        </div>
+
+                        <!-- Purchase Date -->
+                        <div style="flex:0 0 140px;">
+                            @Html.LabelFor(m => m.NewMachine.PurchaseDate)
+                            @Html.TextBoxFor(m => m.NewMachine.PurchaseDate, "{0:yyyy-MM-dd}",
+                              new { @class = "form-control form-control-sm", type = "date" })
+                        </div>
+
+                        <!-- Warranty -->
+                        <div style="flex:0 0 120px;">
+                            @Html.LabelFor(m => m.NewMachine.Warranty)
+                            @Html.TextBoxFor(m => m.NewMachine.Warranty,
+                              new { @class = "form-control form-control-sm text-center" })
+                        </div>
+
+                        <!-- Service End -->
+                        <div style="flex:0 0 140px;">
+                            @Html.LabelFor(m => m.NewMachine.ServiceEnd)
+                            @Html.TextBoxFor(m => m.NewMachine.ServiceEnd, "{0:yyyy-MM-dd}",
+                              new { @class = "form-control form-control-sm", type = "date" })
+                        </div>
+
+                        <!-- Service Next -->
+                        <div style="flex:0 0 140px;">
+                            @Html.LabelFor(m => m.NewMachine.ServiceNext)
+                            @Html.TextBoxFor(m => m.NewMachine.ServiceNext, "{0:yyyy-MM-dd}",
+                              new { @class = "form-control form-control-sm", type = "date" })
+                        </div>
+
+                        <!-- Active / Deleted switches -->
+                        <div class="form-check form-switch" style="flex:0 0 110px;">
+                            @Html.CheckBox("NewMachine.Active",
+                              Model.NewMachine.Active ?? false,
+                              new { @class = "form-check-input", id = "NewMachine_Active" })
+                            <label class="form-check-label" for="NewMachine_Active">
+                                Active
+                            </label>
+                        </div>
+                        <div class="form-check form-switch" style="flex:0 0 100px;">
+                            @Html.CheckBox("NewMachine.Deleted",
+                              Model.NewMachine.Deleted ?? false,
+                              new { @class = "form-check-input", id = "NewMachine_Deleted" })
+                            <label class="form-check-label" for="NewMachine_Deleted">
+                                Deleted
+                            </label>
+                        </div>
+
+                        <!-- ACTIONS -->
+                        <button type="submit" class="btn btn-success btn-sm me-1">
+                            <i class="bi bi-save me-2"></i> Save
+                        </button>
+                        <a href="@Url.Action("Index","Gen_Machines",
+                             new { showCreate = false, search = currentFilter, activeFilter = activeFilter })"
+                           class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+
+    <!-- INLINE EDIT -->
+   @if (showEdit && editId.HasValue)
+       {
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+               @using (Html.BeginForm(
+                             "EditFromIndex",
+                             "Gen_Machines",
+                             new { id = Model.EditMachine.Id, search = currentFilter, activeFilter },
+                             FormMethod.Post,
+                             new { @class = "d-flex flex-column gap-4" }))
+                {
+                        @Html.AntiForgeryToken()
+                        @Html.HiddenFor(m => m.EditMachine.Id)
+                    <div class="d-flex flex-nowrap overflow-auto align-items-start gap-3">
+
+                        <!-- Code -->
+                        <div style="flex:0 0 100px;">
+                            @Html.LabelFor(m => m.EditMachine.Code)
+                            @Html.TextBoxFor(m => m.EditMachine.Code, new { @class = "form-control form-control-sm text-center" })
+                        </div>
+
+                        <!-- Brand -->
+                        <div style="flex:0 0 120px;">
+                            @Html.Label("Brand")
+                            @Html.DropDownListFor(
+                                m => m.EditMachine.BrandId,
+                                (SelectList)ViewBag.BrandList,
+                                "-- select --",
+                                new { @class = "form-select form-select-sm" })
+                        </div>
+
+                        <!-- Service -->
+                        <div style="flex:0 0 120px;">
+                            @Html.Label("Service")
+                            @Html.DropDownListFor(
+                                m => m.EditMachine.ServiceId,
+                                (SelectList)ViewBag.ServiceList,
+                                "-- select --",
+                                new { @class = "form-select form-select-sm" })
+                        </div>
+
+                        <!-- HeadToHead -->
+                        <div style="flex:0 0 120px;">
+                            @Html.LabelFor(m => m.EditMachine.HeadtoHead)
+                            @Html.TextBoxFor(m => m.EditMachine.HeadtoHead, new { @class = "form-control form-control-sm text-center" })
+                        </div>
+
+                        <!-- FrameHeight -->
+                        <div style="flex:0 0 120px;">
+                            @Html.LabelFor(m => m.EditMachine.FrameHeight)
+                            @Html.TextBoxFor(m => m.EditMachine.FrameHeight, new { @class = "form-control form-control-sm text-center", type = "number", step = "0.1" })
+                        </div>
+
+                        <!-- HeadsNum -->
+                        <div style="flex:0 0 120px;">
+                            @Html.LabelFor(m => m.EditMachine.HeadsNum)
+                            @Html.TextBoxFor(m => m.EditMachine.HeadsNum, new { @class = "form-control form-control-sm text-center", type = "number" })
+                        </div>
+
+                        <!-- NeedlesNum -->
+                        <div style="flex:0 0 120px;">
+                            @Html.LabelFor(m => m.EditMachine.NeedlesNum)
+                            @Html.TextBoxFor(m => m.EditMachine.NeedlesNum, new { @class = "form-control form-control-sm text-center", type = "number" })
+                        </div>
+
+                        <!-- Serial # -->
+                        <div style="flex:0 0 120px;">
+                            @Html.LabelFor(m => m.EditMachine.Serial_Number)
+                            @Html.TextBoxFor(m => m.EditMachine.Serial_Number, new { @class = "form-control form-control-sm text-center" })
+                        </div>
+                        <!-- Calling # -->
+                        <div style="flex:0 0 120px;">
+                            @Html.LabelFor(m => m.EditMachine.Calling_Number)
+                            @Html.TextBoxFor(m => m.EditMachine.Calling_Number, new { @class = "form-control form-control-sm text-center" })
+                        </div>
+                    </div>
+                    <div class="d-flex flex-nowrap overflow-auto align-items-start gap-3">
+                                               
+                        <!-- PurchaseDate -->
+                        <div style="flex:0 0 140px;">
+                            @Html.LabelFor(m => m.EditMachine.PurchaseDate)
+                            @Html.TextBoxFor(m => m.EditMachine.PurchaseDate, "{0:yyyy-MM-dd}", new { @class = "form-control form-control-sm", type = "date" })
+                        </div>
+
+                        <!-- Warranty -->
+                        <div style="flex:0 0 140px;">
+                            @Html.LabelFor(m => m.EditMachine.Warranty)
+                            @Html.TextBoxFor(m => m.EditMachine.Warranty, new { @class = "form-control form-control-sm text-center" })
+                        </div>
+
+                        <!-- ServiceEnd -->
+                        <div style="flex:0 0 140px;">
+                            @Html.LabelFor(m => m.EditMachine.ServiceEnd)
+                            @Html.TextBoxFor(m => m.EditMachine.ServiceEnd, "{0:yyyy-MM-dd}", new { @class = "form-control form-control-sm", type = "date" })
+                        </div>
+
+                        <!-- ServiceNext -->
+                        <div style="flex:0 0 140px;">
+                            @Html.LabelFor(m => m.EditMachine.ServiceNext)
+                            @Html.TextBoxFor(m => m.EditMachine.ServiceNext, "{0:yyyy-MM-dd}", new { @class = "form-control form-control-sm", type = "date" })
+                        </div>
+
+                        <!-- Branch -->
+                        <div style="flex:0 0 140px;">
+                            @Html.Label("Branch")
+                            @Html.DropDownListFor(
+                                m => m.EditMachine.BranchId,
+                                (SelectList)ViewBag.BranchList,
+                                "-- select branch --",
+                                new { @class = "form-select form-select-sm" })
+                        </div>
+
+                        <!-- Active switch -->
+                        <div style="flex:0 0 100px;">
+                            <label class="form-label mb-1">@Html.DisplayNameFor(m => m.EditMachine.Active)</label>
+                            <div class="form-check form-switch">
+                                @Html.CheckBox(
+                                    "EditMachine.Active",
+                                    Model.EditMachine.Active ?? false,
+                                    new { @class = "form-check-input", id = "EditMachine_Active" })
+                            </div>
+                        </div>
+
+                        <!-- Deleted switch -->
+                        <div style="flex:0 0 100px;">
+                            <label class="form-label mb-1">@Html.DisplayNameFor(m => m.EditMachine.Deleted)</label>
+                            <div class="form-check form-switch">
+                                @Html.CheckBox(
+                                    "EditMachine.Deleted",
+                                    Model.EditMachine.Deleted ?? false,
+                                    new { @class = "form-check-input", id = "EditMachine_Deleted" })
+                            </div>
+                        </div>
+
+                        <!-- Save / Cancel -->
+
+                        <button type="submit" class="btn btn-success btn-sm me-1">
+                            <i class="bi bi-save me-1"></i> Save
+                        </button>
+                        <a href="@Url.Action("Index","Gen_Machines", new { showEdit = false, search = currentFilter, activeFilter })"
+                           class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </a>
+                    </div>
+                   
+                 }
+            </div>                   
+        </div>
+    }
+
+
+    <!-- DATA GRID -->
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-striped table-hover mb-0">
+            <thead class="table-info">
+                <tr>
+                    <th>Code</th>
+                    <th>Brand</th>
+                    <th>Servics</th>
+                    <th>H2H</th>
+                    <th>F Ht</th>
+                    <th>Heads</th>
+                    <th>Needles</th>
+                    <th>Serial #</th>
+                    <th>Call #</th>
+                    <th>Purchased</th>
+                    <th>Wty</th>
+                    <th>Svc End</th>
+                    <th>Next Svc</th>
+                    <th>Br</th>
+                    <th class="text-center">Act</th>
+                    <th class="text-center">Del</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in Model.Machines)
+                {
+                    <tr>
+                        <td>@m.Code</td>
+                        <td>@(m.Gen_Brands?.Code ?? "—")</td>
+                        <td>@(m.Gen_TheServices?.Service_Name ?? "—")</td>
+                        <td>@m.HeadtoHead</td>
+                        <td>@m.FrameHeight</td>
+                        <td>@m.HeadsNum</td>
+                        <td>@m.NeedlesNum</td>
+                        <td>@m.Serial_Number</td>
+                        <td>@m.Calling_Number</td>
+                        <td>@( (m.PurchaseDate?.ToString("d")) ?? "—" )</td>
+                        <td>@m.Warranty</td>
+                        <td>@( (m.ServiceEnd?.ToString("d"))   ?? "" )</td>
+                        <td>@( (m.ServiceNext?.ToString("d"))  ?? "" )</td>
+                        <td>@m.BranchId</td>
+                        <td class="text-center">
+                            <span class="badge @(m.Active == true ? "bg-success" : "bg-secondary")">
+                                @(m.Active == true ? "Yes" : "No")
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge @(m.Deleted == true ? "bg-success" : "bg-secondary")">
+                                @(m.Deleted == true ? "Yes" : "No")
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <a class="btn btn-sm btn-outline-primary"
+                               href="@Url.Action("Index","Gen_Machines", new { showEdit=true, editId=m.Id })">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a class="btn btn-sm btn-outline-info"
+                               href="@Url.Action("Details","Gen_Machines", new { id=m.Id })">
+                                <i class="bi bi-info-circle"></i>
+                            </a>
+                            <a class="btn btn-sm btn-outline-danger"
+                               href="@Url.Action("Delete","Gen_Machines", new { id=m.Id })">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+
+        </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="d-flex justify-content-center mt-3">
+        @Html.PagedListPager(
+            Model.Machines,
+            page => Url.Action("Index", new { page, search = currentFilter, activeFilter }),
+            new PagedListRenderOptions { UlElementClasses = new[] { "pagination" }, LiElementClasses = new[] { "page-item" } }
+        )
+    </div>
+</div>
+
+    @section Scripts {
+        <script>
+            $(function () {
+                // highlight rows on hover
+                $('table.table-hover tbody tr').hover(
+                    function () { $(this).addClass('table-active'); },
+                    function () { $(this).removeClass('table-active'); }
+                );
+            });
+        </script>
+    }

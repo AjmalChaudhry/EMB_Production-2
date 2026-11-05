@@ -1,0 +1,68 @@
+HOW TO PASTE THESE REPORTS INTO MICROSOFT WORD
+A quick formatting guide
+
+The three text files in this folder are designed for clean copy-paste into Microsoft Word. They use plain text only, no Markdown symbols, and tab characters between table columns so that Word can convert them into proper tables.
+
+Files in this folder
+1. 01_Session_Fix_Report.txt
+2. 02_Workflow_and_Architecture.txt
+3. 03_Development_Progress_Report.txt
+
+
+STEP-BY-STEP PROCEDURE
+
+Step 1 - Open the file
+Open the .txt file in Notepad or in VS Code. Press Ctrl + A to select all, then Ctrl + C to copy.
+
+Step 2 - Paste into Word
+In Microsoft Word, create a new blank document. Press Ctrl + V. Word will paste the entire report as plain text.
+
+Step 3 - Apply the title style
+Click anywhere on the very first line (the all-caps title). On the Home ribbon, click the "Title" style in the Styles gallery. The title will become large and centered.
+
+Step 4 - Apply heading styles
+For each numbered section heading (lines like "1. SYSTEM AT A GLANCE"), click the line and apply the "Heading 1" style from the Styles gallery.
+
+For sub-sections (lines like "11.1 Backend"), apply the "Heading 2" style.
+
+Tip: select multiple headings at once with Ctrl + Click, then apply a style once.
+
+Step 5 - Convert the tables
+Each table in these files is written as tab-separated text. The header row is the first line of the table. To turn a table block into a real Word table:
+
+a. Select all the lines that make up one table (the header row plus the data rows underneath it).
+b. On the Insert ribbon, click Table, then click "Convert Text to Table..."
+c. In the dialog that opens, ensure "Separate text at:" is set to "Tabs".
+d. Click OK.
+
+Word will produce a proper table. You can then apply any built-in Table Style from the Table Design ribbon (for example "Grid Table 4 - Accent 1").
+
+Step 6 - Format the body text
+Select the entire document with Ctrl + A. Set the font to Calibri 11pt (or any preferred body font). This gives the document a consistent, professional look.
+
+Step 7 - Add page numbers and headers (optional)
+On the Insert ribbon, click "Page Number" and choose a position. Add a header with the project name "EMB Production 2" if useful.
+
+Step 8 - Save
+Save as Word Document (.docx).
+
+
+SUGGESTED STYLE PALETTE FOR PROFESSIONAL APPEARANCE
+
+Element	Style
+Title	Calibri Light 28pt, navy blue, centered
+Heading 1	Calibri 16pt, bold, dark blue, with a thin bottom border
+Heading 2	Calibri 13pt, bold, medium blue
+Body text	Calibri 11pt, black, 1.15 line spacing
+Tables	"Grid Table 4 - Accent 1" or "Grid Table 5 - Dark Accent 1"
+Page margins	Normal (1 inch all sides)
+
+
+TIPS
+
+- If a table column appears misaligned in plain text, that is expected. Word's "Convert Text to Table" reads the tab characters, not the visual alignment, so the final table will look clean even if the text version did not.
+- Use the Navigation Pane (View ribbon, then Navigation Pane) to see all your headings as a clickable outline. This makes it easy to verify that every section is correctly styled.
+- For a polished cover page, on the Insert ribbon click "Cover Page" and choose a built-in design. Move the title from the first paragraph into the cover page placeholder.
+
+
+END OF GUIDE

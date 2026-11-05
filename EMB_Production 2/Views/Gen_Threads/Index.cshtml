@@ -1,0 +1,368 @@
+﻿@model EMB_Production.ViewModels.ThreadsPageViewModel
+@using PagedList.Mvc
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var cf = Model.Search ?? "";
+    var af = Model.ActiveFilter ?? "";
+    var showCreate = Model.ShowCreate;
+    var showEdit = Model.ShowEdit;
+    var editId = Model.EditId;
+}
+
+<style>
+    .inline-form .form-label {
+        font-size: 0.75rem;
+    }
+
+    .inline-form .form-control,
+    .inline-form .form-select {
+        width: 80%;
+    }
+
+    .small-input-sm {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+        text-align: center;
+    }
+   
+    .grid-cell-number {
+        text-align: right;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- TOOLBAR -->
+    <div class="d-flex align-items-center mb-4 p-3 bg-primary text-white rounded shadow-sm">
+        <h2 class="mb-0 me-auto">Threads</h2>
+
+        @* Add / Modify *@
+        @if (showEdit)
+        {
+            <a href="@Url.Action("Index","Gen_Threads", new { showEdit = false, search = cf, activeFilter = af })"
+               class="btn btn-warning btn-sm me-3">
+                <i class="bi bi-pencil-fill me-1"></i>Modify
+            </a>
+        }
+        else
+        {
+            <a href="@Url.Action("Index","Gen_Threads", new { showCreate = !showCreate, search = cf, activeFilter = af })"
+               class="btn @(showCreate ? "btn-secondary" : "btn-success") btn-sm me-3">
+                <i class="bi @(showCreate ? "bi-x-lg" : "bi-plus-lg") me-1"></i>
+                @(showCreate ? "Close" : "Add New")
+            </a>
+        }
+
+        @* Filter / actions *@
+        @using (Html.BeginForm("Index", "Gen_Threads", FormMethod.Get, new { @class = "d-flex align-items-center" }))
+        {
+            <div class="input-group input-group-sm me-2" style="width:180px;">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input name="search" value="@cf" class="form-control" placeholder="Search…" />
+            </div>
+            <select name="activeFilter" class="form-select form-select-sm me-2" style="width:120px;">
+                <option value="">All</option>
+                <option value="Yes" @(af == "Yes" ? "selected" : "")>Active</option>
+                <option value="No" @(af == "No" ? "selected" : "")>Inactive</option>
+            </select>
+            <button type="submit" class="btn btn-light btn-sm me-2" title="Filter"><i class="bi bi-funnel-fill"></i></button>
+            <button type="button" onclick="location.reload()" class="btn btn-light btn-sm me-2" title="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
+            <button type="button" onclick="window.print()" class="btn btn-light btn-sm me-2" title="Print"><i class="bi bi-printer"></i></button>
+            <a href="@Url.Action("ExportToExcel","Gen_Threads", new { search = cf, activeFilter = af })"
+               class="btn btn-light btn-sm me-2" title="Excel"><i class="bi bi-file-earmark-spreadsheet text-success"></i></a>
+            <a href="@Url.Action("ExportToPdf","Gen_Threads",   new { search = cf, activeFilter = af })"
+               class="btn btn-light btn-sm" title="PDF"><i class="bi bi-file-earmark-pdf text-danger"></i></a>
+        }
+    </div>
+   @if (Model.ShowCreate)
+    {
+        <div class="card mb-4 shadow-sm inline-form">
+            <div class="card-header bg-success text-white small">Add New Thread</div>
+            <div class="card-body">
+               @using (Html.BeginForm("CreateFromIndex", "Gen_Threads", FormMethod.Post, new { @class = "d-flex flex-wrap" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <div class="col-1">
+                        @Html.LabelFor(m => m.NewThread.Code)
+                        @Html.TextBoxFor(m => m.NewThread.Code, new { @class = "form-control form-control-sm text-center" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.NewThread.Name)
+                        @Html.TextBoxFor(m => m.NewThread.Name, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-1">
+                        @Html.LabelFor(m => m.NewThread.Type)
+                        @Html.TextBoxFor(m => m.NewThread.Type, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-1">
+                        @Html.LabelFor(m => m.NewThread.Material)
+                        @Html.TextBoxFor(m => m.NewThread.Material, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-1">
+                        @Html.LabelFor(m => m.NewThread.YarnCount)
+                        @Html.TextBoxFor(m => m.NewThread.YarnCount, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-1">
+                        @Html.LabelFor(m => m.NewThread.Color)
+                        @Html.TextBoxFor(m => m.NewThread.Color, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-1">
+                        @Html.LabelFor(m => m.NewThread.ColorCode)
+                        @Html.TextBoxFor(m => m.NewThread.ColorCode, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-1">
+                        <label class="small mb-0">Unit Length</label>
+                        @Html.TextBoxFor(m => m.NewThread.UnitLength,
+                          new
+                              {
+                            @class = "form-control form-control-sm small-input-sm small-input",
+                            type = "number",
+                            step = "0.1",
+                            value = Model.NewThread.UnitLength.HasValue
+                                        ? Model.NewThread.UnitLength.Value.ToString("F1")
+                                        : ""
+                          })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.NewThread.UnitOfMeasure)
+                        @Html.TextBoxFor(m => m.NewThread.UnitOfMeasure, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-2">
+                        <label class="small mb-0">Unit Cost</label>
+                        @Html.TextBoxFor(m => m.NewThread.UnitCost, "{0:F2}", new { @class = "form-control form-control-sm text-center", type = "number", step = "0.01" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.NewThread.SupplierId)
+                        @Html.TextBoxFor(m => m.NewThread.SupplierId, new { @class = "form-control form-control-sm text-center" })
+                    </div>
+                    <div class="col-2">
+                        @Html.Label("Branch")
+                        @Html.DropDownListFor(m => m.NewThread.BranchId, Model.BranchList, "– select –", new { @class = "form-select form-select-sm" })
+                    </div>
+
+                    <div class="row g-2 mt-3 align-items-center">
+                        <div class="col-2">
+                            <div class="form-check form-switch">
+                                @Html.CheckBox("NewThread.Active", Model.NewThread.Active ?? false, new { @class = "form-check-input", id = "newAct", style = "transform: scale(1.5);" })
+                                <label class="form-check-label small ms-3" for="newAct">Active</label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-check form-switch">
+                                @Html.CheckBox("NewThread.Deleted", Model.NewThread.Deleted ?? false, new { @class = "form-check-input", id = "newDel", style = "transform: scale(1.5);" })
+                                <label class="form-check-label small ms-3" for="newDel">Deleted</label>
+                            </div>
+                        </div>
+
+
+                        <div class="col text-end">
+                            <button type="submit" class="btn btn-success btn-sm small me-4"><i class="bi bi-save"></i> Save</button>
+                            <a href="@Url.Action("Index",new{ showCreate=false, search=Model.Search, activeFilter=Model.ActiveFilter })"
+                               class="btn btn-danger btn-sm small ms-2"><i class="bi bi-x-circle"></i> Cancel</a>
+                        </div>
+                    </div>
+
+                }
+            </div>
+        </div>
+    }
+
+    @* INLINE EDIT *@
+   @if (Model.ShowEdit && Model.EditId.HasValue)
+    {
+        <div class="card mb-4 shadow-sm inline-form">
+            <div class="card-header bg-warning text-dark small">Modify Thread</div>
+            <div class="card-body">
+               @using (Html.BeginForm("EditFromIndex", "Gen_Threads",
+                                        new { id = Model.EditThread.Id, search = cf, activeFilter = af },
+                                        FormMethod.Post, new { @class = "d-flex flex-wrap" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.EditThread.Id)
+
+                    <div class="col-1">
+                        @Html.LabelFor(m => m.EditThread.Code)
+                        @Html.TextBoxFor(m => m.EditThread.Code, new { @class = "form-control form-control-sm text-center" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.EditThread.Name)
+                        @Html.TextBoxFor(m => m.EditThread.Name, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-1">
+                        @Html.LabelFor(m => m.EditThread.Type)
+                        @Html.TextBoxFor(m => m.EditThread.Type, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-1">
+                        @Html.LabelFor(m => m.EditThread.Material)
+                        @Html.TextBoxFor(m => m.EditThread.Material, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-1">
+                        @Html.LabelFor(m => m.EditThread.YarnCount)
+                        @Html.TextBoxFor(m => m.EditThread.YarnCount, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-1">
+                        @Html.LabelFor(m => m.EditThread.Color)
+                        @Html.TextBoxFor(m => m.EditThread.Color, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-1">
+                        @Html.LabelFor(m => m.EditThread.ColorCode)
+                        @Html.TextBoxFor(m => m.EditThread.ColorCode, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-1">
+                        <label class="small mb-1">Unit Len</label>
+                        @Html.TextBoxFor(m => m.NewThread.UnitLength,
+                          new
+                              {
+                            @class = "form-control form-control-sm small-input-sm small-input",
+                            type = "number",
+                            step = "0.1",
+                            value = Model.EditThread.UnitLength.HasValue
+                                        ? Model.EditThread.UnitLength.Value.ToString("F1")
+                                        : ""
+                          })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.EditThread.UnitOfMeasure)
+                        @Html.TextBoxFor(m => m.EditThread.UnitOfMeasure, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-2">
+                        <label class="small mb-1">Unit Cost</label>
+                        @Html.TextBoxFor(
+                                 m => m.EditThread.UnitCost,
+                                 "{0:F2}",
+                                 new
+                                      {
+                                   @class = "form-control form-control-sm small-input-sm small-input",
+                                   type = "number",
+                                   step = "0.01"
+                                 }
+                             )
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.EditThread.SupplierId)
+                        @Html.TextBoxFor(m => m.EditThread.SupplierId, new { @class = "form-control form-control-sm text-center" })
+                    </div>
+                    <div class="col-2">
+                        @Html.Label("Branch")
+                        @Html.DropDownListFor(m => m.EditThread.BranchId, Model.BranchList, "– select –", new { @class = "form-select form-select-sm" })
+                    </div>
+                    <div class="row g-2 mt-3 align-items-center">
+                        <div class="col-2">
+                            <div class="form-check form-switch">
+                                @Html.CheckBox("EditThread.Active", Model.EditThread.Active ?? false, new { @class = "form-check-input", id = "newAct", style = "transform: scale(1.5);" })
+                                <label class="form-check-label small ms-3" for="newAct">Active</label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-check form-switch">
+                                @Html.CheckBox("EditThread.Deleted", Model.EditThread.Deleted ?? false, new { @class = "form-check-input", id = "newDel", style = "transform: scale(1.5);" })
+                                <label class="form-check-label small ms-3" for="newDel">Deleted</label>
+                            </div>
+                        </div>
+
+
+                        <div class="col text-end">
+                            <button type="submit" class="btn btn-success btn-sm small me-4"><i class="bi bi-save"></i> Save</button>
+                            <a href="@Url.Action("Index",new{ showCreate=false, search=Model.Search, activeFilter=Model.ActiveFilter })"
+                               class="btn btn-danger btn-sm small ms-2"><i class="bi bi-x-circle"></i> Cancel</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    <!-- DATA GRID -->
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-striped table-hover mb-0">
+            <thead class="table-secondary">
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Material</th>
+                    <th>Yarn</th>
+                    <th>Color</th>
+                    <th>C Code</th>
+                    <th class="text-center">ULen</th>
+                    <th>UOM</th>
+                    <th class="text-center">Cost</th>
+                    <th class="text-center">Supplier</th>
+                    <th class="text-center">Branch</th>
+                    <th class="text-center">Active</th>
+                    <th class="text-center">Deleted</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model.Threads)
+                {
+                    <tr>
+                        <td>@t.Code</td>
+                        <td>@t.Name</td>
+                        <td>@t.Type</td>
+                        <td>@t.Material</td>
+                        <td>@t.YarnCount</td>
+                        <td>@t.Color</td>
+                        <td>@t.ColorCode</td>
+                        <td class="grid-cell-number">
+                            @(t.UnitLength.HasValue
+                                  ? t.UnitLength.Value.ToString("F1")
+                                  : "")
+                        </td>
+                        <td>@t.UnitOfMeasure</td>
+                        <td class="grid-cell-number">
+                            @(t.UnitCost.HasValue
+                                      ? t.UnitCost.Value.ToString("F2")
+                                      : "")
+                        </td>
+                        <td class="text-center">@t.SupplierId</td>
+                        <td class="text-center">@t.BranchName</td>
+                        <td class="text-center">
+                            <span class="badge @(t.Active ? "bg-success" : "bg-secondary")">
+                                @(t.Active ? "Yes" : "No")
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge @(t.Deleted ? "bg-danger" : "bg-secondary")">
+                                @(t.Deleted ? "Yes" : "No")
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <a href="@Url.Action("Index","Gen_Threads", new { showEdit = true, editId = t.Id, search = cf, activeFilter = af })"
+                               class="btn btn-outline-primary btn-sm me-1"><i class="bi bi-pencil"></i></a>
+                            <a href="@Url.Action("Details","Gen_Threads", new { id = t.Id })"
+                               class="btn btn-outline-info btn-sm me-1"><i class="bi bi-info-circle"></i></a>
+                            <a href="@Url.Action("Delete","Gen_Threads", new { id = t.Id })"
+                               class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="d-flex justify-content-center mt-3">
+        @Html.PagedListPager(
+          Model.Threads,
+          page => Url.Action("Index", new { page, search = cf, activeFilter = af }),
+          new PagedListRenderOptions
+              {
+            UlElementClasses = new[] { "pagination" },
+            LiElementClasses = new[] { "page-item" },
+
+          })
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // highlight row on hover
+        $('.table-responsive tbody tr').hover(
+            function () { $(this).addClass('table-active'); },
+            function () { $(this).removeClass('table-active'); }
+        );
+    </script>
+}

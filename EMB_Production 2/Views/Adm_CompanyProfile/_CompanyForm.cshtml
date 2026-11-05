@@ -1,0 +1,220 @@
+﻿@model EMB_Production.ViewModels.CompanyPageViewModel
+@using System
+
+@{
+    bool isCreate = Model.ShowCreate;
+    string prefix = isCreate ? nameof(Model.NewCompany) : nameof(Model.EditCompany);
+    string actionName = isCreate ? "CreateFromIndex" : "EditFromIndex";
+    string existingLogo = isCreate ? Model.NewCompany?.Logo : Model.EditCompany?.Logo;
+
+    // Build a safe URL for the preview (or leave null)
+    string logoSrc = null;
+    if (!string.IsNullOrWhiteSpace(existingLogo))
+    {
+        if (existingLogo.StartsWith("http", StringComparison.OrdinalIgnoreCase) || existingLogo.StartsWith("~") || existingLogo.StartsWith("/"))
+        {
+            logoSrc = Url.Content(existingLogo);
+        }
+        else
+        {
+            logoSrc = Url.Content("~/" + existingLogo.TrimStart('/'));
+        }
+    }
+}
+<tr class="inline-row">
+    <td colspan="6">
+        <div class="inline-card d-flex flex-wrap align-items-end gap-3">
+            @using (Html.BeginForm(actionName, "Adm_CompanyProfile", FormMethod.Post, new { enctype = "multipart/form-data" }))
+            {
+                @Html.AntiForgeryToken()
+
+                @* preserve grid/filter state *@
+                @Html.HiddenFor(m => m.Search)
+                @Html.HiddenFor(m => m.ActiveFilter)
+                @Html.HiddenFor(m => m.ParentFilter)
+                @Html.Hidden("page", Model.Companies?.PageNumber ?? 1)
+
+                @* include ID when editing *@
+                if (!isCreate)
+                {
+                    @Html.HiddenFor(m => m.EditCompany.CompanyID)
+                }
+
+                <div class="row gx-2 gy-2">
+                    @*— all your text inputs —*@
+                    <div class="col-md-2">
+                        <label class="form-label small">Name</label>
+                        @Html.TextBox($"{prefix}.CompanyName",
+                                      isCreate ? Model.NewCompany.CompanyName : Model.EditCompany.CompanyName,
+                                      new { @class = "form-control form-control-sm" })
+                        @Html.ValidationMessage($"{prefix}.CompanyName", "", new { @class = "text-danger small" })
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Address</label>
+                        @Html.TextBox($"{prefix}.Address",
+                                      isCreate ? Model.NewCompany.Address : Model.EditCompany.Address,
+                                      new { @class = "form-control form-control-sm" })
+                        @Html.ValidationMessage($"{prefix}.Address", "", new { @class = "text-danger small" })
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label small">Parent</label>
+                        @Html.TextBox($"{prefix}.ParentId",
+                                      isCreate ? Model.NewCompany.ParentId : Model.EditCompany.ParentId,
+                                      new { @class = "form-control form-control-sm", type = "number" })
+                        @Html.ValidationMessage($"{prefix}.ParentId", "", new { @class = "text-danger small" })
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label small">NickName</label>
+                        @Html.TextBox($"{prefix}.NickName",
+                                      isCreate ? Model.NewCompany.NickName : Model.EditCompany.NickName,
+                                      new { @class = "form-control form-control-sm" })
+                        @Html.ValidationMessage($"{prefix}.NickName", "", new { @class = "text-danger small" })
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Email</label>
+                        @Html.TextBox($"{prefix}.Email",
+                                      isCreate ? Model.NewCompany.Email : Model.EditCompany.Email,
+                                      new { @class = "form-control form-control-sm", type = "email" })
+                        @Html.ValidationMessage($"{prefix}.Email", "", new { @class = "text-danger small" })
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label small">LicenseKey</label>
+                        @Html.TextBox($"{prefix}.LicenseKey",
+                                      isCreate ? Model.NewCompany.LicenseKey : Model.EditCompany.LicenseKey,
+                                      new { @class = "form-control form-control-sm", type = "number" })
+                        @Html.ValidationMessage($"{prefix}.LicenseKey", "", new { @class = "text-danger small" })
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Contact Number</label>
+                        @Html.TextBox($"{prefix}.ContactNumber",
+                                      isCreate ? Model.NewCompany.ContactNumber : Model.EditCompany.ContactNumber,
+                                      new { @class = "form-control form-control-sm", type = "tel" })
+                        @Html.ValidationMessage($"{prefix}.ContactNumber", "", new { @class = "text-danger small" })
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label small">NTN</label>
+                        @Html.TextBox($"{prefix}.NTN",
+                                      isCreate ? Model.NewCompany.NTN : Model.EditCompany.NTN,
+                                      new { @class = "form-control form-control-sm", type = "number" })
+                        @Html.ValidationMessage($"{prefix}.NTN", "", new { @class = "text-danger small" })
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label small">STRN</label>
+                        @Html.TextBox($"{prefix}.STRN",
+                                      isCreate ? Model.NewCompany.STRN : Model.EditCompany.STRN,
+                                      new { @class = "form-control form-control-sm", type = "number" })
+                        @Html.ValidationMessage($"{prefix}.STRN", "", new { @class = "text-danger small" })
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label small">Master Password</label>
+                        @Html.Password($"{prefix}.MasterPassword",
+                                       isCreate ? Model.NewCompany.MasterPassword : Model.EditCompany.MasterPassword,
+                                       new { @class = "form-control form-control-sm" })
+                        @Html.ValidationMessage($"{prefix}.MasterPassword", "", new { @class = "text-danger small" })
+                    </div>
+
+                    @* Logo upload *@
+                    <div class="col-md-3">
+                        <label for="LogoFile" class="form-label small">Logo</label>
+                        <input type="file"
+                               name="LogoFile"
+                               id="LogoFile"
+                               class="form-control form-control-sm"
+                               accept="image/*" />
+                        @Html.ValidationMessageFor(m => m.LogoFile, "", new { @class = "text-danger small" })
+                    </div>
+
+                    @* Logo preview (only if logoSrc != null) *@
+                    @if (logoSrc != null)
+                    {
+                        <div class="col-12 mt-2">
+                            <label class="form-label small">Current Logo</label>
+                            <div>
+                                <img src="@logoSrc"
+                                     alt="Logo preview"
+                                     class="img-fluid"
+                                     style="max-height:6rem; max-width:12rem; object-fit:contain;" />
+                            </div>
+                        </div>
+                    }
+
+                    <div class="col-auto">
+                        @if (isCreate)
+                        {
+                            <div class="form-check form-switch mb-2">
+                                @Html.CheckBoxFor(m => m.NewCompany.ShowCurrencyNameBool,
+                                    new { @class = "form-check-input", id = "NewCompany_ShowCurrencyName" })
+                                <label for="NewCompany_ShowCurrencyName" class="form-check-label small">
+                                    Show Currency Name
+                                </label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                @Html.CheckBoxFor(m => m.NewCompany.StopLoginBool,
+                                    new { @class = "form-check-input", id = "NewCompany_StopLogin" })
+                                <label for="NewCompany_StopLogin" class="form-check-label small">
+                                    Stop Login
+                                </label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                @Html.CheckBoxFor(m => m.NewCompany.TaxEnabledBool,
+                                    new { @class = "form-check-input", id = "NewCompany_TaxEnabled" })
+                                <label for="NewCompany_TaxEnabled" class="form-check-label small">
+                                    Tax Enabled
+                                </label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                @Html.CheckBoxFor(m => m.NewCompany.ActiveBool,
+                                    new { @class = "form-check-input", id = "NewCompany_Active" })
+                                <label for="NewCompany_Active" class="form-check-label small">
+                                    Active
+                                </label>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="form-check form-switch mb-2">
+                                @Html.CheckBoxFor(m => m.EditCompany.ShowCurrencyNameBool,
+                                    new { @class = "form-check-input", id = "EditCompany_ShowCurrencyName" })
+                                <label for="EditCompany_ShowCurrencyName" class="form-check-label small">
+                                    Show Currency Name
+                                </label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                @Html.CheckBoxFor(m => m.EditCompany.StopLoginBool,
+                                    new { @class = "form-check-input", id = "EditCompany_StopLogin" })
+                                <label for="EditCompany_StopLogin" class="form-check-label small">
+                                    Stop Login
+                                </label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                @Html.CheckBoxFor(m => m.EditCompany.TaxEnabledBool,
+                                    new { @class = "form-check-input", id = "EditCompany_TaxEnabled" })
+                                <label for="EditCompany_TaxEnabled" class="form-check-label small">
+                                    Tax Enabled
+                                </label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                @Html.CheckBoxFor(m => m.EditCompany.ActiveBool,
+                                    new { @class = "form-check-input", id = "EditCompany_Active" })
+                                <label for="EditCompany_Active" class="form-check-label small">
+                                    Active
+                                </label>
+                            </div>
+                        }
+                    </div>
+
+
+                    @* Submit & Cancel *@
+                    <div class="col-auto d-flex align-items-center gap-2">
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <i class="bi bi-save me-1"></i> @(isCreate ? "Add" : "Save")
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm cancel-btn">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </button>
+                    </div>
+                </div> @* /.row *@
+            } @* End BeginForm *@
+        </div>
+    </td>
+</tr>

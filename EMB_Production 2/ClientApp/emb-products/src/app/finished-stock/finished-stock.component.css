@@ -1,0 +1,22 @@
+table td,
+table th {
+  vertical-align: middle;
+  font-size: 0.85rem;
+}
+
+/* Action buttons spacing */
+table .btn {
+  padding: 0.15rem 0.45rem;
+  font-size: 0.75rem;
+}
+
+/* Reservation badge consistency */
+.badge {
+  font-size: 0.7rem;
+  padding: 0.35em 0.55em;
+}
+
+/* Prevent table header wrapping */
+.table th {
+  white-space: nowrap;
+}

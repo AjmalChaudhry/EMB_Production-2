@@ -1,0 +1,1650 @@
+<div class="dp-container">
+
+  <!-- ================= HEADER ================= -->
+  <div class="dp-header row align-items-center mb-3">
+    <div class="col-md-4">
+      <h4 class="d-flex align-items-center mb-0">
+        <i class="bi bi-kanban me-2 text-primary"></i>
+        Daily Production
+      </h4>
+    </div>
+
+    <div class="col-md-8 d-flex justify-content-end gap-2 flex-wrap">
+      <button class="btn btn-primary d-flex align-items-center"
+              (click)="openCreate()">
+        <i class="bi bi-plus-circle me-2"></i> Add
+      </button>
+
+      <button class="btn btn-outline-secondary btn-sm"
+              (click)="loadData()"
+              title="Refresh">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+
+      <button class="btn btn-outline-success btn-sm"
+              (click)="exportExcel()"
+              title="Export Excel">
+        <i class="bi bi-file-earmark-excel"></i>
+      </button>
+
+      <button class="btn btn-outline-danger btn-sm"
+              (click)="exportPdf()"
+              title="Export PDF">
+        <i class="bi bi-filetype-pdf"></i>
+      </button>
+
+      <button class="btn btn-outline-secondary btn-sm"
+              (click)="openPrint()"
+              title="Print">
+        <i class="bi bi-printer"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== FILTER BAR (Phase Q.0) ===================== -->
+  <div class="card border-0 shadow-sm mb-2 dp-filter-bar">
+    <div class="card-body py-2">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-2">
+          <label class="form-label small mb-1">From date</label>
+          <input type="date" class="form-control form-control-sm"
+                 [(ngModel)]="filterFromDate" (change)="onFiltersChange()">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small mb-1">To date</label>
+          <input type="date" class="form-control form-control-sm"
+                 [(ngModel)]="filterToDate" (change)="onFiltersChange()">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small mb-1">Machine</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="filterMachineId" (ngModelChange)="onFiltersChange()">
+            <option [ngValue]="null">All machines</option>
+            <option *ngFor="let m of machines" [ngValue]="m.id">{{ m.name }}</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small mb-1">Operator</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="filterOperatorId" (ngModelChange)="onFiltersChange()">
+            <option [ngValue]="null">All operators</option>
+            <option *ngFor="let o of operators" [ngValue]="o.id">{{ o.name }}</option>
+          </select>
+        </div>
+        <div class="col-md-1">
+          <label class="form-label small mb-1">Posted</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="filterPosted" (ngModelChange)="onFiltersChange()">
+            <option value="">All</option>
+            <option value="POSTED">Posted</option>
+            <option value="DRAFT">Draft</option>
+            <option value="REVERSED">Reversed</option>
+          </select>
+        </div>
+        <div class="col-md-1">
+          <label class="form-label small mb-1">QC</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="filterSentToQc" (ngModelChange)="onFiltersChange()">
+            <option value="">All</option>
+            <option value="YES">Sent</option>
+            <option value="NO">Not Sent</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-flex gap-1">
+          <input type="text" class="form-control form-control-sm"
+                 [(ngModel)]="filterStatus"
+                 (keyup.enter)="onFiltersChange()"
+                 placeholder="Status...">
+          <button class="btn btn-outline-secondary btn-sm"
+                  (click)="clearFilters()" title="Clear filters">
+            <i class="bi bi-x-circle"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SUMMARY STRIP (Phase Q.0) ===================== -->
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-2 small dp-summary-strip">
+    <span class="badge bg-light text-dark border">
+      <i class="bi bi-list-ul me-1"></i>
+      Count: <strong>{{ summary.count | number }}</strong>
+    </span>
+    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+      <i class="bi bi-target me-1"></i>
+      Planned: <strong>{{ summary.plannedTotal | number }}</strong>
+    </span>
+    <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">
+      <i class="bi bi-speedometer2 me-1"></i>
+      Actual: <strong>{{ summary.actualTotal | number }}</strong>
+      <span class="text-muted ms-1">({{ summary.yieldPct }}%)</span>
+    </span>
+    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">
+      <i class="bi bi-check-circle me-1"></i>
+      Accepted: <strong>{{ summary.acceptedTotal | number }}</strong>
+    </span>
+    <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle"
+          *ngIf="summary.rejectedTotal">
+      <i class="bi bi-x-circle me-1"></i>
+      Rejected: <strong>{{ summary.rejectedTotal | number }}</strong>
+    </span>
+    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+      <i class="bi bi-shield-check me-1"></i>
+      QC Pass: <strong>{{ summary.qcPassPct }}%</strong>
+    </span>
+    <!-- Sprint-3: KPI chip deep-link — clicking applies the matching
+         filter on the list and reloads. Saves a trip to the filter
+         dropdowns for the common "show me what's in QC" question. -->
+    <span class="badge bg-light text-dark border"
+          role="button"
+          style="cursor:pointer;"
+          (click)="filterByKpi('sentToQc')"
+          title="Show only rows sent to QC">
+      <i class="bi bi-clipboard-check me-1"></i>
+      Sent to QC: <strong>{{ summary.sentToQcCount }}</strong>
+    </span>
+    <span class="badge bg-light text-dark border">
+      <i class="bi bi-stars me-1"></i>
+      Stitches: <strong>{{ summary.stitchesTotal | number }}</strong>
+    </span>
+    <!-- Phase S.1 machine cost badges -->
+    <span class="badge bg-success-subtle text-success-emphasis border border-success"
+          *ngIf="summary.totalProductionCost > 0"
+          title="Sum of (machine + operator + electric) × productive hours">
+      <i class="bi bi-cash-coin me-1"></i>
+      Machine Cost: <strong>Rs {{ summary.totalProductionCost | number:'1.2-2' }}</strong>
+    </span>
+    <span class="badge bg-info-subtle text-info-emphasis border border-info"
+          *ngIf="summary.costPerAcceptedPc > 0">
+      <i class="bi bi-tag me-1"></i>
+      Cost / Pc: <strong>Rs {{ summary.costPerAcceptedPc | number:'1.2-2' }}</strong>
+    </span>
+    <span class="badge bg-light text-dark border"
+          *ngIf="summary.totalProductiveHours > 0">
+      <i class="bi bi-clock-history me-1"></i>
+      Prod Hrs: <strong>{{ summary.totalProductiveHours | number:'1.1-2' }}</strong>
+    </span>
+    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning"
+          *ngIf="summary.rowsMissingCostProfile > 0"
+          title="Production rows whose machine has no MachineCostProfile">
+      <i class="bi bi-exclamation-triangle me-1"></i>
+      No Cost Profile: <strong>{{ summary.rowsMissingCostProfile }}</strong>
+    </span>
+    <span *ngFor="let s of summary.byStatus"
+          class="badge bg-light text-dark border">
+      <i class="bi bi-tag me-1"></i>
+      {{ s.status }}: <strong>{{ s.count }}</strong>
+    </span>
+    <span *ngFor="let s of summary.byShift"
+          class="badge bg-light text-dark border">
+      <i class="bi bi-clock me-1"></i>
+      {{ s.shift }}: <strong>{{ s.count }}</strong>
+    </span>
+  </div>
+
+  <!-- Sprint-3: bulk action strip — only shown when at least one row
+       is selected. Per-id failure envelope is rendered in an alert so
+       the operator can see which rows didn't take and why. -->
+  <div *ngIf="selectedIds.size > 0"
+       class="alert alert-info d-flex flex-wrap align-items-center gap-2 py-2 mb-2"
+       role="status">
+    <span class="me-2"><strong>{{ selectedIds.size }}</strong> selected</span>
+    <button class="btn btn-sm btn-success" (click)="bulkPost()" [disabled]="bulkBusy">
+      <i class="bi bi-check-circle me-1"></i>Post
+    </button>
+    <button class="btn btn-sm btn-info" (click)="bulkSendToQc()" [disabled]="bulkBusy">
+      <i class="bi bi-clipboard-check me-1"></i>Send to QC
+    </button>
+    <button class="btn btn-sm btn-warning" (click)="bulkReverse()" [disabled]="bulkBusy">
+      <i class="bi bi-arrow-counterclockwise me-1"></i>Reverse
+    </button>
+    <button class="btn btn-sm btn-outline-danger" (click)="bulkDelete()" [disabled]="bulkBusy">
+      <i class="bi bi-trash me-1"></i>Delete
+    </button>
+    <button class="btn btn-sm btn-light ms-auto" (click)="clearSelection()" [disabled]="bulkBusy">
+      Clear
+    </button>
+  </div>
+
+  <!-- ================= TABLE ================= -->
+  <div class="table-responsive dp-table">
+    <table class="table table-sm table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th class="text-center" style="width: 30px;">
+            <input type="checkbox" class="form-check-input"
+                   [checked]="allVisibleSelected()"
+                   (change)="toggleSelectAll()" />
+          </th>
+          <th style="width: 50px;">#</th>
+          <th style="width: 95px;">WO</th>
+          <th style="min-width: 180px;">Product</th>
+          <th style="min-width: 110px;">Design</th>
+          <th style="min-width: 110px;">Machine</th>
+          <th style="min-width: 170px;">Operator</th>
+          <th style="width: 80px;" class="text-end">Plan</th>
+          <th style="width: 80px;" class="text-end">Actual</th>
+          <th style="width: 90px;" class="text-end">Rejected</th>
+          <th style="width: 90px;" class="text-end">Accepted</th>
+          <th style="width: 130px;" class="text-center">Status</th>
+          <th style="width: 130px;" class="text-center">QC</th>
+          <th style="width: 155px;" class="text-end">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngIf="loading">
+          <td colspan="14" class="text-center py-4">
+            <span class="spinner-border spinner-border-sm me-2"></span>
+            Loading...
+          </td>
+        </tr>
+
+        <tr *ngFor="let row of items"
+            [ngClass]="{
+              'table-danger': row.isReversed === true,
+              'table-success-subtle': row.qcCompleted === true
+            }">
+
+          <td class="text-center">
+            <input type="checkbox" class="form-check-input"
+                   [checked]="isSelected(row.id)"
+                   (change)="toggleSelect(row.id)" />
+          </td>
+          <td>
+            {{ row.id }}
+            <!-- Sprint-1: "posted within last 24h" badge so shift leads
+                 can spot freshly-entered rows at a glance. -->
+            <span *ngIf="row.isRecent"
+                  class="badge bg-info-subtle text-info border border-info-subtle ms-1"
+                  title="Created within last 24 hours">
+              <i class="bi bi-lightning-charge-fill"></i>
+            </span>
+          </td>
+          <!-- Sprint-1: clickable WO badge → /work-order pre-filtered. -->
+          <td>
+            <a *ngIf="row.workOrderLabel && row.workOrderId"
+               href="javascript:void(0)"
+               class="text-decoration-none"
+               (click)="gotoWorkOrder(row)"
+               [title]="'Open ' + row.workOrderLabel">
+              {{ row.workOrderLabel }}
+            </a>
+            <span *ngIf="!row.workOrderId">{{ row.workOrderLabel || '-' }}</span>
+          </td>
+          <!-- Sprint-1: clickable Product → /products?id= -->
+          <td>
+            <a *ngIf="row.productId"
+               href="javascript:void(0)"
+               class="text-decoration-none fw-medium"
+               (click)="gotoProduct(row)">
+              {{ row.productName || '-' }}
+            </a>
+            <span *ngIf="!row.productId">{{ row.productName || '-' }}</span>
+          </td>
+          <!-- Sprint-1: clickable Design. -->
+          <td class="text-muted small">
+            <a *ngIf="row.designId"
+               href="javascript:void(0)"
+               class="text-decoration-none"
+               (click)="gotoDesign(row)">
+              {{ row.designName || '-' }}
+            </a>
+            <span *ngIf="!row.designId">{{ row.designName || '-' }}</span>
+          </td>
+          <!-- Sprint-1: clickable Machine. -->
+          <td>
+            <a *ngIf="row.machineId"
+               href="javascript:void(0)"
+               class="text-decoration-none"
+               (click)="gotoMachine(row)">
+              {{ row.machineName || '-' }}
+            </a>
+            <span *ngIf="!row.machineId">{{ row.machineName || '-' }}</span>
+          </td>
+
+          <!-- Sprint-1: clickable Operator. -->
+          <td>
+            <a *ngIf="row.operatorId"
+               href="javascript:void(0)"
+               class="text-decoration-none"
+               (click)="gotoOperator(row)">
+              <span class="badge bg-light text-dark">
+                {{ row.operatorLabel || row.operatorCode || row.operatorName || '-' }}
+              </span>
+            </a>
+            <span *ngIf="!row.operatorId" class="badge bg-light text-dark">
+              {{ row.operatorLabel || row.operatorCode || row.operatorName || '-' }}
+            </span>
+          </td>
+
+          <td class="text-end">{{ row.plannedQty ?? '-' }}</td>
+          <td class="text-end">{{ row.actualQty ?? '-' }}</td>
+          <td class="text-end text-danger">{{ row.rejectedQty ?? '-' }}</td>
+          <td class="text-end fw-bold text-success">{{ row.acceptedQty ?? '-' }}</td>
+
+          <td class="text-center">
+            <!-- Sprint-1: status pill uses productionStatusPill() —
+                 same colour scheme used across JO / PP / WO / PR / PO. -->
+            <span class="badge rounded-pill px-2 py-1"
+                  [ngClass]="productionStatusPill(row.status).cssClass">
+              <i class="bi me-1" [ngClass]="productionStatusPill(row.status).icon"></i>
+              {{ row.status || '-' }}
+            </span>
+            <!-- Sprint-1: rework rows get a small explanatory chip so
+                 ops can tell at a glance which entries are catch-up
+                 work against an earlier QC. -->
+            <span *ngIf="row.isRework"
+                  class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle ms-1"
+                  [title]="'Rework against QC #' + (row.sourceQcInspectionId || '?')">
+              <i class="bi bi-arrow-repeat"></i> Rework
+            </span>
+          </td>
+
+          <td class="text-center">
+            <span class="state-pill state-reversed"
+                  *ngIf="row.isReversed === true">
+              Reversed
+            </span>
+
+            <span class="state-pill state-muted"
+                  *ngIf="row.isReversed !== true && row.isPosted !== true">
+              Not Posted
+            </span>
+
+            <span class="state-pill state-qc-pending"
+                  *ngIf="row.isReversed !== true
+                    && row.isPosted === true
+                    && row.isSentToQC !== true
+                    && row.hasQc !== true
+                    && !isReworkRow(row)">
+              Pending QC
+            </span>
+
+            <span class="state-pill state-qc-created"
+                  *ngIf="row.isReversed !== true
+                    && (row.isSentToQC === true || row.hasQc === true)
+                    && row.qcCompleted !== true">
+              QC Created
+            </span>
+
+            <span class="state-pill state-qc-created"
+                  *ngIf="row.isReversed !== true && isReworkRow(row)"
+                  title="Rework run — re-inspection happens on the original QC row">
+              Re-inspection ready
+            </span>
+
+            <span class="state-pill state-done"
+                  *ngIf="row.isReversed !== true && row.qcCompleted === true">
+              QC Posted
+            </span>
+          </td>
+
+          <td class="text-end">
+            <div class="d-flex justify-content-end gap-1 mb-1">
+              <button class="btn action-btn btn-outline-info"
+                      type="button"
+                      (click)="openProfile(row.id)"
+                      title="Production 360 Profile">
+                <i class="bi bi-eye"></i>
+              </button>
+
+              <button class="btn action-btn btn-outline-primary"
+                      *ngIf="row.canEdit === true"
+                      (click)="openEdit(row)"
+                      title="Edit">
+                <i class="bi bi-pencil"></i>
+              </button>
+
+              <button class="btn action-btn btn-outline-danger"
+                      *ngIf="row.canDelete === true"
+                      (click)="confirmDelete(row)"
+                      title="Delete">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+
+            <div class="d-flex justify-content-end gap-1 mb-1">
+              <button class="btn action-btn action-btn-wip-active"
+                      *ngIf="row.canPost === true"
+                      (click)="postToWip(row)"
+                      title="Post To WIP">
+                <i class="bi bi-box-arrow-in-down"></i>
+              </button>
+
+              <button class="btn action-btn action-btn-qc-active"
+                      *ngIf="canSendToQc(row)"
+                      (click)="sendToQc(row)"
+                      title="Send To QC">
+                <i class="bi bi-shield-check"></i>
+              </button>
+
+              <button class="btn action-btn btn-outline-warning"
+                      *ngIf="row.canReverse === true && row.qcCompleted !== true"
+                      (click)="openReverse(row)"
+                      title="Reverse">
+                <i class="bi bi-arrow-counterclockwise"></i>
+              </button>
+            </div>
+
+            <div class="mt-1 small text-end">
+              <div *ngIf="row.isReversed === true" class="text-danger">
+                Production reversed
+              </div>
+
+              <div *ngIf="row.qcCompleted === true" class="text-success">
+                QC already posted
+              </div>
+
+              <div *ngIf="row.isReversed !== true && row.hasQc === true && row.qcCompleted !== true" class="text-warning">
+                QC already created
+              </div>
+
+              <div *ngIf="row.isReversed !== true && row.isSentToQC === true && row.hasQc !== true" class="text-info">
+                Sent to QC
+              </div>
+
+              <div *ngIf="row.isReversed !== true && row.isPosted !== true" class="text-muted">
+                Production not posted
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngIf="!loading && items.length === 0">
+          <td colspan="13" class="text-center py-4">No records found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ================= FORM MODAL ================= -->
+  <div class="modal fade dp-modal" #dpModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable dp-modal-dialog">
+      <div class="modal-content dp-modal-content">
+
+        <div class="modal-header dp-modal-header">
+          <div>
+            <h5 class="modal-title mb-0">
+              {{ modalMode === 'create' ? 'Add Production' : 'Edit Production' }}
+            </h5>
+            <small class="text-white-50">
+              Enter production for the current work order item
+            </small>
+          </div>
+
+          <button type="button"
+                  class="btn-close btn-close-white"
+                  aria-label="Close"
+                  (click)="closeModal()">
+          </button>
+        </div>
+
+        <div class="modal-body dp-modal-body">
+
+          <!-- BASIC INFORMATION -->
+          <div class="card dp-section-card mb-3">
+            <div class="card-header">Basic Information</div>
+            <div class="card-body">
+              <div class="row g-3">
+
+                <div class="col-md-6">
+                  <label class="form-label">Work Order Item</label>
+                  <select class="form-select"
+                          [(ngModel)]="formModel.workOrderItemId"
+                          (change)="onWorkOrderItemChange()"
+                          name="workOrderItemId">
+                    <option [ngValue]="null">-- Select Work Order Item --</option>
+                    <option *ngFor="let w of getSelectableWorkOrderItems()" [ngValue]="w.id">
+                      {{ w.workOrderLabel }} |
+                      {{ w.componentName || 'Component' }} |
+                      Planned: {{ w.plannedQty }} |
+                      Done: {{ w.completedQty }} |
+                      Rem: {{ w.remainingQty }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="col-md-3">
+                  <label class="form-label">Machine</label>
+                  <select class="form-select"
+                          [(ngModel)]="formModel.machineId"
+                          name="machineId">
+                    <option [ngValue]="null">-- Select Machine --</option>
+                    <option *ngFor="let m of machines" [ngValue]="m.id">
+                      {{ m.name }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="col-md-3">
+                  <label class="form-label">Operator</label>
+                  <select class="form-select"
+                          [(ngModel)]="formModel.operatorId"
+                          name="operatorId">
+                    <option [ngValue]="null">-- Select Operator --</option>
+                    <option *ngFor="let o of operators" [ngValue]="o.id">
+                      {{ o.name }}
+                    </option>
+                  </select>
+                  <div class="form-text text-muted">
+                    Prefilled with logged-in user
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- WORK ORDER SUMMARY -->
+          <div class="card dp-section-card mb-3" *ngIf="selectedWorkOrderItem">
+            <div class="card-header">Work Order Summary</div>
+            <div class="card-body">
+              <div class="row g-3">
+
+                <div class="col-md-3">
+                  <div class="dp-meta-box">
+                    <div class="dp-meta-label">Product</div>
+                    <div class="dp-meta-value">{{ selectedWorkOrderItem.productName || '-' }}</div>
+                  </div>
+                </div>
+
+                <div class="col-md-3">
+                  <div class="dp-meta-box">
+                    <div class="dp-meta-label">Design</div>
+                    <div class="dp-meta-value">{{ selectedWorkOrderItem.designName || '-' }}</div>
+                  </div>
+                </div>
+
+                <div class="col-md-3">
+                  <div class="dp-meta-box">
+                    <div class="dp-meta-label">Component</div>
+                    <div class="dp-meta-value">{{ selectedWorkOrderItem.componentName || '-' }}</div>
+                  </div>
+                </div>
+
+                <div class="col-md-3">
+                  <div class="dp-meta-box">
+                    <div class="dp-meta-label">Planned</div>
+                    <div class="dp-meta-value">{{ selectedWorkOrderItem.plannedQty }}</div>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="dp-stat-box">
+                    <div class="dp-stat-label">Done</div>
+                    <div class="dp-stat-value text-success">
+                      {{ selectedWorkOrderItem.completedQty }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="dp-stat-box">
+                    <div class="dp-stat-label">Remaining</div>
+                    <div class="dp-stat-value text-primary">
+                      {{ selectedWorkOrderItem.remainingQty }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="dp-stat-box">
+                    <div class="dp-stat-label">Progress</div>
+                    <div class="dp-stat-value text-dark">
+                      {{
+                        selectedWorkOrderItem.plannedQty > 0
+                          ? ((selectedWorkOrderItem.completedQty / selectedWorkOrderItem.plannedQty) * 100 | number:'1.0-0')
+                          : 0
+                      }}%
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="dp-progress">
+                    <div class="progress-bar bg-success"
+                         [style.width.%]="getProgressPercent()">
+                    </div>
+                  </div>
+                  <div class="form-text text-primary mt-2">
+                    Enter only this entry quantity. Existing progress is already shown above.
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-light border"
+               *ngIf="!selectedWorkOrderItem">
+            Select a Work Order Item to view production summary.
+          </div>
+
+          <!-- ENTRY MODE TOGGLE — only shown when creating a fresh row -->
+          <div class="card dp-section-card mb-3" *ngIf="modalMode === 'create'">
+            <div class="card-body py-2">
+              <div class="d-flex align-items-center gap-3 flex-wrap">
+                <strong class="me-2">Entry Type:</strong>
+                <div class="btn-group" role="group">
+                  <input type="radio"
+                         class="btn-check"
+                         id="dpModeProd"
+                         name="dpEntryMode"
+                         [checked]="entryMode === 'production'"
+                         (change)="onEntryModeChange('production')">
+                  <label class="btn btn-outline-primary btn-sm" for="dpModeProd">
+                    <i class="bi bi-gear"></i> Fresh Production
+                  </label>
+
+                  <input type="radio"
+                         class="btn-check"
+                         id="dpModeRework"
+                         name="dpEntryMode"
+                         [checked]="entryMode === 'rework'"
+                         (change)="onEntryModeChange('rework')"
+                         [disabled]="(reworkTasks || []).length === 0">
+                  <label class="btn btn-outline-warning btn-sm" for="dpModeRework">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    Rework
+                    <span class="badge bg-warning text-dark ms-1"
+                          *ngIf="(reworkTasks || []).length > 0">
+                      {{ reworkTasks.length }}
+                    </span>
+                  </label>
+                </div>
+                <small class="text-muted ms-auto" *ngIf="entryMode === 'rework'">
+                  Records a re-do of pieces QC marked for rework. Posting flips the QC back for re-inspection.
+                </small>
+              </div>
+
+              <div class="row g-3 mt-2" *ngIf="entryMode === 'rework'">
+                <div class="col-md-12">
+                  <label class="form-label">Rework Task (from QC)</label>
+                  <select class="form-select"
+                          [(ngModel)]="selectedReworkTaskId"
+                          (ngModelChange)="onReworkTaskChange()"
+                          name="reworkTaskId">
+                    <option [ngValue]="null">Select a rework task...</option>
+                    <option *ngFor="let t of reworkTasks"
+                            [ngValue]="t.qcInspectionId">
+                      {{ t.name }}
+                    </option>
+                  </select>
+                  <div class="form-text text-muted" *ngIf="(reworkTasks || []).length === 0">
+                    No rework tasks pending — every posted QC is either complete or already in re-inspection.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PRODUCTION ENTRY -->
+          <div class="card dp-section-card production-entry">
+            <div class="card-header">
+              {{ entryMode === 'rework' ? 'Rework Entry' : 'Production Entry' }}
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+
+                <div class="col-md-4">
+                  <label class="form-label">Actual Qty</label>
+                  <input type="number"
+                         class="form-control"
+                         [(ngModel)]="formModel.actualQty"
+                         (ngModelChange)="onActualQtyChange()"
+                         name="actualQty"
+                         min="1">
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">Rejected Qty</label>
+                  <input type="number"
+                         class="form-control"
+                         [(ngModel)]="formModel.rejectedQty"
+                         name="rejectedQty"
+                         min="0">
+                  <div class="form-text text-muted">
+                    Defective pieces in this entry
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">Accepted Qty</label>
+                  <input type="number"
+                         class="form-control dp-readonly-input"
+                         [value]="acceptedQty"
+                         readonly>
+                  <div class="form-text text-primary">
+                    Auto = Actual - Rejected
+                  </div>
+                </div>
+
+                <div class="col-12"
+                  *ngIf="selectedWorkOrderItem !== null && modalMode === 'create' && acceptedQty >
+                   (selectedWorkOrderItem?.remainingQty || 0)">
+                  selectedWorkOrderItem.remainingQty">
+                  <div class="alert alert-danger py-2 mb-0">
+                    Accepted quantity exceeds remaining quantity.
+                  </div>
+                </div>
+
+                <div class="col-md-3">
+                  <label class="form-label">Production Date</label>
+                  <input type="date"
+                         class="form-control"
+                         [(ngModel)]="uiProductionDate"
+                         name="uiProductionDate">
+                  <div class="form-text text-muted">
+                    One entry = one shift on one day
+                  </div>
+                </div>
+
+                <div class="col-md-3">
+                  <label class="form-label">Shift</label>
+                  <input type="text"
+                         class="form-control"
+                         [(ngModel)]="formModel.shift"
+                         name="shift"
+                         placeholder="Auto from Start">
+                </div>
+
+                <div class="col-md-3">
+                  <label class="form-label">Start Time</label>
+                  <input type="time"
+                         class="form-control"
+                         [(ngModel)]="uiStartTime"
+                         (change)="onTimeChange()"
+                         name="uiStartTime">
+                </div>
+
+                <div class="col-md-3">
+                  <label class="form-label">End Time</label>
+                  <input type="time"
+                         class="form-control"
+                         [(ngModel)]="uiEndTime"
+                         name="uiEndTime">
+                  <div class="form-text text-muted" *ngIf="isNightShiftCross()">
+                    Ends next day (night shift)
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">Working Hours</label>
+                  <input type="text"
+                         class="form-control"
+                         [value]="getWorkingHours() + ' hrs'"
+                         readonly>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">Production / Hour</label>
+                  <input type="text"
+                         class="form-control"
+                         [value]="getProductionPerHour()"
+                         readonly>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">Stitches</label>
+                  <input type="number"
+                         class="form-control"
+                         [(ngModel)]="formModel.stitches"
+                         name="stitches"
+                         min="0">
+                  <div class="form-text text-primary"
+                       *ngIf="getStitchesPerPiece() > 0 && (formModel.actualQty ?? 0) > 0">
+                    Auto = {{ getStitchesPerPiece() | number }} / piece &times;
+                    {{ formModel.actualQty | number }} =
+                    {{ getStitchesPerPiece() * (formModel.actualQty ?? 0) | number }}
+                  </div>
+                  <div class="form-text text-muted"
+                       *ngIf="selectedWorkOrderItem && getStitchesPerPiece() <= 0">
+                    No stitch count set on this component's spec — type manually
+                  </div>
+                </div>
+
+                <div class="col-md-12">
+                  <label class="form-label">Remarks</label>
+                  <textarea class="form-control"
+                            [(ngModel)]="formModel.remarks"
+                            name="remarks"
+                            rows="3"></textarea>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer dp-modal-footer">
+          <button type="button"
+                  class="btn btn-light"
+                  (click)="closeModal()">
+            Close
+          </button>
+
+          <button type="button"
+                  class="btn btn-primary"
+                  [disabled]="modalMode === 'create' && selectedWorkOrderItem !== null && acceptedQty > selectedWorkOrderItem.remainingQty"
+                  (click)="save()">
+            {{ modalMode === 'create' ? 'Save Production' : 'Update Production' }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================= DETAIL MODAL ================= -->
+<div class="modal fade dp-modal" #dpDetailModal tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable dp-modal-dialog">
+    <div class="modal-content dp-modal-content">
+
+      <div class="modal-header dp-modal-header dp-modal-header-dark">
+        <h5 class="modal-title">Daily Production Details</h5>
+        <button type="button"
+                class="btn-close btn-close-white"
+                (click)="closeModal()"
+                aria-label="Close">
+        </button>
+      </div>
+
+      <div class="modal-body dp-modal-body">
+        <ng-container *ngIf="detailModel; else detailLoading">
+
+          <!-- Sprint-2: workflow stepper. Same five-stage pipeline
+               every state-changing module renders. REVERSED is a red
+               sibling at the POSTED_TO_WIP slot — when active, the
+               main chain greys out. -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-body py-3 px-4 d-flex align-items-center gap-2 flex-wrap">
+              <div class="me-3 small text-muted">Workflow</div>
+              <ng-container *ngFor="let stg of workflowStages; let i = index">
+                <div class="d-inline-flex align-items-center">
+                  <span class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                        [ngClass]="{
+                          'bg-success text-white': stepperState(i).done,
+                          'bg-primary text-white': stepperState(i).current && !stepperState(i).cancelled,
+                          'bg-danger text-white':  stepperState(i).current && stepperState(i).cancelled,
+                          'bg-light text-muted border': !stepperState(i).done && !stepperState(i).current
+                        }"
+                        style="width:28px;height:28px;font-size:.85rem;font-weight:600;">
+                    {{ i + 1 }}
+                  </span>
+                  <span class="ms-2 small fw-semibold"
+                        [ngClass]="{
+                          'text-success': stepperState(i).done,
+                          'text-primary': stepperState(i).current && !stepperState(i).cancelled,
+                          'text-danger':  stepperState(i).current && stepperState(i).cancelled,
+                          'text-muted':   !stepperState(i).done && !stepperState(i).current
+                        }">
+                    {{ stageLabel(stg) }}
+                  </span>
+                </div>
+                <span *ngIf="i < workflowStages.length - 1"
+                      class="flex-grow-1 mx-2"
+                      style="height:2px; min-width:32px;"
+                      [ngClass]="stepperState(i).done ? 'bg-success' : 'bg-light'"></span>
+              </ng-container>
+            </div>
+          </div>
+
+          <div class="row g-3">
+
+            <div class="col-md-4">
+              <strong>Work Order:</strong>
+              <div>{{ detailModel.workOrderLabel || '-' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <strong>Product:</strong>
+              <div>{{ detailModel.productName || '-' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <strong>Design:</strong>
+              <div class="text-muted small">{{ detailModel.designName || '-' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <strong>Machine:</strong>
+              <div>{{ detailModel.machineName || '-' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <strong>Operator:</strong>
+              <div>{{ detailModel.operatorLabel || detailModel.operatorName || '-' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <strong>Shift:</strong>
+              <div>{{ detailModel.shift || '-' }}</div>
+            </div>
+
+            <div class="col-12"><hr></div>
+
+            <div class="col-md-4">
+              <strong>Start Time:</strong>
+              <div>{{ detailModel.startTime || '-' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <strong>End Time:</strong>
+              <div>{{ detailModel.endTime || '-' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <strong>Stitches:</strong>
+              <div>{{ detailModel.stitches ?? '-' }}</div>
+            </div>
+
+            <div class="col-md-3">
+              <strong>Planned Qty:</strong>
+              <div>{{ detailModel.plannedQty ?? '-' }}</div>
+            </div>
+
+            <div class="col-md-3">
+              <strong>Actual Qty:</strong>
+              <div>{{ detailModel.actualQty ?? '-' }}</div>
+            </div>
+
+            <div class="col-md-3">
+              <strong>Rejected Qty:</strong>
+              <div>{{ detailModel.rejectedQty ?? '-' }}</div>
+            </div>
+
+            <div class="col-md-3">
+              <strong>Accepted Qty:</strong>
+              <div>{{ detailModel.acceptedQty ?? '-' }}</div>
+            </div>
+
+            <div class="col-12"><hr></div>
+
+            <div class="col-md-4">
+              <strong>Status:</strong>
+              <div>
+                <span class="state-pill"
+                      [ngClass]="getStatusClass(detailModel.status, detailModel.isReversed)">
+                  {{ detailModel.status || '-' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <strong>QC Status:</strong>
+              <div>
+                <span class="state-pill state-reversed"
+                      *ngIf="detailModel.isReversed === true">
+                  Reversed
+                </span>
+
+                <span class="state-pill state-muted"
+                      *ngIf="detailModel.isReversed !== true && detailModel.isPosted !== true">
+                  Not Posted
+                </span>
+
+                <span class="state-pill state-qc-pending"
+                      *ngIf="detailModel.isReversed !== true
+                        && detailModel.isPosted === true
+                        && detailModel.isSentToQC !== true
+                        && detailModel.hasQc !== true">
+                  Pending QC
+                </span>
+
+                <span class="state-pill state-qc-created"
+                      *ngIf="detailModel.isReversed !== true
+                        && (detailModel.isSentToQC === true || detailModel.hasQc === true)
+                        && detailModel.qcCompleted !== true">
+                  QC Created
+                </span>
+
+                <span class="state-pill state-done"
+                      *ngIf="detailModel.isReversed !== true && detailModel.qcCompleted === true">
+                  QC Posted
+                </span>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <strong>QC ID:</strong>
+              <div>{{ detailModel.qcId ?? '-' }}</div>
+            </div>
+
+            <div class="col-md-8">
+              <strong>Remarks:</strong>
+              <div>{{ detailModel.remarks || '-' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <strong>Record Time Stamp:</strong>
+              <div>{{ detailModel.recordTimeStamp || '-' }}</div>
+            </div>
+
+            <div class="col-12"><hr></div>
+
+            <div class="col-md-6">
+              <strong>Created:</strong>
+              <div>
+                {{ detailModel.createdDate || '-' }}<br>
+                <small>Employee ID: {{ detailModel.createdByEmployeeId || '-' }}</small>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <strong>Updated:</strong>
+              <div>
+                {{ detailModel.updatedDate || '-' }}<br>
+                <small>Employee ID: {{ detailModel.updatedByEmployeeId || '-' }}</small>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ===== Sprint-2: Audit Timeline =============================
+               Append-only history of every state-changing event on
+               this row. Best-effort load — if the audit table hasn't
+               been migrated yet, the section is just empty. -->
+          <div class="card mt-3 border-0 shadow-sm"
+               *ngIf="auditLog?.length || auditLogLoading">
+            <div class="card-header bg-light py-2 px-3 d-flex align-items-center">
+              <i class="bi bi-clock-history me-2 text-primary"></i>
+              <span class="fw-semibold">Audit Timeline</span>
+              <span class="badge bg-light text-secondary border ms-2"
+                    *ngIf="auditLog?.length">{{ auditLog.length }}</span>
+              <span *ngIf="auditLogLoading"
+                    class="text-muted small ms-auto">Loading…</span>
+            </div>
+            <div class="card-body p-0">
+              <ul class="list-group list-group-flush small">
+                <li *ngFor="let e of auditLog" class="list-group-item py-2 px-3">
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="badge {{ auditPill(e.action) }}">{{ e.action }}</span>
+                    <span class="text-muted">{{ e.changedDateText || e.changedDate || '-' }}</span>
+                    <span class="ms-auto fw-semibold">{{ e.changedByName || '-' }}</span>
+                  </div>
+                  <div *ngIf="e.detail" class="text-muted mt-1">
+                    {{ e.detail }}
+                  </div>
+                  <div *ngIf="(e.oldValue || e.newValue) && e.oldValue !== e.newValue"
+                       class="text-muted mt-1">
+                    <span class="text-decoration-line-through">{{ e.oldValue || '∅' }}</span>
+                    <i class="bi bi-arrow-right mx-1"></i>
+                    <strong>{{ e.newValue || '∅' }}</strong>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+        </ng-container>
+
+        <ng-template #detailLoading>
+          <div class="text-center py-4 text-muted">
+            Loading detail...
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="modal-footer dp-modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= DELETE MODAL ================= -->
+<div class="modal fade dp-modal" #dpDeleteModal tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-scrollable dp-modal-dialog">
+    <div class="modal-content dp-modal-content dp-delete-modal">
+
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Delete Daily Production Entry</h5>
+        <button type="button"
+                class="btn-close btn-close-white"
+                (click)="closeModal()">
+        </button>
+      </div>
+
+      <div class="modal-body text-center">
+        <p class="fs-5">Are you sure you want to delete this record?</p>
+
+        <p><strong>ID: {{ deleteModel?.id }}</strong></p>
+
+        <p *ngIf="deleteModel">
+          Work Order: <strong>{{ deleteModel.workOrderLabel || '-' }}</strong><br>
+          Machine: <strong>{{ deleteModel.machineName || '-' }}</strong><br>
+          Operator: <strong>{{ deleteModel.operatorName || deleteModel.operatorLabel || '-' }}</strong>
+        </p>
+
+        <p class="text-muted fst-italic">This action cannot be undone.</p>
+      </div>
+
+      <div class="modal-footer justify-content-center">
+        <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+        <button class="btn btn-danger" (click)="deleteConfirmed()">Yes, Delete</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= REVERSE MODAL ================= -->
+<div class="modal fade dp-modal" #dpReverseModal tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-warning">
+
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title text-dark">Reverse Daily Production</h5>
+        <button type="button"
+                class="btn-close"
+                (click)="closeModal()">
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div *ngIf="reverseModel" class="mb-3">
+          <p class="mb-1"><strong>ID:</strong> {{ reverseModel.id }}</p>
+          <p class="mb-1"><strong>Work Order:</strong> {{ reverseModel.workOrderLabel || '-' }}</p>
+          <p class="mb-1"><strong>Product:</strong> {{ reverseModel.productName || '-' }}</p>
+          <p class="mb-1"><strong>Accepted Qty:</strong> {{ reverseModel.acceptedQty ?? 0 }}</p>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Reverse Reason <span class="text-danger">*</span></label>
+          <textarea class="form-control"
+                    rows="4"
+                    [(ngModel)]="reverseReason"
+                    name="reverseReason"
+                    placeholder="Enter reason for reversal"></textarea>
+        </div>
+
+        <div class="alert alert-warning py-2 mb-0">
+          This action will mark the production as reversed and should only be used when business rules allow it.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+        <button class="btn btn-warning text-dark"
+                [disabled]="!reverseReason || !reverseReason.trim()"
+                (click)="reverseConfirmed()">
+          Confirm Reverse
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Phase Q.1 - 360 PROFILE DRAWER (top-level) ===================== -->
+<div *ngIf="showProfile" class="modal show d-block dp-profile-modal" tabindex="-1"
+     (click)="closeProfile()">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+         (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title d-flex align-items-center">
+            <i class="bi bi-kanban me-2"></i>
+            Daily Production Profile
+            <span class="opacity-75 ms-2" *ngIf="profile">#{{ profile.header.id }}</span>
+            <ng-container *ngIf="profile">
+              <span class="badge ms-3"
+                    [ngClass]="profile.header.isReversed
+                                ? 'bg-danger-subtle text-danger-emphasis border border-danger'
+                                : (profile.header.isPosted
+                                    ? 'bg-success-subtle text-success-emphasis border border-success'
+                                    : 'bg-light text-secondary border')">
+                <i class="bi me-1"
+                   [ngClass]="profile.header.isReversed ? 'bi-arrow-counterclockwise'
+                              : (profile.header.isPosted ? 'bi-check-circle-fill' : 'bi-pencil')"></i>
+                {{ profile.header.isReversed ? 'Reversed' : (profile.header.isPosted ? 'Posted' : 'Draft') }}
+              </span>
+              <span class="badge ms-2" *ngIf="profile.header.status"
+                    [ngClass]="productionStatusPill(profile.header.status).cssClass">
+                <i class="bi me-1" [ngClass]="productionStatusPill(profile.header.status).icon"></i>
+                {{ profile.header.status }}
+              </span>
+              <span class="badge ms-2 bg-success-subtle text-success-emphasis border border-success"
+                    *ngIf="profile.header.qcCompleted">
+                <i class="bi bi-shield-check me-1"></i>QC Done
+              </span>
+            </ng-container>
+          </h5>
+          <button class="btn-close btn-close-white" (click)="closeProfile()"></button>
+        </div>
+
+        <div class="modal-body p-3">
+
+          <div *ngIf="profileLoading" class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
+            <div class="text-muted small mt-2">Loading profile...</div>
+          </div>
+
+          <ng-container *ngIf="!profileLoading && profile">
+
+            <!-- HEADER CARD -->
+            <div class="profile-section card mb-3">
+              <div class="card-header py-2 px-3 d-flex align-items-center">
+                <i class="bi bi-info-circle me-2 text-primary"></i>
+                <span class="fw-semibold">Header</span>
+                <span class="badge bg-light text-secondary border ms-2" *ngIf="profile.header.shift">
+                  Shift {{ profile.header.shift }}
+                </span>
+              </div>
+              <div class="card-body p-3">
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <div class="profile-field-label">Start</div>
+                    <div class="profile-field-value">{{ profile.header.startTimeText || '-' }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="profile-field-label">End</div>
+                    <div class="profile-field-value">{{ profile.header.endTimeText || '—' }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="profile-field-label">Work Order</div>
+                    <div class="profile-field-value">{{ profile.header.workOrderCode || '-' }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="profile-field-label">Component</div>
+                    <div class="profile-field-value">{{ profile.header.componentName || '-' }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="profile-field-label">Product</div>
+                    <div class="profile-field-value">
+                      {{ profile.header.productCode ? (profile.header.productCode + ' - ') : '' }}{{ profile.header.productName || '-' }}
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="profile-field-label">Design</div>
+                    <div class="profile-field-value">
+                      {{ profile.header.designCode ? (profile.header.designCode + ' - ') : '' }}{{ profile.header.designName || '-' }}
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="profile-field-label">Machine</div>
+                    <div class="profile-field-value">
+                      {{ profile.header.machineCode || '-' }}
+                      <small class="text-muted ms-1" *ngIf="profile.header.machineSerial">[{{ profile.header.machineSerial }}]</small>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="profile-field-label">Operator</div>
+                    <div class="profile-field-value">
+                      {{ profile.header.operatorCode }} <span class="text-muted">- {{ profile.header.operatorName }}</span>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="profile-field-label">Sent to QC</div>
+                    <div class="profile-field-value">{{ profile.header.sentToQcDateText || '—' }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="profile-field-label">QC Completed</div>
+                    <div class="profile-field-value">{{ profile.header.qcCompletedDateText || '—' }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="profile-field-label">Posted</div>
+                    <div class="profile-field-value">{{ profile.header.postedDateText || '—' }}</div>
+                  </div>
+                  <div class="col-12" *ngIf="profile.header.remarks">
+                    <div class="profile-field-label">Remarks</div>
+                    <div class="profile-field-value">{{ profile.header.remarks }}</div>
+                  </div>
+                  <div class="col-12" *ngIf="profile.header.reverseReason">
+                    <div class="profile-field-label">Reverse Reason</div>
+                    <div class="profile-field-value text-danger">{{ profile.header.reverseReason }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- KPI TILES -->
+            <div class="row g-2 mb-3 profile-kpi-row">
+              <div class="col-md col-6">
+                <div class="card kpi-tile kpi-tile-info h-100">
+                  <div class="card-body p-2 px-3">
+                    <div class="kpi-label">Planned / Actual</div>
+                    <div class="kpi-value">{{ profile.kpis.plannedQty | number }} / {{ profile.kpis.actualQty | number }}</div>
+                    <div class="kpi-sub text-muted">Yield {{ profile.kpis.yieldPct }}%</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md col-6">
+                <div class="card kpi-tile kpi-tile-success h-100">
+                  <div class="card-body p-2 px-3">
+                    <div class="kpi-label">Accepted</div>
+                    <div class="kpi-value">{{ profile.kpis.acceptedQty | number }}</div>
+                    <div class="kpi-sub text-success">{{ profile.kpis.qcPassPct }}% QC pass</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md col-6">
+                <div class="card kpi-tile kpi-tile-danger h-100">
+                  <div class="card-body p-2 px-3">
+                    <div class="kpi-label">Rejected</div>
+                    <div class="kpi-value">{{ profile.kpis.rejectedQty | number }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md col-6">
+                <div class="card kpi-tile kpi-tile-warning h-100">
+                  <div class="card-body p-2 px-3">
+                    <div class="kpi-label">Stitches</div>
+                    <div class="kpi-value">{{ profile.kpis.stitches | number }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md col-6">
+                <div class="card kpi-tile h-100"
+                     [ngClass]="profile.kpis.utilizationPct >= 75 ? 'kpi-tile-success' : (profile.kpis.utilizationPct >= 50 ? 'kpi-tile-warning' : 'kpi-tile-muted')">
+                  <div class="card-body p-2 px-3">
+                    <div class="kpi-label">Utilization</div>
+                    <div class="kpi-value">{{ profile.kpis.utilizationPct }}%</div>
+                    <div class="kpi-sub text-muted">
+                      {{ profile.kpis.productiveMinutes }} / {{ profile.kpis.totalRunMinutes }} min
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md col-6">
+                <div class="card kpi-tile h-100"
+                     [ngClass]="profile.kpis.stopCount > 0 ? 'kpi-tile-danger' : 'kpi-tile-muted'">
+                  <div class="card-body p-2 px-3">
+                    <div class="kpi-label">Stops</div>
+                    <div class="kpi-value">{{ profile.kpis.stopCount }}</div>
+                    <div class="kpi-sub text-muted">{{ profile.kpis.totalStopMinutes }} min lost</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Phase S.1 - MACHINE COST BREAKDOWN -->
+            <div class="profile-section card mb-3" *ngIf="profile.cost">
+              <div class="card-header py-2 px-3 d-flex align-items-center">
+                <i class="bi bi-cash-coin me-2 text-success"></i>
+                <span class="fw-semibold">Machine Cost Breakdown</span>
+                <span *ngIf="profile.cost.hasCostProfile" class="badge bg-success-subtle text-success-emphasis border border-success ms-2">
+                  {{ profile.cost.costProfileSourceText }}
+                </span>
+                <span *ngIf="!profile.cost.hasCostProfile" class="badge bg-warning-subtle text-warning-emphasis border border-warning ms-2">
+                  <i class="bi bi-exclamation-triangle me-1"></i> No active cost profile for this machine
+                </span>
+              </div>
+              <div class="card-body p-3">
+
+                <!-- Hourly rates -->
+                <div class="row g-2 mb-3" *ngIf="profile.cost.hasCostProfile">
+                  <div class="col-md col-6">
+                    <div class="cost-tile">
+                      <div class="cost-label">Machine / Hr</div>
+                      <div class="cost-value">Rs {{ profile.cost.machineHourly | number:'1.2-2' }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md col-6">
+                    <div class="cost-tile">
+                      <div class="cost-label">Operator / Hr</div>
+                      <div class="cost-value">Rs {{ profile.cost.operatorHourly | number:'1.2-2' }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md col-6">
+                    <div class="cost-tile">
+                      <div class="cost-label">Electric / Hr</div>
+                      <div class="cost-value">Rs {{ profile.cost.electricHourly | number:'1.2-2' }}</div>
+                      <div class="cost-sub text-muted">{{ profile.cost.powerKW }} KW × Rs {{ profile.cost.electricityUnitRate }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md col-6">
+                    <div class="cost-tile cost-tile-primary">
+                      <div class="cost-label">Total / Hr</div>
+                      <div class="cost-value">Rs {{ profile.cost.totalHourly | number:'1.2-2' }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Actual cost (productive hours × hourly rate) -->
+                <div class="row g-2">
+                  <div class="col-md col-6">
+                    <div class="cost-tile">
+                      <div class="cost-label">Productive Hrs</div>
+                      <div class="cost-value">{{ profile.cost.productiveHours | number:'1.2-4' }}</div>
+                      <div class="cost-sub text-muted">+ {{ profile.cost.idleHours | number:'1.2-4' }} idle</div>
+                    </div>
+                  </div>
+                  <div class="col-md col-6">
+                    <div class="cost-tile">
+                      <div class="cost-label">Machine Cost</div>
+                      <div class="cost-value">Rs {{ profile.cost.machineCost | number:'1.2-2' }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md col-6">
+                    <div class="cost-tile">
+                      <div class="cost-label">Operator Cost</div>
+                      <div class="cost-value">Rs {{ profile.cost.operatorCost | number:'1.2-2' }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md col-6">
+                    <div class="cost-tile">
+                      <div class="cost-label">Electric Cost</div>
+                      <div class="cost-value">Rs {{ profile.cost.electricCost | number:'1.2-2' }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 col-6">
+                    <div class="cost-tile cost-tile-success">
+                      <div class="cost-label">Total Production Cost</div>
+                      <div class="cost-value fw-bold">Rs {{ profile.cost.totalProductionCost | number:'1.2-2' }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 col-6">
+                    <div class="cost-tile cost-tile-info">
+                      <div class="cost-label">Cost / Accepted Pc</div>
+                      <div class="cost-value">Rs {{ profile.cost.costPerAcceptedPc | number:'1.2-4' }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 col-6">
+                    <div class="cost-tile cost-tile-primary">
+                      <div class="cost-label">Stitches Cost</div>
+                      <div class="cost-value">Rs {{ profile.cost.stitchesCost | number:'1.2-2' }}</div>
+                      <div class="cost-sub text-muted" *ngIf="profile.cost.ratedCostPerStitch > 0">
+                        {{ profile.kpis.stitches | number }} × Rs {{ profile.cost.ratedCostPerStitch | number:'1.4-6' }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 col-6">
+                    <div class="cost-tile cost-tile-info">
+                      <div class="cost-label">Cost / Stitch</div>
+                      <div class="cost-value">Rs {{ profile.cost.costPerStitch | number:'1.4-6' }}</div>
+                      <div class="cost-sub text-muted">Rated: Rs {{ profile.cost.ratedCostPerStitch | number:'1.4-6' }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 col-6">
+                    <div class="cost-tile"
+                         [ngClass]="profile.cost.stitchEfficiencyPct >= 90 ? 'cost-tile-success' : (profile.cost.stitchEfficiencyPct >= 70 ? 'cost-tile-warning' : 'cost-tile-danger')">
+                      <div class="cost-label">Stitch Efficiency</div>
+                      <div class="cost-value">{{ profile.cost.stitchEfficiencyPct }}%</div>
+                      <div class="cost-sub text-muted" *ngIf="profile.cost.expectedStitches > 0">
+                        {{ profile.kpis.stitches | number }} / {{ profile.cost.expectedStitches | number }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="text-muted small mt-2" *ngIf="profile.cost.hasCostProfile">
+                  <i class="bi bi-info-circle me-1"></i>
+                  Cost computed from MachineCostProfile rates × productive hours (run time − stops). Idle cost shown separately.
+                </div>
+                <div class="text-muted small mt-2" *ngIf="!profile.cost.hasCostProfile">
+                  Set hourly rates in <strong>Machine Cost Profile</strong> for this machine to see production cost here.
+                </div>
+              </div>
+            </div>
+
+            <!-- STOPS -->
+            <div class="profile-section card mb-3">
+              <div class="card-header py-2 px-3 d-flex align-items-center">
+                <i class="bi bi-stopwatch me-2 text-primary"></i>
+                <span class="fw-semibold">Production Stops</span>
+                <span class="badge bg-light text-secondary border ms-2">{{ profile.stops.length }}</span>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive" *ngIf="profile.stops.length; else noStops">
+                  <table class="table table-sm align-middle mb-0 profile-table">
+                    <thead>
+                      <tr>
+                        <th style="width:40px;">#</th>
+                        <th style="width:160px;">Stop Start</th>
+                        <th style="width:160px;">Stop End</th>
+                        <th class="text-end" style="width:120px;">Duration (min)</th>
+                        <th>Reason</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let s of profile.stops; let idx = index">
+                        <td class="text-muted">{{ idx + 1 }}</td>
+                        <td>{{ s.stopStartText }}</td>
+                        <td>{{ s.stopEndText || '—' }}</td>
+                        <td class="text-end fw-semibold">{{ s.durationMinutes | number:'1.0-1' }}</td>
+                        <td>{{ s.reason || '-' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <ng-template #noStops>
+                  <div class="text-center text-muted py-4">
+                    <i class="bi bi-stopwatch fs-4 d-block mb-2"></i>
+                    No production stops recorded for this run.
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+
+            <!-- QC TRAIL -->
+            <div class="profile-section card mb-3">
+              <div class="card-header py-2 px-3 d-flex align-items-center">
+                <i class="bi bi-clipboard-check me-2 text-primary"></i>
+                <span class="fw-semibold">QC Trail</span>
+                <span class="badge bg-light text-secondary border ms-2">{{ profile.qcTrail.length }}</span>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive" *ngIf="profile.qcTrail.length; else noQc">
+                  <table class="table table-sm align-middle mb-0 profile-table">
+                    <thead>
+                      <tr>
+                        <th style="width:40px;">#</th>
+                        <th>QC No</th>
+                        <th style="width:110px;">Date</th>
+                        <th>Type</th>
+                        <th>Source</th>
+                        <th class="text-end">Batch</th>
+                        <th class="text-end">Inspected</th>
+                        <th class="text-end text-success">Passed</th>
+                        <th class="text-end text-danger">Failed</th>
+                        <th class="text-end text-warning">Rework</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let q of profile.qcTrail; let idx = index">
+                        <td class="text-muted">{{ idx + 1 }}</td>
+                        <td class="fw-semibold">{{ q.qcNo }}</td>
+                        <td>{{ q.inspectionDateText }}</td>
+                        <td>{{ q.inspectionType || '-' }}</td>
+                        <td>{{ q.sourceType || '-' }}</td>
+                        <td class="text-end">{{ q.batchQty | number }}</td>
+                        <td class="text-end">{{ q.inspectedQty | number }}</td>
+                        <td class="text-end text-success">{{ q.passedQty | number }}</td>
+                        <td class="text-end text-danger">{{ q.failedQty | number }}</td>
+                        <td class="text-end text-warning">{{ q.reworkQty | number }}</td>
+                        <td>
+                          <span class="badge" [ngClass]="productionStatusPill(q.status).cssClass">
+                            <i class="bi me-1" [ngClass]="productionStatusPill(q.status).icon"></i>
+                            {{ q.status || '-' }}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <ng-template #noQc>
+                  <div class="text-center text-muted py-4">
+                    <i class="bi bi-clipboard fs-4 d-block mb-2"></i>
+                    No QC inspections linked to this production run.
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+
+            <!-- STOCK POSTING TRAIL -->
+            <div class="profile-section card">
+              <div class="card-header py-2 px-3 d-flex align-items-center">
+                <i class="bi bi-bezier me-2 text-primary"></i>
+                <span class="fw-semibold">Finished Stock Posting Trail</span>
+                <span class="badge bg-light text-secondary border ms-2">{{ profile.stockTrail.length }}</span>
+                <span class="ms-auto small text-muted">Gen_Stocks rows from this QC</span>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive" *ngIf="profile.stockTrail.length; else noStock">
+                  <table class="table table-sm align-middle mb-0 profile-table">
+                    <thead>
+                      <tr>
+                        <th style="width:40px;">#</th>
+                        <th style="width:120px;">Date</th>
+                        <th>Type</th>
+                        <th>Ref</th>
+                        <th>Stage</th>
+                        <th class="text-end">Opening</th>
+                        <th class="text-end text-success">In</th>
+                        <th class="text-end text-danger">Out</th>
+                        <th class="text-end">Current</th>
+                        <th class="text-end">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let s of profile.stockTrail; let idx = index">
+                        <td class="text-muted">{{ idx + 1 }}</td>
+                        <td>{{ s.dateText }}</td>
+                        <td>
+                          <span class="badge"
+                                [ngClass]="(s.transactionType || '').toUpperCase() === 'IN'
+                                            ? 'bg-success-subtle text-success-emphasis border border-success'
+                                            : 'bg-danger-subtle text-danger-emphasis border border-danger'">
+                            {{ s.transactionType }}
+                          </span>
+                        </td>
+                        <td class="text-muted small">{{ s.referenceType }}<span *ngIf="s.referenceNo"> · {{ s.referenceNo }}</span></td>
+                        <td>{{ s.stockStage || '-' }}</td>
+                        <td class="text-end">{{ s.openingQty | number }}</td>
+                        <td class="text-end text-success">{{ s.inQty | number }}</td>
+                        <td class="text-end text-danger">{{ s.outQty | number }}</td>
+                        <td class="text-end fw-semibold">{{ s.currentQty | number }}</td>
+                        <td class="text-end">{{ s.amount | number:'1.0-0' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <ng-template #noStock>
+                  <div class="text-center text-muted py-4">
+                    <i class="bi bi-bezier2 fs-4 d-block mb-2"></i>
+                    No finished-stock rows posted from this production yet.
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+
+          </ng-container>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" (click)="closeProfile()">
+            <i class="bi bi-x-circle me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="showProfile" class="modal-backdrop show"></div>

@@ -1,0 +1,64 @@
+﻿@model IEnumerable<EMB_Production.ViewModels.BranchExportRow>
+@{
+    Layout = null; /* clean PDF; remove if you want site layout */
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Branches</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 6px 8px;
+            text-align: left;
+        }
+
+        th {
+            background: #f2f2f2;
+        }
+
+        h3 {
+            margin: 0 0 10px 0;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <h3>Branches</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Code</th>
+                <th>Location</th>
+                <th>Company</th>
+                <th>Active</th>
+                <th>Deleted</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>@r.Id</td>
+                    <td>@r.Name</td>
+                    <td>@(r.Code?.ToString() ?? "—")</td>
+                    <td>@r.Location</td>
+                    <td>@r.Company</td>
+                    <td>@r.Active</td>
+                    <td>@r.Deleted</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</body>
+</html>

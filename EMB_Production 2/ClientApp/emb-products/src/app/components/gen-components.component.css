@@ -1,0 +1,41 @@
+.search-group {
+  max-width: 220px;
+}
+
+/* Phase R.1 - summary strip + profile drawer */
+.comp-summary-strip .badge { font-weight: 500; padding: 0.5rem 0.7rem; font-size: 0.78rem; }
+.comp-summary-strip .badge strong { font-weight: 700; }
+.comp-profile-modal { background: rgba(0,0,0,0.4); padding-top: 60px; overflow-y: auto; }
+.comp-profile-modal .modal-content { border-radius: 12px; overflow: hidden; }
+.comp-profile-modal .modal-body { background: #f4f6f9; }
+.comp-section-card { border: 1px solid #e9ecef; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+.comp-section-card .card-header { background: #f8f9fb; border-bottom: 1px solid #eef1f4; font-weight: 600; font-size: 0.86rem; }
+.comp-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.comp-value { font-size: 0.92rem; color: #212529; font-weight: 500; margin-top: 2px; }
+.comp-kpi-row .kpi-tile { border: 1px solid #e9ecef; border-left-width: 4px; border-radius: 8px; transition: transform .15s ease; }
+.comp-kpi-row .kpi-tile:hover { transform: translateY(-1px); }
+.comp-kpi-row .kpi-tile-primary { border-left-color: #0d6efd; }
+.comp-kpi-row .kpi-tile-success { border-left-color: #198754; }
+.comp-kpi-row .kpi-tile-info    { border-left-color: #0dcaf0; }
+.comp-kpi-row .kpi-tile-warning { border-left-color: #ffc107; }
+.comp-kpi-row .kpi-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.comp-kpi-row .kpi-value { font-size: 1.15rem; font-weight: 700; line-height: 1.2; color: #212529; }
+
+.status-filter {
+  max-width: 120px;
+}
+
+.design-filter {
+  max-width: 220px;
+}
+
+.table-responsive-components {
+  max-height: 60vh;
+}
+
+  /* Optional: smaller table cells */
+  .table-responsive-components table td,
+  .table-responsive-components table th {
+    vertical-align: middle;
+    font-size: 0.9rem;
+  }

@@ -1,0 +1,1213 @@
+<div class="container-fluid py-3 store-page">
+
+  <!-- ===================== HEADER ===================== -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+      <h3 class="mb-1">Raw Material Store</h3>
+      <div class="text-muted small">
+        Item-wise raw material ledger generated from Purchase, Opening, and Material Issue transactions
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-outline-primary btn-sm" (click)="openOpening()">
+        <i class="bi bi-plus-circle me-1"></i>
+        Opening In
+      </button>
+
+      <button class="btn btn-warning btn-sm" (click)="openIssue()">
+        <i class="bi bi-arrow-up-right-circle me-1"></i>
+        Material Issue Out
+      </button>
+
+      <button class="btn btn-info btn-sm text-white" (click)="openTransfer()">
+        <i class="bi bi-arrow-left-right me-1"></i>
+        Branch Transfer
+      </button>
+
+      <button class="btn btn-outline-secondary btn-sm" (click)="openAdjust()">
+        <i class="bi bi-sliders me-1"></i>
+        Stock Adjustment
+      </button>
+
+      <button class="btn btn-outline-dark btn-sm" (click)="loadAll()">
+        <i class="bi bi-arrow-clockwise me-1"></i>
+        Refresh
+      </button>
+    </div>
+  </div>
+  
+  <!-- ===================== FILTERS ===================== -->
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-body">
+      <div class="row g-2 align-items-end">
+
+        <div class="col-md-3">
+          <label class="form-label">Search</label>
+          <input type="text"
+                 class="form-control"
+                 [(ngModel)]="search"
+                 placeholder="Search item, reference, remarks"
+                 (keyup.enter)="onSearch()">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Work Order</label>
+          <select class="form-select" [(ngModel)]="issuedSearchWorkOrderId">
+            <option [ngValue]="null">All Work Orders</option>
+            <option *ngFor="let w of issuedWorkOrders" [ngValue]="w.id">
+              {{ w.text }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">Branch</label>
+          <select class="form-select" [(ngModel)]="branchId">
+            <option [ngValue]="null">All Branches</option>
+            <option *ngFor="let b of branches" [ngValue]="b.id">
+              {{ b.text }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="activeFilter">
+            <option value="">All</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+
+        <div class="col-md-2 d-flex gap-2">
+          <button class="btn btn-primary w-100" (click)="onSearch()">Search</button>
+          <button class="btn btn-outline-secondary w-100" (click)="resetFilters()">Reset</button>
+        </div>
+
+      </div>
+
+      <!-- Phase G.0 — date range + reference type filters -->
+      <div class="row g-2 align-items-end mt-2">
+        <div class="col-md-2">
+          <label class="form-label small mb-1">From date</label>
+          <input type="date" class="form-control form-control-sm"
+                 [(ngModel)]="fromDate" (change)="onFiltersChange()">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small mb-1">To date</label>
+          <input type="date" class="form-control form-control-sm"
+                 [(ngModel)]="toDate" (change)="onFiltersChange()">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small mb-1">Reference Type</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="referenceType" (ngModelChange)="onFiltersChange()">
+            <option value="">All references</option>
+            <option *ngFor="let rt of referenceTypes" [value]="rt">{{ rt }}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small mb-1">Stock Status</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="stockStatusFilter" (ngModelChange)="onFiltersChange()">
+            <option *ngFor="let s of stockStatusOptions" [value]="s.value">{{ s.label }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== KPI TILES (Phase G.0) =====================
+       Scope: KPI numbers are LIFETIME (Opening + IN − OUT reconciles
+       with Net Balance). Date filters above only narrow the transactions
+       table below the chip strip, not these aggregates. -->
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <small class="text-muted">
+      <i class="bi bi-info-circle me-1"></i>
+      Balance numbers are lifetime
+      <ng-container *ngIf="!kpis.appliedFromDate && !kpis.appliedToDate">
+        (transactions table below shows <strong>all dates</strong>).
+      </ng-container>
+      <ng-container *ngIf="kpis.appliedFromDate || kpis.appliedToDate">
+        (transactions table below filtered
+        <strong>{{ kpis.appliedFromDate || 'earliest' }}</strong>
+        →
+        <strong>{{ kpis.appliedToDate || 'today' }}</strong>).
+      </ng-container>
+    </small>
+  </div>
+
+  <div class="row g-2 mb-3 store-kpi-row">
+    <div class="col-md col-6">
+      <div class="card border-0 shadow-sm h-100 kpi-tile kpi-tile-primary">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">Distinct Items</div>
+          <div class="kpi-value">{{ kpis.distinctItems | number }}</div>
+          <div class="kpi-sub text-success">{{ kpis.activeItemCount }} available</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md col-6">
+      <!-- Total Opening — added so the IN / OUT / Net Balance math
+           reconciles on the chip strip. Net Balance = Opening + IN − OUT. -->
+      <div class="card border-0 shadow-sm h-100 kpi-tile kpi-tile-muted">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">Total Opening</div>
+          <div class="kpi-value">{{ kpis.totalOpening | number:'1.0-2' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md col-6">
+      <div class="card border-0 shadow-sm h-100 kpi-tile kpi-tile-success">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">Total IN</div>
+          <div class="kpi-value">{{ kpis.totalIn | number:'1.0-2' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md col-6">
+      <div class="card border-0 shadow-sm h-100 kpi-tile kpi-tile-danger">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">Total OUT</div>
+          <div class="kpi-value">{{ kpis.totalOut | number:'1.0-2' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md col-6">
+      <div class="card border-0 shadow-sm h-100 kpi-tile"
+           [ngClass]="kpis.netBalance < 0 ? 'kpi-tile-danger' : 'kpi-tile-info'">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">Net Balance</div>
+          <div class="kpi-value">{{ kpis.netBalance | number:'1.0-2' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md col-6">
+      <div class="card border-0 shadow-sm h-100 kpi-tile kpi-tile-warning">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">
+            Stock Value
+            <!-- Sprint-1: disclose the valuation method so the finance
+                 team isn't left guessing why the number doesn't match
+                 their own FIFO/Avg calculation. -->
+            <i class="bi bi-info-circle ms-1 text-muted"
+               title="Balance × Last Paid Rate per (Item, Branch). Valuation method: Last Purchase Price."></i>
+          </div>
+          <div class="kpi-value">{{ kpis.stockValue | number:'1.0-0' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md col-6">
+      <div class="card border-0 shadow-sm h-100 kpi-tile"
+           [ngClass]="kpis.belowReorderCount > 0 ? 'kpi-tile-danger' : 'kpi-tile-muted'">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">Below Reorder</div>
+          <div class="kpi-value">{{ kpis.belowReorderCount }}</div>
+          <div class="kpi-sub text-muted">
+            of {{ kpis.distinctItems }} items
+            <span class="text-warning ms-1" *ngIf="kpis.aboveMaxCount > 0">
+              ({{ kpis.aboveMaxCount }} above max)
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md col-6">
+      <div class="card border-0 shadow-sm h-100 kpi-tile"
+           [ngClass]="kpis.negativeCount > 0 ? 'kpi-tile-danger' : 'kpi-tile-muted'">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">Below Zero</div>
+          <div class="kpi-value">{{ kpis.negativeCount }}</div>
+          <div class="kpi-sub text-muted">{{ kpis.zeroCount }} at zero</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 2. ITEM BALANCE SUMMARY ===================== -->
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">
+        <i class="bi bi-boxes me-1"></i>
+        Item Balance Summary
+      </span>
+      <span class="text-muted small">
+        Item-wise balance for monitoring raw material stock
+      </span>
+    </div>
+
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width:45px;">#</th>
+              <th>Item</th>
+              <th style="width:140px;">Branch</th>
+              <th class="text-end" style="width:90px;">Opening</th>
+              <th class="text-end" style="width:90px;">In</th>
+              <th class="text-end" style="width:90px;">Out</th>
+              <th class="text-end" style="width:110px;">Balance</th>
+              <th style="width:60px;">Unit</th>
+              <th class="text-end" style="width:90px;">Reorder</th>
+              <th class="text-end" style="width:90px;">Max</th>
+              <th style="width:130px;">Reorder Status</th>
+              <th class="text-center" style="width:110px;">Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngIf="loading">
+              <td colspan="12" class="text-center py-3">Loading...</td>
+            </tr>
+
+            <tr *ngIf="!loading && itemBalances.length === 0">
+              <td colspan="12" class="text-center text-muted py-3">
+                No item balance found.
+              </td>
+            </tr>
+
+            <tr *ngFor="let r of itemBalances; let i = index"
+                [ngClass]="rowTintClass(r)">
+              <td class="text-muted">{{ i + 1 }}</td>
+              <td class="fw-semibold">{{ r.itemName || '-' }}</td>
+              <td>{{ r.branchName || '-' }}</td>
+
+              <td class="text-end">{{ r.openingQty | number:'1.0-2' }}</td>
+              <td class="text-end text-success fw-semibold">{{ r.totalIn | number:'1.0-2' }}</td>
+              <td class="text-end text-danger fw-semibold">{{ r.totalOut | number:'1.0-2' }}</td>
+
+              <td class="text-end fw-bold"
+                 [ngClass]="{
+                      'text-success': isBalancePositive(r.currentBalance),
+                      'text-danger': isBalanceNegative(r.currentBalance),
+                      'text-muted': isBalanceZero(r.currentBalance)
+                    }">
+                {{ r.currentBalance | number:'1.0-2' }}
+              </td>
+
+              <td>{{ r.unit || '-' }}</td>
+
+              <td class="text-end text-muted">
+                <span *ngIf="r.reorderLevel != null">{{ r.reorderLevel | number:'1.0-2' }}</span>
+                <span *ngIf="r.reorderLevel == null">&mdash;</span>
+              </td>
+              <td class="text-end text-muted">
+                <span *ngIf="r.maxLevel != null">{{ r.maxLevel | number:'1.0-2' }}</span>
+                <span *ngIf="r.maxLevel == null">&mdash;</span>
+              </td>
+
+              <td>
+                <span class="badge" [ngClass]="stockStatusBadgeClass(r.stockStatus || 'NO_LEVELS')">
+                  <i class="bi me-1"
+                     [ngClass]="{
+                       'bi-exclamation-triangle-fill': r.stockStatus === 'BELOW_REORDER',
+                       'bi-arrow-up-circle': r.stockStatus === 'ABOVE_MAX',
+                       'bi-check-circle-fill': r.stockStatus === 'OK',
+                       'bi-dash-circle': r.stockStatus === 'NO_LEVELS' || !r.stockStatus
+                     }"></i>
+                  {{ stockStatusLabel(r.stockStatus || 'NO_LEVELS') }}
+                </span>
+              </td>
+
+              <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary me-1"
+                        title="View full ledger history for this item"
+                        (click)="openItemHistory(r)">
+                  <i class="bi bi-clock-history"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary"
+                        title="Set reorder / max levels"
+                        (click)="openLevels(r)">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 3. STORE LEDGER TRANSACTIONS ===================== -->
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">
+        <i class="bi bi-journal-text me-1"></i>
+        Store Ledger Transactions
+      </span>
+      <span class="text-muted small">
+        Purchase IN comes from Purchase module. Store only shows transactions.
+      </span>
+    </div>
+
+    <div class="card-body">
+      <!-- Sprint-3: bulk action strip — appears only when at least
+           one ledger row is selected. The per-id failure envelope
+           from /bulk-reverse is rendered in an alert so the operator
+           can see which reversals didn't take and why. -->
+      <div *ngIf="selectedIds.size > 0"
+           class="alert alert-info d-flex flex-wrap align-items-center gap-2 py-2 mb-2"
+           role="status">
+        <span class="me-2"><strong>{{ selectedIds.size }}</strong> row(s) selected</span>
+        <button class="btn btn-sm btn-warning" (click)="bulkReverse()" [disabled]="bulkBusy">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>
+          Bulk Reverse
+        </button>
+        <button class="btn btn-sm btn-light ms-auto" (click)="clearSelection()" [disabled]="bulkBusy">
+          Clear
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered table-hover align-middle mb-0 ledger-table">
+          <thead class="table-light">
+            <tr>
+              <!-- Sprint-3: select-all checkbox over the ledger rows.
+                   Eligibility for bulk reverse is enforced server-side,
+                   so the row-level checkbox is rendered regardless of
+                   ref type — non-eligible rows just come back in the
+                   failure list with a clear reason. -->
+              <th class="text-center" style="width:30px;">
+                <input type="checkbox" class="form-check-input"
+                       [checked]="allVisibleSelected()"
+                       (change)="toggleSelectAll()" />
+              </th>
+              <th style="width:34px;">#</th>
+              <!-- Date — single line "24-Jun-2026"; .col-date enforces
+                   nowrap so a 1366-px viewport doesn't shrink it
+                   into the 3-line stack we used to see. -->
+              <th style="width:100px;">Date</th>
+              <!-- Item — clamped to 2 lines via .cell-clamp; the
+                   primary visual on the row. -->
+              <th style="width:160px;">Item</th>
+              <th style="width:110px;">Branch</th>
+              <th class="text-center" style="width:66px;">Type</th>
+              <th style="width:130px;">Reference</th>
+              <th class="text-end" style="width:80px;">Opening</th>
+              <th class="text-end" style="width:70px;">In</th>
+              <th class="text-end" style="width:70px;">Out</th>
+              <th class="text-end" style="width:82px;">Balance</th>
+              <th class="text-center" style="width:44px;">Unit</th>
+              <th class="text-end" style="width:62px;">Rate</th>
+              <th class="text-end" style="width:88px;">Amount</th>
+              <!-- Remarks — same 2-line clamp; visually balances Item
+                   so the row reads symmetrically. -->
+              <th style="width:170px;">Remarks</th>
+              <th class="text-center" style="width:66px;">Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngIf="loading">
+              <td colspan="16" class="text-center py-3">Loading...</td>
+            </tr>
+
+            <tr *ngIf="!loading && rows.length === 0">
+              <td colspan="16" class="text-center text-muted py-3">
+                No store ledger record found.
+              </td>
+            </tr>
+
+            <tr *ngFor="let row of rows; let i = index">
+              <td class="text-center">
+                <input type="checkbox" class="form-check-input"
+                       [checked]="isSelected(row.id)"
+                       (change)="toggleSelect(row.id)" />
+              </td>
+              <td class="text-muted">{{ ((page - 1) * pageSize) + i + 1 }}</td>
+              <td class="col-date">
+                {{ row.transactionDate ? (row.transactionDate | date:'dd-MMM-yyyy') : '-' }}
+                <!-- Sprint-1: highlight rows created in the last 24h
+                     so warehouse staff spot fresh ledger entries. -->
+                <span *ngIf="row.isRecent"
+                      class="badge bg-info-subtle text-info border border-info-subtle ms-1"
+                      title="Posted within last 24 hours">
+                  <i class="bi bi-lightning-charge-fill"></i>
+                </span>
+              </td>
+
+              <!-- Sprint-1: clickable item name → raw-items master.
+                   .cell-clamp on the inner span wraps to 2 lines and
+                   trims the rest with an ellipsis; .col-item keeps the
+                   cell width predictable. -->
+              <td class="fw-semibold col-item" [title]="row.itemName">
+                <a *ngIf="row.itemId"
+                   href="javascript:void(0)"
+                   (click)="gotoItem(row)"
+                   class="cell-clamp d-block">
+                  {{ row.itemName || '-' }}
+                </a>
+                <span *ngIf="!row.itemId" class="cell-clamp d-block">{{ row.itemName || '-' }}</span>
+              </td>
+
+              <!-- Sprint-1: clickable branch name → branches master. -->
+              <td>
+                <a *ngIf="row.branchId"
+                   href="javascript:void(0)"
+                   class="text-decoration-none"
+                   (click)="gotoBranch(row)"
+                   [title]="'Open branch ' + (row.branchName || '')">
+                  {{ row.branchName || '-' }}
+                </a>
+                <span *ngIf="!row.branchId">{{ row.branchName || '-' }}</span>
+              </td>
+
+              <td>
+                <span class="badge"
+                      [ngClass]="{
+                        'bg-success': row.transactionType === 'IN',
+                        'bg-warning text-dark': row.transactionType === 'OUT',
+                        'bg-secondary': row.transactionType === 'BALANCE'
+                      }">
+                  {{ row.transactionType === 'BALANCE' ? 'BAL' : row.transactionType || '-' }}
+                </span>
+              </td>
+
+              <!-- Sprint-1: clickable Reference badge → source module
+                   (PURCHASE → /purchase, MATERIAL_ISSUE → /issue-materials,
+                   etc.). The slug is computed server-side and shipped as
+                   `referenceModule` so the mapping isn't duplicated. -->
+              <td class="col-ref">
+                <a *ngIf="row.referenceModule"
+                   href="javascript:void(0)"
+                   class="text-decoration-none d-block"
+                   (click)="gotoReference(row)"
+                   [title]="'Open ' + row.referenceType + ' ' + (row.referenceNo || '')">
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                    <i class="bi bi-link-45deg me-1"></i>{{ row.referenceType }}
+                  </span>
+                  <small class="text-muted">{{ row.referenceNo || '-' }}</small>
+                </a>
+                <ng-container *ngIf="!row.referenceModule">
+                  <div>{{ row.referenceType || '-' }}</div>
+                  <small class="text-muted">{{ row.referenceNo || '-' }}</small>
+                </ng-container>
+              </td>
+
+              <td class="text-end">{{ row.openingQty | number:'1.0-2' }}</td>
+              <td class="text-end text-success fw-semibold">{{ row.inQty | number:'1.0-2' }}</td>
+              <td class="text-end text-danger fw-semibold">{{ row.outQty | number:'1.0-2' }}</td>
+
+              <td class="text-end fw-bold"
+                  [ngClass]="{
+                      'text-success': isBalancePositive(row.currentQty),
+                      'text-danger': isBalanceNegative(row.currentQty),
+                      'text-muted': isBalanceZero(row.currentQty)
+                    }">
+                {{ row.currentQty | number:'1.0-2' }}
+              </td>
+
+              <td>{{ row.unit || '-' }}</td>
+              <td class="text-end">{{ row.rate | number:'1.2-2' }}</td>
+              <td class="text-end">{{ row.amount | number:'1.2-2' }}</td>
+              <!-- Remarks wraps to 2 lines via .cell-clamp; full text
+                   shown on hover so nothing is lost. -->
+              <td class="col-remarks" [title]="row.remarks">
+                <span class="cell-clamp d-block">{{ row.remarks || '-' }}</span>
+              </td>
+
+              <td class="text-center text-nowrap">
+                <button class="btn btn-sm btn-outline-primary me-1"
+                        (click)="viewDetail(row.id)"
+                        title="View detail">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button *ngIf="canReverseIssue(row)"
+                        class="btn btn-sm btn-outline-warning me-1"
+                        (click)="editIssueRow(row)"
+                        title="Edit (reverses this issue and re-opens form for the same WO)">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <button *ngIf="canReverseIssue(row)"
+                        class="btn btn-sm btn-outline-danger"
+                        (click)="reverseIssueRow(row)"
+                        title="Reverse this Material Issue (restore to stock)">
+                  <i class="bi bi-arrow-counterclockwise"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+        <div class="small text-muted">
+          Total: {{ totalItems }} | Page {{ page }} of {{ totalPages || 1 }}
+        </div>
+
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-secondary"
+                  [disabled]="page <= 1"
+                  (click)="changePage(page - 1)">
+            Prev
+          </button>
+
+          <button type="button"
+                  class="btn"
+                  [ngClass]="p === page ? 'btn-primary' : 'btn-outline-secondary'"
+                  *ngFor="let p of getPageNumbers()"
+                  (click)="changePage(p)">
+            {{ p }}
+          </button>
+
+          <button class="btn btn-outline-secondary"
+                  [disabled]="page >= totalPages"
+                  (click)="changePage(page + 1)">
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== DETAIL ===================== -->
+  <div class="card shadow-sm mt-4" *ngIf="detailModel">
+    <div class="card-header fw-semibold">Store Entry Detail</div>
+
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3"><strong>ID:</strong><br>{{ detailModel.id }}</div>
+        <div class="col-md-3"><strong>Item:</strong><br>{{ detailModel.itemName || '-' }}</div>
+        <div class="col-md-3"><strong>Branch:</strong><br>{{ detailModel.branchName || '-' }}</div>
+        <div class="col-md-3"><strong>Date:</strong><br>{{ detailModel.transactionDate | date:'dd-MMM-yyyy' }}</div>
+
+        <div class="col-md-3"><strong>Transaction:</strong><br>{{ detailModel.transactionType || '-' }}</div>
+        <div class="col-md-3"><strong>Reference Type:</strong><br>{{ detailModel.referenceType || '-' }}</div>
+        <div class="col-md-3"><strong>Reference No:</strong><br>{{ detailModel.referenceNo || '-' }}</div>
+        <div class="col-md-3"><strong>Unit:</strong><br>{{ detailModel.unit || '-' }}</div>
+
+        <div class="col-12">
+          <div class="alert alert-info py-2 mb-2 small">
+            <strong>How to read this row:</strong>
+            Stock balance was
+            <strong>{{ detailModel.openingQty | number:'1.0-2' }}</strong>
+            <span class="text-muted">{{ detailModel.unit }}</span>
+            before this transaction.
+            This transaction
+            <span *ngIf="(detailModel.inQty || 0) > 0">added <strong class="text-success">+{{ detailModel.inQty | number:'1.0-2' }}</strong></span>
+            <span *ngIf="(detailModel.outQty || 0) > 0">removed <strong class="text-danger">−{{ detailModel.outQty | number:'1.0-2' }}</strong></span>
+            <span *ngIf="(detailModel.inQty || 0) === 0 && (detailModel.outQty || 0) === 0">made no qty change</span>,
+            leaving a closing balance of
+            <strong class="text-primary">{{ detailModel.currentQty | number:'1.0-2' }}</strong>
+            <span class="text-muted">{{ detailModel.unit }}</span>.
+          </div>
+        </div>
+
+        <div class="col-md-3"><strong>Balance Before:</strong><br>{{ detailModel.openingQty | number:'1.0-2' }} <span class="text-muted">{{ detailModel.unit }}</span></div>
+        <div class="col-md-3"><strong>In Qty:</strong><br><span [class.text-success]="(detailModel.inQty || 0) > 0">{{ detailModel.inQty | number:'1.0-2' }}</span></div>
+        <div class="col-md-3"><strong>Out Qty:</strong><br><span [class.text-danger]="(detailModel.outQty || 0) > 0">{{ detailModel.outQty | number:'1.0-2' }}</span></div>
+        <div class="col-md-3"><strong>Balance After:</strong><br><span class="text-primary fw-semibold">{{ detailModel.currentQty | number:'1.0-2' }}</span> <span class="text-muted">{{ detailModel.unit }}</span></div>
+
+        <div class="col-md-3"><strong>Rate:</strong><br>{{ detailModel.rate | number:'1.2-2' }}</div>
+        <div class="col-md-3"><strong>Amount:</strong><br>{{ detailModel.amount | number:'1.2-2' }}</div>
+        <div class="col-md-6"><strong>Remarks:</strong><br>{{ detailModel.remarks || '-' }}</div>
+      </div>
+
+      <!-- ===== Sprint-2: Audit Timeline =============================
+           Append-only history of every state-changing event on this
+           ledger row. Best-effort load — if the audit table hasn't
+           been migrated yet, this section is just empty. -->
+      <div class="mt-4" *ngIf="auditLog?.length || auditLogLoading">
+        <h6 class="fw-semibold mb-2">
+          <i class="bi bi-clock-history me-1 text-primary"></i>
+          Audit Timeline
+          <span class="badge bg-light text-secondary border ms-2"
+                *ngIf="auditLog?.length">{{ auditLog.length }}</span>
+          <span *ngIf="auditLogLoading"
+                class="text-muted small ms-2">Loading…</span>
+        </h6>
+        <ul class="list-group list-group-flush small">
+          <li *ngFor="let e of auditLog" class="list-group-item py-2 px-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="badge {{ auditPill(e.action) }}">{{ e.action }}</span>
+              <span class="text-muted">{{ e.changedDateText || e.changedDate || '-' }}</span>
+              <span class="ms-auto fw-semibold">{{ e.changedByName || '-' }}</span>
+            </div>
+            <div *ngIf="e.detail" class="text-muted mt-1">{{ e.detail }}</div>
+            <div *ngIf="(e.oldValue || e.newValue) && e.oldValue !== e.newValue"
+                 class="text-muted mt-1">
+              <span class="text-decoration-line-through">{{ e.oldValue || '∅' }}</span>
+              <i class="bi bi-arrow-right mx-1"></i>
+              <strong>{{ e.newValue || '∅' }}</strong>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== OPENING FORM ===================== -->
+  <div class="card shadow-sm mt-4" *ngIf="showOpeningForm">
+    <div class="card-header fw-semibold">Opening Stock In</div>
+
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Raw Item</label>
+          <select class="form-select" [(ngModel)]="formOpening.itemId">
+            <option [ngValue]="0">Select</option>
+            <option *ngFor="let x of rawItems" [ngValue]="x.id">
+              {{ x.text }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Branch</label>
+          <select class="form-select" [(ngModel)]="formOpening.branchId">
+            <option [ngValue]="null">Select</option>
+            <option *ngFor="let x of branches" [ngValue]="x.id">
+              {{ x.text }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Transaction Date</label>
+          <input class="form-control" type="date" [(ngModel)]="formOpening.transactionDate">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Opening Qty</label>
+          <input class="form-control" type="number" [(ngModel)]="formOpening.openingQty">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Unit</label>
+          <input class="form-control" type="text" [(ngModel)]="formOpening.unit">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Rate</label>
+          <input class="form-control" type="number" [(ngModel)]="formOpening.rate">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Reference No</label>
+          <input class="form-control" type="text" [(ngModel)]="formOpening.referenceNo">
+        </div>
+
+        <div class="col-md-12">
+          <label class="form-label">Remarks</label>
+          <textarea class="form-control" rows="2" [(ngModel)]="formOpening.remarks"></textarea>
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+          <button class="btn btn-primary" [disabled]="saving" (click)="saveOpening()">
+            Save Opening
+          </button>
+          <button class="btn btn-outline-secondary" (click)="showOpeningForm = false">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MATERIAL ISSUE FORM ===================== -->
+  <div class="card shadow-sm mt-4" *ngIf="showIssueForm">
+    <div class="card-header fw-semibold">Issue Material Against Work Order</div>
+
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Work Order</label>
+          <select class="form-select"
+                  [(ngModel)]="formIssue.workOrderId"
+                  (change)="onWorkOrderChange()">
+            <option [ngValue]="0">Select Work Order</option>
+            <option *ngFor="let x of workOrders" [ngValue]="x.id">
+              {{ x.text }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Branch</label>
+          <select class="form-select"
+                  [(ngModel)]="formIssue.branchId"
+                  (change)="onBranchChange()">
+            <option [ngValue]="null">Select Branch</option>
+            <option *ngFor="let x of branches" [ngValue]="x.id">
+              {{ x.text }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Issue Date</label>
+          <input class="form-control" type="date" [(ngModel)]="formIssue.transactionDate">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Reference No</label>
+          <input class="form-control" type="text" [(ngModel)]="formIssue.referenceNo">
+        </div>
+
+        <div class="col-md-8">
+          <label class="form-label">Remarks</label>
+          <input class="form-control" type="text" [(ngModel)]="formIssue.remarks">
+        </div>
+      </div>
+
+      <div class="table-responsive mt-4" *ngIf="issueMaterialRows.length > 0">
+        <table class="table table-sm table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Raw Item</th>
+              <th>Type</th>
+              <th class="text-end">Required</th>
+              <th class="text-end">Available</th>
+              <th class="text-end">Already Issued</th>
+              <th class="text-end">Pending</th>
+              <th class="text-end">Issue Now</th>
+              <th>Department</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let r of issueMaterialRows">
+              <td>{{ r.itemName }}</td>
+              <td>{{ r.itemType }}</td>
+              <td class="text-end">{{ r.requiredQty }}</td>
+              <td class="text-end">{{ r.availableQty }}</td>
+              <td class="text-end">{{ r.alreadyIssuedQty }}</td>
+              <td class="text-end">{{ r.pendingQty }}</td>
+
+              <td>
+                <input type="number"
+                       class="form-control form-control-sm text-end"
+                       [(ngModel)]="r.issueQty">
+              </td>
+
+              <td>
+                <select class="form-select form-select-sm" [(ngModel)]="r.department">
+                  <option value="CUTTING">Cutting</option>
+                  <option value="EMBROIDERY">Embroidery</option>
+                  <option value="STITCHING">Stitching</option>
+                  <option value="FINISHING">Finishing</option>
+                  <option value="PACKING">Packing</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="col-12 d-flex gap-2 mt-3">
+        <button class="btn btn-warning" [disabled]="saving" (click)="saveIssue()">
+          Save Issue
+        </button>
+
+        <button class="btn btn-outline-secondary" (click)="showIssueForm = false">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== ITEM LEDGER HISTORY MODAL ===================== -->
+  <div *ngIf="historyOpen" class="modal show d-block item-history-modal" tabindex="-1"
+       (click)="closeItemHistory()">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white py-2">
+          <h5 class="modal-title">
+            <i class="bi bi-clock-history me-2"></i>
+            Ledger:
+            <span *ngIf="historyItem">{{ historyItem.itemName }} &mdash; {{ historyItem.branchName }}</span>
+          </h5>
+          <button class="btn-close btn-close-white" (click)="closeItemHistory()"></button>
+        </div>
+        <div class="modal-body">
+          <div *ngIf="historyLoading" class="alert alert-info py-2 mb-2">Loading full ledger&hellip;</div>
+
+          <div *ngIf="historyItem && !historyLoading" class="mb-2 small">
+            Aggregate &mdash; In: <strong>{{ historyItem.totalIn | number:'1.0-2' }}</strong>
+            &nbsp;|&nbsp; Out: <strong>{{ historyItem.totalOut | number:'1.0-2' }}</strong>
+            &nbsp;|&nbsp; Balance: <strong>{{ historyItem.currentBalance | number:'1.0-2' }}</strong> {{ historyItem.unit }}
+            <span class="text-muted ms-3">(full ledger &mdash; {{ historyRows.length }} transactions)</span>
+          </div>
+
+          <table *ngIf="!historyLoading" class="table table-sm">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th>
+                <th>Transaction</th>
+                <th>Reference</th>
+                <th class="text-end">In</th>
+                <th class="text-end">Out</th>
+                <th class="text-end">Balance</th>
+                <th class="text-end">Rate</th>
+                <th class="text-end">Amount</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of historyRows">
+                <td class="text-nowrap">{{ r.dateText || '-' }}</td>
+                <td>
+                  <span class="badge"
+                        [ngClass]="{
+                          'bg-success': r.transactionType === 'IN',
+                          'bg-warning text-dark': r.transactionType === 'OUT',
+                          'bg-secondary': r.transactionType !== 'IN' && r.transactionType !== 'OUT'
+                        }">
+                    {{ r.transactionType || '-' }}
+                  </span>
+                </td>
+                <td>
+                  <div>{{ r.referenceType || '-' }}</div>
+                  <small class="text-muted">{{ r.referenceNo || '-' }}</small>
+                </td>
+                <td class="text-end text-success">{{ r.inQty | number:'1.0-2' }}</td>
+                <td class="text-end text-danger">{{ r.outQty | number:'1.0-2' }}</td>
+                <td class="text-end fw-semibold">{{ r.runningBalance | number:'1.0-2' }}</td>
+                <td class="text-end">{{ r.rate | number:'1.2-2' }}</td>
+                <td class="text-end">{{ r.amount | number:'1.2-2' }}</td>
+                <td class="small text-muted">{{ r.remarks || '-' }}</td>
+              </tr>
+              <tr *ngIf="historyRows.length === 0">
+                <td colspan="9" class="text-center text-muted py-3">
+                  No transactions found for this item.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-outline-secondary btn-sm" (click)="closeItemHistory()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="historyOpen" class="modal-backdrop show"></div>
+
+  <!-- ===================== Phase G.2 BRANCH TRANSFER MODAL ===================== -->
+  <div *ngIf="showTransferForm" class="modal show d-block branch-transfer-modal" tabindex="-1"
+       (click)="closeTransfer()">
+    <div class="modal-dialog modal-lg modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header bg-info text-white py-2">
+          <h5 class="modal-title">
+            <i class="bi bi-arrow-left-right me-2"></i>
+            Branch Stock Transfer
+          </h5>
+          <button class="btn-close btn-close-white" (click)="closeTransfer()"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="alert alert-info py-2 small mb-3">
+            <i class="bi bi-info-circle me-1"></i>
+            This will write a paired OUT/IN ledger at the two branches with a single TRF-YYYY-NNNN reference.
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Item <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="formTransfer.itemId" name="trItemId">
+                <option [ngValue]="null">-- Select Item --</option>
+                <option *ngFor="let r of rawItems" [ngValue]="r.id">{{ r.text }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Date</label>
+              <input type="date"
+                     class="form-control"
+                     [(ngModel)]="formTransfer.transactionDate"
+                     name="trDate">
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Qty <span class="text-danger">*</span></label>
+              <input type="number"
+                     class="form-control"
+                     [(ngModel)]="formTransfer.qty"
+                     name="trQty"
+                     min="0"
+                     step="0.001">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">From Branch <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="formTransfer.fromBranchId" name="trFromBranch">
+                <option [ngValue]="null">-- Source --</option>
+                <option *ngFor="let b of branches" [ngValue]="b.id">{{ b.text }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">To Branch <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="formTransfer.toBranchId" name="trToBranch">
+                <option [ngValue]="null">-- Destination --</option>
+                <option *ngFor="let b of branches"
+                        [ngValue]="b.id"
+                        [disabled]="b.id === formTransfer.fromBranchId">
+                  {{ b.text }}
+                </option>
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Rate <small class="text-muted">(optional)</small></label>
+              <input type="number"
+                     class="form-control"
+                     [(ngModel)]="formTransfer.rate"
+                     name="trRate"
+                     min="0"
+                     step="0.01"
+                     placeholder="Auto from last">
+            </div>
+
+            <div class="col-md-9">
+              <label class="form-label">Remarks</label>
+              <input type="text"
+                     class="form-control"
+                     [(ngModel)]="formTransfer.remarks"
+                     name="trRemarks"
+                     placeholder="Reason for transfer">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer py-2">
+          <button class="btn btn-outline-secondary btn-sm" (click)="closeTransfer()" [disabled]="saving">
+            Cancel
+          </button>
+          <button class="btn btn-info btn-sm text-white" (click)="saveTransfer()" [disabled]="saving">
+            <i class="bi bi-check2-circle me-1"></i>
+            {{ saving ? 'Posting...' : 'Post Transfer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="showTransferForm" class="modal-backdrop show"></div>
+
+  <!-- ===================== Phase G.1 SET REORDER LEVELS MODAL ===================== -->
+  <div *ngIf="showLevelsForm" class="modal show d-block set-levels-modal" tabindex="-1"
+       (click)="closeLevels()">
+    <div class="modal-dialog modal-md modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header bg-secondary text-white py-2">
+          <h5 class="modal-title">
+            <i class="bi bi-sliders me-2"></i>
+            Set Reorder / Max Levels
+          </h5>
+          <button class="btn-close btn-close-white" (click)="closeLevels()"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="alert alert-light border py-2 small mb-3">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div><b>Item:</b> {{ formLevels.itemName || '-' }}</div>
+                <div><b>Branch:</b> {{ formLevels.branchName || '-' }}</div>
+                <div>
+                  <b>Current balance:</b>
+                  <span class="fw-bold ms-1">
+                    {{ formLevels.currentBalance | number:'1.0-2' }}
+                  </span>
+                  <span class="text-muted">{{ formLevels.unit || '' }}</span>
+                </div>
+              </div>
+              <div class="text-end">
+                <div class="kpi-label text-muted">Live status</div>
+                <span class="badge" [ngClass]="stockStatusBadgeClass(levelsPreviewStatus)">
+                  <i class="bi me-1"
+                     [ngClass]="{
+                       'bi-exclamation-triangle-fill': levelsPreviewStatus === 'BELOW_REORDER',
+                       'bi-arrow-up-circle': levelsPreviewStatus === 'ABOVE_MAX',
+                       'bi-check-circle-fill': levelsPreviewStatus === 'OK',
+                       'bi-dash-circle': levelsPreviewStatus === 'NO_LEVELS'
+                     }"></i>
+                  {{ stockStatusLabel(levelsPreviewStatus) }}
+                </span>
+              </div>
+            </div>
+            <div class="text-muted mt-2" style="font-size: 11.5px;">
+              Thresholds apply globally to the item (not per-branch). Leave a field blank to keep it unset.
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">
+                Reorder Level
+                <small class="text-muted">({{ formLevels.unit || 'unit' }})</small>
+              </label>
+              <input type="number" class="form-control"
+                     [(ngModel)]="formLevels.reorderLevel"
+                     name="rl" min="0" step="0.001"
+                     placeholder="Below this triggers alert">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">
+                Max Level
+                <small class="text-muted">({{ formLevels.unit || 'unit' }})</small>
+              </label>
+              <input type="number" class="form-control"
+                     [(ngModel)]="formLevels.maxLevel"
+                     name="ml" min="0" step="0.001"
+                     placeholder="Above this is excess">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">
+                Reorder Qty
+                <small class="text-muted">(default order size)</small>
+              </label>
+              <input type="number" class="form-control"
+                     [(ngModel)]="formLevels.reorderQty"
+                     name="rq" min="0" step="0.001"
+                     placeholder="Optional">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer py-2">
+          <button class="btn btn-outline-secondary btn-sm" (click)="closeLevels()" [disabled]="levelsSaving">
+            Cancel
+          </button>
+          <button class="btn btn-secondary btn-sm" (click)="saveLevels()" [disabled]="levelsSaving">
+            <i class="bi bi-check2-circle me-1"></i>
+            {{ levelsSaving ? 'Saving...' : 'Save Levels' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="showLevelsForm" class="modal-backdrop show"></div>
+
+  <!-- ===================== Phase G.3 STOCK ADJUSTMENT MODAL ===================== -->
+  <div *ngIf="showAdjustForm" class="modal show d-block stock-adjust-modal" tabindex="-1"
+       (click)="closeAdjust()">
+    <div class="modal-dialog modal-lg modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white py-2">
+          <h5 class="modal-title">
+            <i class="bi bi-sliders me-2"></i>
+            Stock Adjustment
+          </h5>
+          <button class="btn-close btn-close-white" (click)="closeAdjust()"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="alert alert-secondary py-2 small mb-3">
+            <i class="bi bi-info-circle me-1"></i>
+            Use this for variance corrections (damage, loss, recount). Writes a single ledger row tagged
+            <code>STOCK_ADJUSTMENT</code> with reference <code>ADJ-YYYY-NNNN</code>.
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Item <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="formAdjust.itemId" name="adjItem">
+                <option [ngValue]="null">-- Select Item --</option>
+                <option *ngFor="let r of rawItems" [ngValue]="r.id">{{ r.text }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Branch <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="formAdjust.branchId" name="adjBranch">
+                <option [ngValue]="null">-- Branch --</option>
+                <option *ngFor="let b of branches" [ngValue]="b.id">{{ b.text }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-2">
+              <label class="form-label">Date</label>
+              <input type="date" class="form-control"
+                     [(ngModel)]="formAdjust.transactionDate" name="adjDate">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label d-block">Direction <span class="text-danger">*</span></label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" id="adjSignIn"
+                       [(ngModel)]="formAdjust.sign" name="adjSign" value="IN">
+                <label class="btn btn-outline-success" for="adjSignIn">
+                  <i class="bi bi-plus-circle me-1"></i> Add (IN)
+                </label>
+
+                <input type="radio" class="btn-check" id="adjSignOut"
+                       [(ngModel)]="formAdjust.sign" name="adjSign" value="OUT">
+                <label class="btn btn-outline-danger" for="adjSignOut">
+                  <i class="bi bi-dash-circle me-1"></i> Subtract (OUT)
+                </label>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Qty <span class="text-danger">*</span></label>
+              <input type="number" class="form-control"
+                     [(ngModel)]="formAdjust.qty" name="adjQty"
+                     min="0" step="0.001">
+            </div>
+
+            <div class="col-md-5">
+              <label class="form-label">Reason <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="formAdjust.reason" name="adjReason">
+                <option *ngFor="let r of adjustReasons" [value]="r.value">{{ r.label }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Rate <small class="text-muted">(optional)</small></label>
+              <input type="number" class="form-control"
+                     [(ngModel)]="formAdjust.rate" name="adjRate"
+                     min="0" step="0.01"
+                     placeholder="Auto from last">
+            </div>
+
+            <div class="col-md-9">
+              <label class="form-label">Remarks</label>
+              <input type="text" class="form-control"
+                     [(ngModel)]="formAdjust.remarks" name="adjRemarks"
+                     placeholder="Optional context">
+            </div>
+
+            <!-- Live balance preview -->
+            <div class="col-12" *ngIf="formAdjust.itemId && formAdjust.branchId">
+              <div class="border rounded p-2 d-flex align-items-center gap-3 small bg-light">
+                <span class="text-muted">Current:</span>
+                <span class="fw-bold">{{ adjustCurrentBalance | number:'1.0-2' }}</span>
+                <i class="bi bi-arrow-right text-muted"></i>
+                <span class="text-muted">After:</span>
+                <span class="fw-bold"
+                      [ngClass]="adjustWillGoNegative ? 'text-danger' : 'text-success'">
+                  {{ adjustAfterBalance | number:'1.0-2' }}
+                </span>
+                <span class="badge ms-auto"
+                      [ngClass]="adjustWillGoNegative
+                                  ? 'bg-danger-subtle text-danger-emphasis border border-danger'
+                                  : 'bg-success-subtle text-success-emphasis border border-success'">
+                  <i class="bi me-1"
+                     [ngClass]="adjustWillGoNegative ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'"></i>
+                  {{ adjustWillGoNegative ? 'Would go negative' : 'OK' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer py-2">
+          <button class="btn btn-outline-secondary btn-sm" (click)="closeAdjust()" [disabled]="adjustSaving">
+            Cancel
+          </button>
+          <button class="btn btn-dark btn-sm"
+                  (click)="saveAdjust()"
+                  [disabled]="adjustSaving || adjustWillGoNegative">
+            <i class="bi bi-check2-circle me-1"></i>
+            {{ adjustSaving ? 'Posting...' : 'Post Adjustment' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="showAdjustForm" class="modal-backdrop show"></div>
+
+</div>

@@ -1,0 +1,149 @@
+﻿@model EMB_Production.Models.Gen_TheServices
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Stock Details";
+    var currentFilter = Request.QueryString["search"] ?? "";
+    var activeFilter = Request.QueryString["activeFilter"] ?? "";
+}
+
+<style>
+    .detail-card {
+        background: #fff;
+        border-left: 5px solid #007bff;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        margin-top: 1rem;
+    }
+
+    .details-header {
+        font-size: 1.25rem;
+        font-weight: 600;
+        background: #007bff;
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 6px 6px 0 0;
+        margin: -1.5rem -1.5rem 1rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #2c3e50;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        color: #34495e;
+        word-wrap: break-word;
+    }
+</style>
+
+<div class="detail-card">
+    <div class="details-header">Sevice Details</div>
+    <div class="toolbar-container d-flex align-items-center justify-content-end mb-3">
+       @using (Html.BeginForm("Index", "Gen_TheServices", FormMethod.Get, new { @class = "d-flex align-items-center" }))
+        {            
+            <a href="@Url.Action("Index","Gen_TheServices")" class="btn btn-outline-secondary btn-sm me-2">
+                <i class="bi bi-x-circle"></i>
+            </a>
+            <button type="button" onclick="location.reload()"
+                    class="btn btn-outline-secondary btn-sm me-2">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button type="button" onclick="window.print()"
+                    class="btn btn-outline-secondary btn-sm me-2">
+                <i class="bi bi-printer"></i>
+            </button>
+            <a href="@Url.Action("ExportToExcel", "Gen_TheServices", new { id = Model.Id })" class="btn btn-success btn-sm me-2">
+                <i class="bi bi-file-earmark-spreadsheet"></i>Excel
+            </a>
+            <a href="@Url.Action("ExportToPdf", "Gen_TheServices", new { id = Model.Id })" class="btn btn-danger btn-sm">
+                 <i class="bi bi-file-earmark-pdf"></i>PDF
+            </a>
+        }
+    </div>
+    <div class="bg-white p-4 rounded shadow-sm mb-4">
+        <div class="row gy-3">
+
+            <!-- Gen_ServiceType lookup -->
+            <div class="col-md-4">
+                <div class="detail-label">Gen_ServiceType</div>
+                <div class="detail-value">
+                    @(Model.Gen_ServiceType != null
+                        ? Model.Gen_ServiceType.Service_Type
+                        : $"(ID: {Model.Service_Type})")
+                </div>
+            </div>
+
+            <!-- Branch lookup -->
+            <div class="col-md-4">
+                <div class="detail-label">Branch</div>
+                <div class="detail-value">
+                    @(Model.Branches != null
+                        ? Model.Branches.Name
+                        : $"(ID: {Model.BranchId})")
+                </div>
+            </div>
+
+            <!-- Gen_Machines count -->
+            <div class="col-md-4">
+                <div class="detail-label">Gen_Machines</div>
+                <div class="detail-value">
+                    @(Model.Gen_Machines != null ? Model.Gen_Machines.Count : 0)
+                </div>
+            </div>
+
+            <!-- Gen_ServiceRates count -->
+            <div class="col-md-4">
+                <div class="detail-label">Gen_ServiceRates</div>
+                <div class="detail-value">
+                    @(Model.Gen_ServiceRates != null ? Model.Gen_ServiceRates.Count : 0)
+                </div>
+            </div>
+
+            <!-- Record Timestamp -->
+            <div class="col-md-4">
+                <div class="detail-label">RecordTimeStamp</div>
+                <div class="detail-value">
+                    @(Model.RecordTimeStamp.HasValue
+                        ? Model.RecordTimeStamp.Value.ToString("yyyy-MM-dd HH:mm:ss")
+                        : "(none)")
+                </div>
+            </div>
+
+            @* Now render all other scalar props *@
+           @foreach (var prop in ViewData.ModelMetadata.Properties
+                .Where(p => p.ShowForDisplay
+                            && p.PropertyName != nameof(Model.Service_Type)
+                            && p.PropertyName != nameof(Model.Gen_ServiceType)
+                            && p.PropertyName != nameof(Model.BranchId)
+                            && p.PropertyName != nameof(Model.Branches)
+                            && p.PropertyName != nameof(Model.Gen_Machines)
+                            && p.PropertyName != nameof(Model.Gen_ServiceRates)
+                            && p.PropertyName != nameof(Model.RecordTimeStamp)))
+            {
+                <div class="col-md-4">
+                    <div class="detail-label">@prop.GetDisplayName()</div>
+                    <div class="detail-value">
+                        @if (prop.Model is DateTime dt)
+                        {
+                            @dt.ToString("yyyy-MM-dd HH:mm")
+                        }
+                        else
+                        {
+                            @prop.Model
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center mb-4">
+        @Html.ActionLink("Back to List", "Index", null, new { @class = "btn btn-outline-secondary me-3" })
+        @Html.ActionLink("Edit", "Index", new { showEdit = true, editId = Model.Id }, new { @class = "btn btn-primary" })
+    </div>
+
+</div>

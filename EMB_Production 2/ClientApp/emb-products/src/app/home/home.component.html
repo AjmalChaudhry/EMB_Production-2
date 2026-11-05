@@ -1,0 +1,318 @@
+<div class="landing-root">
+
+  <!-- ============ MARKETING HEADER ============ -->
+  <header class="landing-header">
+    <div class="brand">
+      <i class="bi bi-bezier2 brand-icon"></i>
+      <span class="brand-name">EMB <span class="brand-name-accent">Production</span></span>
+    </div>
+
+    <nav class="landing-nav">
+      <a href="#features">Features</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#why">Why us</a>
+      <button class="btn btn-light btn-sm fw-semibold" (click)="navigateToLogin()">
+        <i class="bi bi-box-arrow-in-right me-1"></i> Sign in
+      </button>
+    </nav>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <span class="hero-eyebrow">
+          <i class="bi bi-stars me-1"></i>
+          Embroidery ERP &middot; Production &middot; QC &middot; Stock
+        </span>
+
+        <h1 class="hero-title">
+          Run your embroidery floor like a
+          <span class="hero-accent">factory should be run.</span>
+        </h1>
+
+        <p class="hero-sub">
+          From job order to dispatch &mdash; one workflow, one source of truth,
+          real costs at every stage. Materials, machines, operators and QC,
+          all stitched into the same ledger.
+        </p>
+
+        <div class="hero-ctas">
+          <button class="btn-primary-lg" (click)="navigateToLogin()">
+            <i class="bi bi-box-arrow-in-right me-2"></i>
+            Login to Dashboard
+          </button>
+          <a class="btn-ghost-lg" href="#features">
+            Take the tour
+            <i class="bi bi-arrow-right ms-2"></i>
+          </a>
+        </div>
+
+        <div class="hero-trust">
+          <div class="trust-item">
+            <i class="bi bi-shield-check"></i>
+            <div>
+              <strong>Audit-ready</strong>
+              <span>Every entry signed &amp; reversible</span>
+            </div>
+          </div>
+          <div class="trust-item">
+            <i class="bi bi-graph-up-arrow"></i>
+            <div>
+              <strong>Live KPIs</strong>
+              <span>Efficiency, QC pass, machine util.</span>
+            </div>
+          </div>
+          <div class="trust-item">
+            <i class="bi bi-diagram-3"></i>
+            <div>
+              <strong>Multi-branch</strong>
+              <span>Branch-scoped stock + costing</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Decorative dashboard mock. Numbers below are illustrative —
+           the previous styling let visitors read them as live claims,
+           so the mock is now wrapped with a diagonal SAMPLE watermark
+           and the titlebar badge is far more prominent. -->
+      <div class="hero-mock">
+        <div class="mock-window">
+          <!-- Diagonal watermark across the whole mock window. CSS-only,
+               pointer-events:none so it doesn't block any clicks. -->
+          <div class="mock-sample-watermark" aria-hidden="true">SAMPLE</div>
+
+          <div class="mock-titlebar">
+            <span class="dot red"></span>
+            <span class="dot amber"></span>
+            <span class="dot green"></span>
+            <span class="mock-title">Production Overview &middot; Today</span>
+            <span class="mock-preview-badge">
+              <i class="bi bi-exclamation-triangle-fill"></i> Sample Preview
+            </span>
+          </div>
+
+          <div class="mock-body">
+            <div class="mock-tile blue">
+              <div class="mock-tile-icon"><i class="bi bi-clipboard-check"></i></div>
+              <div>
+                <div class="mock-num">2</div>
+                <div class="mock-label">Active Job Orders</div>
+              </div>
+            </div>
+            <div class="mock-tile purple">
+              <div class="mock-tile-icon"><i class="bi bi-kanban"></i></div>
+              <div>
+                <div class="mock-num">5</div>
+                <div class="mock-label">Work Orders</div>
+              </div>
+            </div>
+            <div class="mock-tile green">
+              <div class="mock-tile-icon"><i class="bi bi-gear-wide-connected"></i></div>
+              <div>
+                <div class="mock-num">5,100</div>
+                <div class="mock-label">Today Production</div>
+              </div>
+            </div>
+            <div class="mock-tile orange">
+              <div class="mock-tile-icon"><i class="bi bi-shield-check"></i></div>
+              <div>
+                <div class="mock-num">99.6%</div>
+                <div class="mock-label">QC Pass Ratio</div>
+              </div>
+            </div>
+
+            <div class="mock-bar">
+              <div class="mock-bar-label">Daily Efficiency</div>
+              <div class="mock-bar-track">
+                <div class="mock-bar-fill" style="width: 85%"></div>
+              </div>
+              <div class="mock-bar-val">85%</div>
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">
+          <i class="bi bi-info-circle me-1"></i>
+          Illustrative preview only. Sign in to see your live dashboard.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section id="features" class="features">
+    <h2 class="section-title">Built for the embroidery shop floor</h2>
+    <p class="section-sub">
+      Eleven first-class modules. Every action audited.
+      One ledger from raw thread to dispatched garment.
+    </p>
+
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="feature-icon icon-blue"><i class="bi bi-clipboard-data"></i></div>
+        <h5>Job &amp; Work Orders</h5>
+        <p>Customer orders flow straight into machine-ready work orders with traceability back to the original demand.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon icon-violet"><i class="bi bi-bag-plus"></i></div>
+        <h5>Purchase &amp; Returns</h5>
+        <p>Receive raw materials, threads &amp; fabrics into a single ledger. Return defective lots to suppliers without losing the audit trail.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon icon-amber"><i class="bi bi-bricks"></i></div>
+        <h5>BOM &amp; Components</h5>
+        <p>Define design specifications &mdash; stitches, threads, components &mdash; once and reuse across every order.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon icon-green"><i class="bi bi-bar-chart-line"></i></div>
+        <h5>Daily Production</h5>
+        <p>Operators log per-shift output. Machine cost, labor &amp; electricity accrue against the order in real time.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon icon-pink"><i class="bi bi-shield-check"></i></div>
+        <h5>QC with Rework Loop</h5>
+        <p>Inspect, post passed stock, send rework back to production. Same row, multiple rounds, full delta-aware stock posting.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon icon-teal"><i class="bi bi-truck"></i></div>
+        <h5>Dispatch with Margin</h5>
+        <p>Pick from finished stock with live margin badge. Below-cost dispatches warn before they save.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WORKFLOW STRIP ============ -->
+  <section id="workflow" class="workflow">
+    <h2 class="section-title">From customer demand to delivered box</h2>
+    <p class="section-sub">
+      Nine gated stages. The dashboard shows where work is stuck in one glance.
+    </p>
+
+    <div class="flow-strip">
+      <div class="flow-step">
+        <div class="flow-icon"><i class="bi bi-clipboard-data"></i></div>
+        <div class="flow-label">Job Order</div>
+      </div>
+      <div class="flow-arrow"><i class="bi bi-arrow-right"></i></div>
+      <!-- Production Plan — weekly capacity scheduling between Job Order
+           and Work Order. Added to the flow when the PP module shipped. -->
+      <div class="flow-step">
+        <div class="flow-icon"><i class="bi bi-calendar-week"></i></div>
+        <div class="flow-label">Production Plan</div>
+      </div>
+      <div class="flow-arrow"><i class="bi bi-arrow-right"></i></div>
+      <div class="flow-step">
+        <div class="flow-icon"><i class="bi bi-card-checklist"></i></div>
+        <div class="flow-label">Work Order</div>
+      </div>
+      <div class="flow-arrow"><i class="bi bi-arrow-right"></i></div>
+      <!-- Purchase Order — appears between Work Order and Issue Materials
+           because a WO without on-hand stock triggers auto-PR → PO before
+           materials can be issued. -->
+      <div class="flow-step">
+        <div class="flow-icon"><i class="bi bi-file-earmark-text"></i></div>
+        <div class="flow-label">Purchase Order</div>
+      </div>
+      <div class="flow-arrow"><i class="bi bi-arrow-right"></i></div>
+      <div class="flow-step">
+        <div class="flow-icon"><i class="bi bi-box-arrow-up-right"></i></div>
+        <div class="flow-label">Issue Materials</div>
+      </div>
+      <div class="flow-arrow"><i class="bi bi-arrow-right"></i></div>
+      <div class="flow-step">
+        <div class="flow-icon"><i class="bi bi-bar-chart-line"></i></div>
+        <div class="flow-label">Daily Production</div>
+      </div>
+      <div class="flow-arrow"><i class="bi bi-arrow-right"></i></div>
+      <div class="flow-step">
+        <div class="flow-icon"><i class="bi bi-shield-check"></i></div>
+        <div class="flow-label">QC</div>
+      </div>
+      <div class="flow-arrow"><i class="bi bi-arrow-right"></i></div>
+      <div class="flow-step">
+        <div class="flow-icon"><i class="bi bi-archive"></i></div>
+        <div class="flow-label">Finished Stock</div>
+      </div>
+      <div class="flow-arrow"><i class="bi bi-arrow-right"></i></div>
+      <div class="flow-step">
+        <div class="flow-icon"><i class="bi bi-truck"></i></div>
+        <div class="flow-label">Dispatch</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WHY ============ -->
+  <section id="why" class="why">
+    <div class="why-grid">
+      <div class="why-left">
+        <h2 class="section-title">Built by people who ran the floor.</h2>
+        <p class="section-sub">
+          Most ERPs were written for warehouses, then bolted onto factories.
+          EMB Production is built around the stitch &mdash; thread, head, machine
+          time, QC pass and rework &mdash; in that order.
+        </p>
+
+        <ul class="why-list">
+          <li><i class="bi bi-check2-circle"></i> No double-entry &mdash; production posts the ledger</li>
+          <li><i class="bi bi-check2-circle"></i> Reversible everything &mdash; nothing is ever destroyed</li>
+          <li><i class="bi bi-check2-circle"></i> Cost accrual at post time &mdash; CostPerUnit always live</li>
+          <li><i class="bi bi-check2-circle"></i> Role-aware sidebar &mdash; salesman never sees machine profiles</li>
+          <li><i class="bi bi-check2-circle"></i> Multi-branch, multi-company by design</li>
+        </ul>
+
+        <button class="btn-primary-lg" (click)="navigateToLogin()">
+          <i class="bi bi-box-arrow-in-right me-2"></i>
+          Sign in &amp; start
+        </button>
+      </div>
+
+      <div class="why-right">
+        <div class="stat-card">
+          <div class="stat-num">7</div>
+          <div class="stat-label">workflow stages tracked</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">11</div>
+          <div class="stat-label">first-class modules</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">100%</div>
+          <div class="stat-label">audit-trail coverage</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">∞</div>
+          <div class="stat-label">QC rework rounds, same row</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA ============ -->
+  <section class="cta">
+    <div class="cta-card">
+      <div>
+        <h3>Ready when you are.</h3>
+        <p>Sign in with your employee credentials.</p>
+      </div>
+      <button class="btn-primary-lg" (click)="navigateToLogin()">
+        <i class="bi bi-box-arrow-in-right me-2"></i>
+        Login to Dashboard
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="landing-footer">
+    <div>
+      <span class="brand">
+        <i class="bi bi-bezier2 brand-icon"></i>
+        EMB <span class="brand-name-accent">Production</span>
+      </span>
+    </div>
+    <div class="text-muted small">
+      &copy; 2026 EMB Production &middot; Built for the embroidery industry.
+    </div>
+  </footer>
+
+</div>

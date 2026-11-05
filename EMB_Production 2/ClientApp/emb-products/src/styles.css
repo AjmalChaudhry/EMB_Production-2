@@ -1,0 +1,174 @@
+/* =========================================
+   ROOT VARIABLES
+========================================= */
+:root {
+  --sidebar-width: 240px;
+  --topbar-height: 60px;
+  --brand-primary: #0d6efd;
+  --brand-primary-dark: #0b5ed7;
+  --brand-text: #ffffff;
+  /* How far below the topbar a floating UI element (modal, toast, etc.)
+     must start. Used by every *-profile-modal backdrop and the toast
+     container so they always clear the topbar with breathing room. */
+  --topbar-clearance: calc(var(--topbar-height) + 24px);
+}
+
+/* =========================================
+   GLOBAL MODAL CLEARANCE
+   ------------------------------------------------
+   Every per-component modal backdrop in this app
+   uses a "*-profile-modal" class (dc-, comp-, cm-,
+   brnd-, cat-, mach-, mp-, svc-, srate-, stype-,
+   mcp-, bom-) with padding-top: 60px hardcoded.
+   That leaves a 0-pixel gap between the topbar and
+   the modal-dialog top edge — looks like overlap.
+   This rule overrides them all in one place.
+========================================= */
+.modal[class*="-profile-modal"],
+.dc-profile-modal,
+.comp-profile-modal,
+.cm-profile-modal,
+.brnd-profile-modal,
+.cat-profile-modal,
+.mach-profile-modal,
+.mp-profile-modal,
+.svc-profile-modal,
+.srate-profile-modal,
+.stype-profile-modal,
+.mcp-profile-modal,
+.bom-profile-modal {
+  padding-top: var(--topbar-clearance) !important;
+}
+
+/* =========================================
+   BASE
+========================================= */
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: #f8f9fa;
+  overflow-x: hidden;
+}
+
+/* =========================================
+   LAYOUT
+   ----------------------------------------
+   The old `.sidebar { position: fixed }` /
+   `.topbar { position: fixed }` / `.main-content`
+   rules were removed: `LayoutComponent` now owns
+   the layout via flexbox (app-sidebar 250px on
+   the left, app-topbar + page-wrap on the right),
+   and both child components paint their own blue
+   gradient in their own component CSS.
+   Pulling the old rules out kept the inner
+   `<nav class="sidebar">` from being yanked out
+   of the host's flow with `position: fixed`,
+   which was leaving the host's 250-px column
+   empty + white after sign-in.
+
+   `.page-content` is still used as a max-width
+   centering helper inside individual pages.
+========================================= */
+.page-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 992px) {
+  /* On narrow viewports collapse the sidebar host
+     entirely rather than positioning it off-screen
+     — `LayoutComponent` doesn't have a toggle yet,
+     so leave the column visible at 0 width and let
+     the page-wrap take the whole screen. Refine
+     later if a hamburger toggle is added. */
+  app-sidebar { display: none !important; }
+}
+
+/* =========================================
+   GLOBAL MODAL POSITIONING
+   =========================================
+   Bootstrap's .modal defaults to top:0 left:0 width:100% height:100%,
+   which parks every modal over the sticky topbar and over the sidebar.
+   This rule constrains every modal in the app to the content area —
+   below the topbar, beside the sidebar — so:
+     • The topbar stays visible/interactive behind the modal
+     • The sidebar stays visible/interactive behind the modal
+     • The modal's footer (Close / Save buttons) sits inside the
+       viewport instead of being pushed below the bottom edge
+
+   Several modules also have their own (older, outdated) copies of
+   this fix inside component-scoped CSS. Angular's view encapsulation
+   gives those a higher specificity than this global rule. To make
+   the global rule the single source of truth, the layout-critical
+   properties below are marked !important. Per-module copies become
+   inert — they don't have to be deleted to keep working.
+
+   Applies globally — every module's modals inherit it. To opt OUT
+   for a specific modal, you'd need to wrap a parent selector around
+   .modal in your component CSS (e.g. `.my-special-modal-wrapper .modal`)
+   and use !important to outrank these properties. */
+.modal {
+  top:    var(--topbar-height) !important;
+  bottom: 0                    !important;
+  height: auto                 !important;
+}
+@media (min-width: 992px) {
+  .modal {
+    left:  var(--sidebar-width) !important;
+    right: 0                    !important;
+    width: auto                 !important;
+  }
+}
+.modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1056;
+}
+/* The dimmed backdrop is appended directly to <body>, so it sits
+   outside any single component's scope. Align its edges with the
+   modal frame so it dims only the content area, not the topbar
+   or sidebar. */
+.modal-backdrop.show {
+  top: var(--topbar-height) !important;
+}
+@media (min-width: 992px) {
+  .modal-backdrop.show {
+    left: var(--sidebar-width) !important;
+  }
+}
+/* A few module-level modals were styled with their own inline
+   left/right/max-width/position:absolute (legacy attempts to
+   dodge the sidebar). Those are now redundant AND harmful —
+   position:absolute bypasses Bootstrap's margin-based centering,
+   leaving the modal header flush against the topbar with no
+   breathing-room gap. Reset everything so dialogs center inside
+   the already-correct .modal box using Bootstrap's defaults.
+   The targeted .modal-xl/.modal-lg sizes follow Bootstrap's spec. */
+.modal-dialog {
+  position: relative !important;   /* restore Bootstrap default — kills inline position:absolute */
+  left:  auto !important;
+  right: auto !important;
+  margin: 1.75rem auto !important; /* restore Bootstrap default vertical breathing room */
+}
+.modal-dialog.modal-xl { max-width: 1140px !important; }
+.modal-dialog.modal-lg { max-width: 800px  !important; }
+@media (max-width: 991.98px) {
+  /* Below the sidebar breakpoint, the sidebar is hidden so modals
+     can span the full width again. */
+  .modal {
+    left:  0    !important;
+    right: 0    !important;
+    width: 100% !important;
+  }
+  .modal-backdrop.show {
+    left:  0    !important;
+    right: 0    !important;
+    width: 100% !important;
+  }
+}

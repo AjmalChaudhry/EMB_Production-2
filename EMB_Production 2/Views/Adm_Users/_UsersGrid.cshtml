@@ -1,0 +1,86 @@
+﻿@model EMB_Production.ViewModels.UsersPageViewModel
+@using PagedList.Mvc
+
+<div id="users-table-container">
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-hover table-sm mb-0">
+            <thead class="table-secondary">
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>Branch</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model.Users)
+                {
+                    <tr data-user-id="@u.Id">
+                        <td class="align-middle">@u.EmployeeId</td>
+                        <td class="align-middle">@u.UserName</td>
+                        <td class="align-middle">@u.EmailAddress</td>
+                        <td class="align-middle">@u.MobilePrimary</td>
+                        <td class="align-middle">@u.BranchName</td>
+                        <td class="align-middle">
+                            <span class="badge @(u.Active ? "bg-success" : "bg-secondary")">
+                                @(u.Active ? "Active" : "Inactive")
+                            </span>
+                        </td>
+                        <td class="align-middle text-center">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <!-- Edit -->
+                                <button type="button"
+                                   class="btn btn-outline-primary btn-edit-ajax"
+                                   data-url="@Url.Action("Index", "Adm_Users", new {showEdit = true,editId = u.Id,search = Model.Search,
+                                                activeFilter = Model.ActiveFilter,page = Model.Users.PageNumber})"
+                                        title="Edit @u.UserName">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+
+                                <!-- Delete -->
+                                <button type="button"
+                                    class="btn btn-outline-danger btn-delete-ajax"
+                                    data-url="@Url.Action("Delete", "Adm_Users", new {id = u.Id,search = Model.Search,
+                                            activeFilter = Model.ActiveFilter,page = Model.Users.PageNumber})"
+                                        title="Delete @u.UserName">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+
+                                <!-- Detail -->
+                                <button type="button"
+                                    class="btn btn-outline-info btn-sm btn-detail-ajax"
+                                    data-detail-url="@Url.Action("DetailsFromIndex", "Adm_Users", new {id = u.Id,search = Model.Search,
+                                                    activeFilter = Model.ActiveFilter,page = Model.Users.PageNumber})"
+                                        title="Details for @u.UserName">
+                                    <i class="bi bi-info-circle"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.Users != null && Model.Users.Any())
+    {
+        <div class="d-flex justify-content-center my-3">
+            @Html.PagedListPager(Model.Users, page => Url.Action("Index", new
+            {
+                page,
+                search = Model.Search,
+                activeFilter = Model.ActiveFilter
+            }),
+            new PagedListRenderOptions
+            {
+                UlElementClasses = new[] { "pagination" },
+                LiElementClasses = new[] { "page-item" }
+            })
+        </div>
+    }
+</div>
+
+<div id="users-detail-container"></div>

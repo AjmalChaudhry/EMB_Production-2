@@ -1,0 +1,78 @@
+/* ===============================
+   COMPACT ACTION BUTTONS
+================================ */
+
+/* Text buttons (Add, Save, etc.) */
+.action-btns .btn {
+  padding: 0.2rem 0.4rem;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+/* Icon-only buttons (refresh, export, print) */
+.icon-btn {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+  .icon-btn i {
+    font-size: 0.7rem;
+    line-height: 1;
+  }
+/* Search input */
+.action-search {
+  height: 26px;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.35rem;
+}
+
+/* Dropdowns */
+.action-select {
+  height: 26px;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.3rem;
+}
+.page-subtitle {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+.table thead th {
+  font-weight: 600;
+}
+
+.badge.status-badge {
+  font-weight: 600;
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.5rem;
+}
+
+.card.shadow-soft {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.modal .form-label {
+  font-weight: 600;
+  font-size: 13px;
+}
+@media (max-width: 768px) {
+  .action-search,
+  .action-select {
+    width: 100%;
+  }
+
+  .action-btns {
+    white-space: nowrap;
+  }
+}

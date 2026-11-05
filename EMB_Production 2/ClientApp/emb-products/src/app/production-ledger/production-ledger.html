@@ -1,0 +1,108 @@
+<div [class.page-wrap]="isStandaloneMode">
+
+  <!-- Standalone-mode header + picker -->
+  <ng-container *ngIf="isStandaloneMode">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h5 class="mb-0 d-flex align-items-center">
+          <i class="bi bi-journal-text me-2 text-primary"></i>Production Ledger
+        </h5>
+        <div class="text-muted small">
+          Pick a posted production to see its stock movements (production IN + QC rejects OUT)
+          within the production's lifetime.
+        </div>
+      </div>
+      <button class="btn btn-sm btn-outline-secondary" (click)="loadRecent()" [disabled]="recentLoading">
+        <i class="bi bi-arrow-clockwise me-1"></i>{{ recentLoading ? 'Loading…' : 'Refresh list' }}
+      </button>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body py-2">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-8">
+            <label class="form-label small mb-1">Production</label>
+            <select class="form-select form-select-sm"
+                    [(ngModel)]="selectedProductionId"
+                    (change)="onPickProduction()"
+                    [disabled]="recentLoading">
+              <option [ngValue]="null">— Select a posted production —</option>
+              <option *ngFor="let p of recent" [ngValue]="p.productionId">
+                #{{ p.productionId }} · {{ p.workOrderCode }} · {{ p.productName }}
+                ({{ p.designCode }}) · {{ p.postedDate ? (p.postedDate | date:'dd-MMM-yyyy HH:mm') : '(no date)' }}
+                · Accepted {{ p.acceptedQty }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-sm btn-primary w-100"
+                    (click)="load()"
+                    [disabled]="!selectedProductionId || loading">
+              <i class="bi bi-arrow-repeat me-1"></i>{{ loading ? 'Loading…' : 'Load' }}
+            </button>
+          </div>
+        </div>
+        <div *ngIf="!recentLoading && recent.length === 0" class="text-muted small mt-2">
+          No posted productions yet. Post a Daily Production entry to populate this list.
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Embedded mode header (only a small reload button, no picker) -->
+  <button *ngIf="!isStandaloneMode"
+          class="btn btn-sm btn-outline-secondary mb-2"
+          (click)="load()"
+          [disabled]="loading">
+    <i class="bi bi-arrow-repeat me-1"></i>
+    {{ loading ? 'Loading…' : 'Load Ledger' }}
+  </button>
+
+  <div *ngIf="loading" class="text-muted small mb-2">
+    Loading production ledger…
+  </div>
+
+  <table class="table table-sm table-striped"
+         *ngIf="!loading && rows.length > 0">
+    <thead class="table-light">
+      <tr>
+        <th style="width:160px;">Date</th>
+        <th style="width:120px;">Type</th>
+        <th class="text-end" style="width:80px;">IN</th>
+        <th class="text-end" style="width:80px;">OUT</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let r of rows">
+        <td>{{ r.date ? (r.date | date:'dd-MMM-yyyy HH:mm') : '-' }}</td>
+        <td>
+          <span class="badge"
+                [ngClass]="{
+                  'bg-success': r.itemType === 'PRODUCTION',
+                  'bg-danger': r.itemType === 'QC-REJECT',
+                  'bg-warning text-dark': r.itemType !== 'PRODUCTION' && r.itemType !== 'QC-REJECT'
+                }">
+            {{ r.itemType || '-' }}
+          </span>
+        </td>
+        <td class="text-end text-success fw-semibold">{{ r.inQty }}</td>
+        <td class="text-end text-danger fw-semibold">{{ r.outQty }}</td>
+        <td>{{ r.description || '-' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="!loading && rows.length === 0 && !isStandaloneMode"
+       class="text-muted small">
+    No ledger entries found.
+  </div>
+
+  <div *ngIf="!loading && rows.length === 0 && isStandaloneMode && selectedProductionId"
+       class="text-muted small text-center py-3">
+    <i class="bi bi-info-circle me-1"></i>
+    No ledger entries for this production yet.
+    Stock movements appear here once a <strong>QC inspection</strong> is posted —
+    accepted qty becomes an IN row, rejected qty becomes an OUT row.
+  </div>
+</div>

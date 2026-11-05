@@ -1,0 +1,184 @@
+﻿@model EMB_Production.Models.Gen_Components
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Component Details";
+    var currentFilter = Request.QueryString["search"] ?? "";
+    var activeFilter = Request.QueryString["activeFilter"] ?? "";
+}
+
+<style>
+    .detail-card {
+        background-color: #fff;
+        border-left: 5px solid #007bff;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-top: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .details-header {
+        font-size: 1.25rem;
+        font-weight: bold;
+        background: #007bff;
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 6px 6px 0 0;
+        margin: -2rem -2rem 1.5rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #2c3e50;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        color: #34495e;
+        word-break: break-word;
+    }
+
+    .toolbar-container .btn {
+        border-radius: 4px;
+        margin-left: 6px;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- Toolbar -->
+
+
+    <div class="detail-card">
+        <div class="details-header">Component Details</div>
+        <div class="toolbar-container d-flex justify-content-end mb-3">
+            <button type="button" onclick="location.reload()" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button type="button" onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-printer"></i>
+            </button>
+            <a href="@Url.Action("ExportDetailToExcel", "Gen_Components", new { id = Model.Id })"
+               class="btn btn-success btn-sm">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+            </a>
+            <a href="@Url.Action("ExportDetailToPdf", "Gen_Components", new { id = Model.Id })"
+               class="btn btn-danger btn-sm">
+                <i class="bi bi-file-earmark-pdf"></i>
+            </a>
+        </div>
+        <div class="row gy-4">
+            <!-- Branch -->
+            <div class="col-md-3">
+                <div class="detail-label">Branch</div>
+                <div class="detail-value">
+                    @(Model.Branches != null && Model.Branches.Name != null ? Model.Branches.Name : "(none)")
+                </div>
+            </div>
+
+            <!-- Design -->
+            <div class="col-md-3">
+                <div class="detail-label">Design</div>
+                <div class="detail-value">
+                    @(Model.Gen_Design != null ? Convert.ToString(Model.Gen_Design.CollectionName) : "(none)")
+                </div>
+            </div>
+
+            <!-- Created Date -->
+            <div class="col-md-3">
+                <div class="detail-label">Created Date</div>
+                <div class="detail-value">
+                    @(Model.CreatedDate.HasValue
+                    ? Model.CreatedDate.Value.ToString("yyyy-MM-dd")
+                    : "(none)")
+                </div>
+            </div>
+
+
+            <!-- Scalar Properties -->
+           @foreach (var prop in ViewData.ModelMetadata.Properties
+                    .Where(p => p.ShowForDisplay &&
+                                !new[] { "Id", "Branches", "Gen_Design", "Gen_JobOrders" }
+                                .Contains(p.PropertyName)))
+            {
+                <div class="col-md-3">
+                    <div class="detail-label">@prop.GetDisplayName()</div>
+                    <div class="detail-value">
+                        @{
+                            var val = prop.Model;
+
+                            if (val is DateTime dt)
+                            {
+                                @dt.ToString("yyyy-MM-dd HH:mm:ss")
+                            }
+                            else
+                            {
+                                @(val != null ? val.ToString() : "(none)")
+                            }
+                        }
+
+                    </div>
+                </div>
+            }
+            <!-- Job Orders -->
+            <div class="col-md-3">
+                <div class="detail-label">Job Orders</div>
+                <div class="detail-value">
+                    @if (Model.Gen_JobOrders != null && Model.Gen_JobOrders.Any())
+                    {
+                        <ul class="mb-0 ps-3">
+                            @foreach (var job in Model.Gen_JobOrders.OrderBy(j => j.Id))
+                            {
+                                <li>ID: @job.Id, Code: @job.Code</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <em>(no job orders)</em>
+                    }
+                </div>
+            </div>
+
+            <!-- Thread Usage section removed — see Gen_ComponentMaterials
+                 for unified material BOM (threads + fabrics + accessories). -->
+            <div class="col-md-3">
+                <div class="detail-label">Materials</div>
+                <div class="detail-value">
+                    @if (Model.Gen_ComponentMaterials != null && Model.Gen_ComponentMaterials.Any())
+                    {
+                        <ul class="mb-0 ps-3">
+                            @foreach (var cm in Model.Gen_ComponentMaterials.OrderBy(t => t.Id))
+                            {
+                                <li>RawItemId: @cm.RawItemId, Qty/Unit: @cm.QtyPerUnit</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <em>(no materials)</em>
+                    }
+                </div>
+            </div>
+
+
+
+            <div class="mt-4 d-flex justify-content-center gap-3">
+                @Html.ActionLink("Edit", "Index", new { showEdit = true, editId = Model.Id }, new { @class = "btn btn-primary" })
+                @Html.ActionLink("Back to List", "Index", new { search = currentFilter, activeFilter }, new { @class = "btn btn-outline-secondary" })
+            </div>
+        </div>
+    </div>
+
+        @section Scripts {
+            <script>
+                $(function () {
+                    $('.detail-value').hover(
+                        function () { $(this).addClass('bg-light rounded'); },
+                        function () { $(this).removeClass('bg-light rounded'); }
+                    );
+                });
+            </script>
+        }
+</div>

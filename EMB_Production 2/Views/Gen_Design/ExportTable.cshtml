@@ -1,0 +1,51 @@
+﻿@model EMB_Production.ViewModels.DesignPageViewModel
+
+@{ Layout = null; }
+
+<style>
+    body { font-family: "Segoe UI", Arial, sans-serif; font-size: 11pt; color: #212529; }
+    h2 { text-align: center; margin: 4px 0 16px; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: #0d6efd; color: #fff; }
+    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; vertical-align: top; }
+    tbody tr:nth-child(even) { background: #f6f8fb; }
+    .footer { text-align: right; font-size: 9pt; color: #6c757d; margin-top: 10px; }
+</style>
+
+<h2>Designs &mdash; List</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>D No</th>
+            <th>Collection</th>
+            <th>Product</th>
+            <th>Customer</th>
+            <th>Branch</th>
+            <th>Active</th>
+            <th>Created</th>
+            <th>Updated</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var d in Model.Designs)
+        {
+            <tr>
+                <td>@d.D_Code</td>
+                <td>@d.DNo</td>
+                <td>@d.CollectionName</td>
+                <td>@d.ProductName</td>
+                <td>@d.CustomerName</td>
+                <td>@d.BranchName</td>
+                <td>@(d.Active.GetValueOrDefault() ? "Yes" : "No")</td>
+                <td>@(d.CreatedDate?.ToString("yyyy-MM-dd"))</td>
+                <td>@(d.UpdatedDate?.ToString("yyyy-MM-dd"))</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="footer">
+    Generated: @DateTime.Now.ToString("yyyy-MM-dd HH:mm") &nbsp;|&nbsp; Rows: @Model.Designs.Count()
+</div>

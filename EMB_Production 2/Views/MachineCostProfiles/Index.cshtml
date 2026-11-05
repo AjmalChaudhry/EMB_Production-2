@@ -1,0 +1,81 @@
+﻿@model IEnumerable<EMB_Production.Models.MachineCostProfile>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.HourlyRate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.PowerKW)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.StitchPerMinute)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.OperatorHourlyRate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ElectricityUnitRate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.EffectiveFrom)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Active)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Deleted)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Gen_Machines.Code)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.HourlyRate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.PowerKW)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.StitchPerMinute)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.OperatorHourlyRate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ElectricityUnitRate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.EffectiveFrom)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Active)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Deleted)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Gen_Machines.Code)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.Id }) |
+            @Html.ActionLink("Details", "Details", new { id=item.Id }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.Id })
+        </td>
+    </tr>
+}
+
+</table>

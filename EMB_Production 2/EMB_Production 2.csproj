@@ -1,0 +1,1734 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{7FE84CF6-7FE0-4193-9481-E16D88489BC3}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>EMB_Production</RootNamespace>
+    <AssemblyName>EMB_Production</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <MvcBuildViews>false</MvcBuildViews>
+    <UseIISExpress>true</UseIISExpress>
+    <Use64BitIISExpress>false</Use64BitIISExpress>
+    <IISExpressSSLPort>44335</IISExpressSSLPort>
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <TypeScriptToolsVersion>4.3</TypeScriptToolsVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Antlr3.Runtime, Version=3.5.0.2, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ClosedXML, Version=0.95.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ClosedXML.0.95.4\lib\net46\ClosedXML.dll</HintPath>
+    </Reference>
+    <Reference Include="ClosedXML.Parser, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1d5f7376574c51ec, processorArchitecture=MSIL">
+      <HintPath>..\packages\ClosedXML.Parser.2.0.0\lib\netstandard2.0\ClosedXML.Parser.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="EPPlus, Version=4.5.3.3, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
+      <HintPath>..\packages\EPPlus.4.5.3.3\lib\net40\EPPlus.dll</HintPath>
+    </Reference>
+    <Reference Include="ExcelNumberFormat, Version=1.1.0.0, Culture=neutral, PublicKeyToken=23c6f5d73be07eca, processorArchitecture=MSIL">
+      <HintPath>..\packages\ExcelNumberFormat.1.1.0\lib\net20\ExcelNumberFormat.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="itextsharp, Version=5.5.13.4, Culture=neutral, PublicKeyToken=8354ae6d2174ddca, processorArchitecture=MSIL">
+      <HintPath>..\packages\iTextSharp.5.5.13.4\lib\net461\itextsharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.Cryptography, Version=10.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.Cryptography.10.0.2\lib\net462\Microsoft.Bcl.Cryptography.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.HashCode, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.HashCode.6.0.0\lib\net462\Microsoft.Bcl.HashCode.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.5-beta1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="PresentationFramework" />
+    <Reference Include="RBush, Version=4.0.0.0, Culture=neutral, PublicKeyToken=c77e27b81f4d0187, processorArchitecture=MSIL">
+      <HintPath>..\packages\RBush.Signed.4.0.0\lib\net47\RBush.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SixLabors.Fonts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d998eea7b14cab13, processorArchitecture=MSIL">
+      <HintPath>..\packages\SixLabors.Fonts.1.0.0\lib\netstandard2.0\SixLabors.Fonts.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Threading.Tasks" />
+    <Reference Include="System.Web.Optimization, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="WebGrease, Version=1.6.5135.21930, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <!-- all your existing references stay untouched -->
+  </ItemGroup>
+  <!-- Add this as a new group anywhere below -->
+  <ItemGroup>
+    <None Remove="ClientApp\tsconfig.spec.json" />
+    <Content Include="ClientApp\emb-products\src\app\bom\gen-bom.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\component-material\component-materials.css" />
+    <Content Include="ClientApp\emb-products\src\app\component-material\component-materials.html" />
+    <Content Include="ClientApp\emb-products\src\app\daily-production-stops\daily-production-stops.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\daily-production-stops\daily-production-stops.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\daily-production\daily-production.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\daily-production\daily-production.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\designcosting\design-costing.css" />
+    <Content Include="ClientApp\emb-products\src\app\designcosting\design-costing.html" />
+    <Content Include="ClientApp\emb-products\src\app\dispatch-items\dispatch-items.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\dispatch-items\dispatch-items.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\dispatch\dispatch.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\dispatch\dispatch.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\fabric\fabric.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\fabric\fabric.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\finished-stock\finished-stock.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\gen-stocks\gen-stocks.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\gen-stocks\gen-stocks.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\gen-store\gen-store.css" />
+    <Content Include="ClientApp\emb-products\src\app\gen-store\gen-store.html" />
+    <Content Include="ClientApp\emb-products\src\app\gen-suppliers\gen-suppliers.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\gen-suppliers\gen-suppliers.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\job-tracking-history\job-tracking-history.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\job-tracking-history\job-tracking-history.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\machine-cost-profile\machine-cost-profile.css" />
+    <Content Include="ClientApp\emb-products\src\app\machine-cost-profile\machine-cost-profile.html" />
+    <Content Include="ClientApp\emb-products\src\app\models\module-template\module-template.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\models\module-template\module-template.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\purchase\purchase.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\purchase\purchase.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\qc-inspection-items\qc-inspection-items.css" />
+    <Content Include="ClientApp\emb-products\src\app\qc-inspection-items\qc-inspection-items.html" />
+    <Content Include="ClientApp\emb-products\src\app\qc-inspection\qc-inspection.css" />
+    <Content Include="ClientApp\emb-products\src\app\qc-inspection\qc-inspection.html" />
+    <Content Include="ClientApp\emb-products\src\app\thread-usage\thread-usage.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\thread-usage\thread-usage.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\topbar\topbar.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\topbar\topbar.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\work-order-items\work-order-items.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\work-order-items\work-order-items.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\work-order\work-order.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\work-order\work-order.component.html" />
+    <Content Include="Content\bootstrap-grid.css" />
+    <Content Include="Content\bootstrap-grid.min.css" />
+    <Content Include="Content\bootstrap-grid.rtl.css" />
+    <Content Include="Content\bootstrap-grid.rtl.min.css" />
+    <Content Include="Content\bootstrap-reboot.css" />
+    <Content Include="Content\bootstrap-reboot.min.css" />
+    <Content Include="Content\bootstrap-reboot.rtl.css" />
+    <Content Include="Content\bootstrap-reboot.rtl.min.css" />
+    <Content Include="Content\bootstrap-theme.css" />
+    <Content Include="Content\bootstrap-theme.min.css" />
+    <Content Include="Content\bootstrap-utilities.css" />
+    <Content Include="Content\bootstrap-utilities.min.css" />
+    <Content Include="Content\bootstrap-utilities.rtl.css" />
+    <Content Include="Content\bootstrap-utilities.rtl.min.css" />
+    <Content Include="Content\bootstrap.css" />
+    <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\bootstrap.rtl.css" />
+    <Content Include="Content\bootstrap.rtl.min.css" />
+    <Content Include="Content\PagedList.css" />
+    <Content Include="Content\Site.css" />
+    <Content Include="fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="Models\Model1.Context.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Model1.Context1.cs</LastGenOutput>
+    </Content>
+    <Content Include="Models\Model1.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>Model1.edmx</DependentUpon>
+      <LastGenOutput>Model11.cs</LastGenOutput>
+    </Content>
+    <Content Include="Rotativa\help-wkhtmltoimage.txt" />
+    <Content Include="Rotativa\help-wkhtmltopdf.txt" />
+    <Content Include="Rotativa\wkhtmltoimage.exe" />
+    <Content Include="Rotativa\wkhtmltopdf.exe" />
+    <Content Include="Scripts\bootstrap.bundle.js" />
+    <Content Include="Scripts\bootstrap.bundle.min.js" />
+    <Content Include="Scripts\bootstrap.esm.js" />
+    <Content Include="Scripts\bootstrap.esm.min.js" />
+    <Content Include="Scripts\bootstrap.js" />
+    <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include="App_Browsers\qt.browser" />
+    <Content Include="fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="fonts\glyphicons-halflings-regular.woff2" />
+    <Content Include="Content\bootstrap-theme.min.css.map" />
+    <Content Include="Content\bootstrap-theme.css.map" />
+    <Content Include="ClientApp\emb-products\src\app\finished-stock\finished-stock.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\bom\gen-bom.component.html" />
+    <EntityDeploy Include="Models\Model1.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>Model1.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+    <Content Include="Models\Model1.edmx.diagram">
+      <DependentUpon>Model1.edmx</DependentUpon>
+    </Content>
+    <None Include="Scripts\jquery-3.7.1.intellisense.js" />
+    <Content Include="Scripts\jquery-3.7.1.js" />
+    <Content Include="Scripts\jquery-3.7.1.min.js" />
+    <Content Include="Scripts\jquery-3.7.1.slim.js" />
+    <Content Include="Scripts\jquery-3.7.1.slim.min.js" />
+    <None Include="Scripts\jquery.validate-vsdoc.js" />
+    <Content Include="Scripts\jquery.validate.js" />
+    <Content Include="Scripts\jquery.validate.min.js" />
+    <Content Include="Scripts\jquery.validate.unobtrusive.js" />
+    <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
+    <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Views\Gen_Suppliers\Create.cshtml" />
+    <Content Include="Views\Gen_Suppliers\Delete.cshtml" />
+    <Content Include="Views\Gen_Suppliers\Details.cshtml" />
+    <Content Include="Views\Gen_Suppliers\Edit.cshtml" />
+    <Content Include="Views\Gen_Suppliers\Index.cshtml" />
+    <Content Include="Views\WorkOrders\Create.cshtml" />
+    <Content Include="Views\WorkOrders\Delete.cshtml" />
+    <Content Include="Views\WorkOrders\Details.cshtml" />
+    <Content Include="Views\WorkOrders\Edit.cshtml" />
+    <Content Include="Views\WorkOrders\Index.cshtml" />
+    <Content Include="Views\WorkOrderItems\Create.cshtml" />
+    <Content Include="Views\WorkOrderItems\Delete.cshtml" />
+    <Content Include="Views\WorkOrderItems\Details.cshtml" />
+    <Content Include="Views\WorkOrderItems\Edit.cshtml" />
+    <Content Include="Views\WorkOrderItems\Index.cshtml" />
+    <Content Include="Views\DailyProductions\Create.cshtml" />
+    <Content Include="Views\DailyProductions\Delete.cshtml" />
+    <Content Include="Views\DailyProductions\Details.cshtml" />
+    <Content Include="Views\DailyProductions\Edit.cshtml" />
+    <Content Include="Views\DailyProductions\Index.cshtml" />
+    <Content Include="Views\DailyProductionStops\Create.cshtml" />
+    <Content Include="Views\DailyProductionStops\Delete.cshtml" />
+    <Content Include="Views\DailyProductionStops\Details.cshtml" />
+    <Content Include="Views\DailyProductionStops\Edit.cshtml" />
+    <Content Include="Views\DailyProductionStops\Index.cshtml" />
+    <Content Include="Views\JobTrackingHistories\Create.cshtml" />
+    <Content Include="Views\JobTrackingHistories\Delete.cshtml" />
+    <Content Include="Views\JobTrackingHistories\Details.cshtml" />
+    <Content Include="Views\JobTrackingHistories\Edit.cshtml" />
+    <Content Include="Views\JobTrackingHistories\Index.cshtml" />
+    <Content Include="Views\Dispatches\Create.cshtml" />
+    <Content Include="Views\Dispatches\Delete.cshtml" />
+    <Content Include="Views\Dispatches\Details.cshtml" />
+    <Content Include="Views\Dispatches\Edit.cshtml" />
+    <Content Include="Views\Dispatches\Index.cshtml" />
+    <Content Include="Views\DispatchItems\Create.cshtml" />
+    <Content Include="Views\DispatchItems\Delete.cshtml" />
+    <Content Include="Views\DispatchItems\Details.cshtml" />
+    <Content Include="Views\DispatchItems\Edit.cshtml" />
+    <Content Include="Views\DispatchItems\Index.cshtml" />
+    <Content Include="Views\Purchases\Create.cshtml" />
+    <Content Include="Views\Purchases\Delete.cshtml" />
+    <Content Include="Views\Purchases\Details.cshtml" />
+    <Content Include="Views\Purchases\Edit.cshtml" />
+    <Content Include="Views\Purchases\Index.cshtml" />
+    <Content Include="Views\Adm_Departments\Create.cshtml" />
+    <Content Include="Views\Adm_Departments\Delete.cshtml" />
+    <Content Include="Views\Adm_Departments\Details.cshtml" />
+    <Content Include="Views\Adm_Departments\Edit.cshtml" />
+    <Content Include="Views\Adm_Departments\Index.cshtml" />
+    <Content Include="Views\Gen_BOM\Create.cshtml" />
+    <Content Include="Views\Gen_BOM\Delete.cshtml" />
+    <Content Include="Views\Gen_BOM\Details.cshtml" />
+    <Content Include="Views\Gen_BOM\Edit.cshtml" />
+    <Content Include="Views\Gen_BOM\Index.cshtml" />
+    <Content Include="Views\QC_Inspection\Create.cshtml" />
+    <Content Include="Views\QC_Inspection\Delete.cshtml" />
+    <Content Include="Views\QC_Inspection\Details.cshtml" />
+    <Content Include="Views\QC_Inspection\Edit.cshtml" />
+    <Content Include="Views\QC_Inspection\Index.cshtml" />
+    <Content Include="Content\bootstrap.rtl.min.css.map" />
+    <Content Include="Content\bootstrap.rtl.css.map" />
+    <Content Include="Content\bootstrap.min.css.map" />
+    <Content Include="Content\bootstrap.css.map" />
+    <Content Include="Content\bootstrap-utilities.rtl.min.css.map" />
+    <Content Include="Content\bootstrap-utilities.rtl.css.map" />
+    <Content Include="Content\bootstrap-utilities.min.css.map" />
+    <Content Include="Content\bootstrap-utilities.css.map" />
+    <Content Include="Content\bootstrap-reboot.rtl.min.css.map" />
+    <Content Include="Content\bootstrap-reboot.rtl.css.map" />
+    <Content Include="Content\bootstrap-reboot.min.css.map" />
+    <Content Include="Content\bootstrap-reboot.css.map" />
+    <Content Include="Content\bootstrap-grid.rtl.min.css.map" />
+    <Content Include="Content\bootstrap-grid.rtl.css.map" />
+    <Content Include="Content\bootstrap-grid.min.css.map" />
+    <Content Include="Content\bootstrap-grid.css.map" />
+    <None Include="packages.config" />
+    <Content Include="Scripts\bootstrap.min.js.map" />
+    <Content Include="Scripts\bootstrap.js.map" />
+    <Content Include="Scripts\bootstrap.esm.min.js.map" />
+    <Content Include="Scripts\bootstrap.esm.js.map" />
+    <Content Include="Scripts\bootstrap.bundle.min.js.map" />
+    <Content Include="Scripts\bootstrap.bundle.js.map" />
+    <Content Include="Scripts\jquery-3.7.1.slim.min.map" />
+    <Content Include="Scripts\jquery-3.7.1.min.map" />
+    <Content Include="Views\Gen_FinishedStocks\Create.cshtml" />
+    <Content Include="Views\Gen_FinishedStocks\Delete.cshtml" />
+    <Content Include="Views\Gen_FinishedStocks\Details.cshtml" />
+    <Content Include="Views\Gen_FinishedStocks\Edit.cshtml" />
+    <Content Include="Views\Gen_FinishedStocks\Index.cshtml" />
+    <Content Include="Views\DesignCostings\Create.cshtml" />
+    <Content Include="Views\DesignCostings\Delete.cshtml" />
+    <Content Include="Views\DesignCostings\Details.cshtml" />
+    <Content Include="Views\DesignCostings\Edit.cshtml" />
+    <Content Include="Views\DesignCostings\Index.cshtml" />
+    <Content Include="Views\MachineCostProfiles\Create.cshtml" />
+    <Content Include="Views\MachineCostProfiles\Delete.cshtml" />
+    <Content Include="Views\MachineCostProfiles\Details.cshtml" />
+    <Content Include="Views\MachineCostProfiles\Edit.cshtml" />
+    <Content Include="Views\MachineCostProfiles\Index.cshtml" />
+    <Content Include="Views\Gen_JobOrderItems\Create.cshtml" />
+    <Content Include="Views\Gen_JobOrderItems\Delete.cshtml" />
+    <Content Include="Views\Gen_JobOrderItems\Details.cshtml" />
+    <Content Include="Views\Gen_JobOrderItems\Edit.cshtml" />
+    <Content Include="Views\Gen_JobOrderItems\Index.cshtml" />
+    <Content Include="Views\Gen_ComponentMaterials\Create.cshtml" />
+    <Content Include="Views\Gen_ComponentMaterials\Delete.cshtml" />
+    <Content Include="Views\Gen_ComponentMaterials\Details.cshtml" />
+    <Content Include="Views\Gen_ComponentMaterials\Edit.cshtml" />
+    <Content Include="Views\Gen_ComponentMaterials\Index.cshtml" />
+    <Content Include="Views\QC_InspectionItems\Create.cshtml" />
+    <Content Include="Views\QC_InspectionItems\Delete.cshtml" />
+    <Content Include="Views\QC_InspectionItems\Details.cshtml" />
+    <Content Include="Views\QC_InspectionItems\Edit.cshtml" />
+    <Content Include="Views\QC_InspectionItems\Index.cshtml" />
+    <Content Include="Views\Gen_Store\Create.cshtml" />
+    <Content Include="Views\Gen_Store\Delete.cshtml" />
+    <Content Include="Views\Gen_Store\Details.cshtml" />
+    <Content Include="Views\Gen_Store\Edit.cshtml" />
+    <Content Include="Views\Gen_Store\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="BouncyCastle.Cryptography, Version=2.0.0.0, Culture=neutral, PublicKeyToken=072edcf4a5328938, processorArchitecture=MSIL">
+      <HintPath>..\packages\BouncyCastle.Cryptography.2.7.0-beta.98\lib\net461\BouncyCastle.Cryptography.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=4.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\lib\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.IO.RecyclableMemoryStream, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IO.RecyclableMemoryStream.3.0.1\lib\netstandard2.0\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Web.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.2.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="PagedList, Version=1.17.0.0, Culture=neutral, PublicKeyToken=abbb863e9397c5e1, processorArchitecture=MSIL">
+      <HintPath>..\packages\PagedList.1.17.0.0\lib\net40\PagedList.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="PagedList.Mvc, Version=4.5.0.0, Culture=neutral, PublicKeyToken=abbb863e9397c5e1, processorArchitecture=MSIL">
+      <HintPath>..\packages\PagedList.Mvc.4.5.0.0\lib\net40\PagedList.Mvc.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="Rotativa, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rotativa.1.7.4-rc\lib\net45\Rotativa.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ComponentModel.Annotations.5.0.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Formats.Asn1, Version=10.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Formats.Asn1.10.0.2\lib\net462\System.Formats.Asn1.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.6.1\lib\net462\System.Numerics.Vectors.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, 	processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Security.Cryptography.Xml, Version=10.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Xml.10.0.2\lib\net462\System.Security.Cryptography.Xml.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.3.0\lib\net45\System.Web.Helpers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Mvc.5.3.0\lib\net45\System.Web.Mvc.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Razor.3.3.0\lib\net45\System.Web.Razor.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.3.0\lib\net45\System.Web.WebPages.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.3.0\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.3.0\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Abstractions" />
+    <Reference Include="System.Web.Routing" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Net.Http">
+    </Reference>
+    <Reference Include="System.Net.Http.WebRequest">
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="App_Start\BundleConfig.cs" />
+    <Compile Include="App_Start\FilterConfig.cs" />
+    <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\Adm_CompanyProfileController.cs" />
+    <Compile Include="Controllers\Adm_DepartmentsController.cs" />
+    <Compile Include="Controllers\Adm_RolesController.cs" />
+    <Compile Include="Controllers\Adm_UsersController.cs" />
+    <Compile Include="Controllers\AuthController.cs" />
+    <Compile Include="Controllers\BaseController.cs" />
+    <Compile Include="Controllers\BomAuditController.cs" />
+    <Compile Include="Controllers\BranchesController.cs" />
+    <Compile Include="Controllers\DailyProductionsController.cs" />
+    <Compile Include="Controllers\DailyProductionStopsController.cs" />
+    <Compile Include="Controllers\DesignCostingsController.cs" />
+    <Compile Include="Controllers\DispatchesController.cs" />
+    <Compile Include="Controllers\DispatchItemsController.cs" />
+    <Compile Include="Controllers\DropdownsController.cs" />
+    <Compile Include="Controllers\ExtraMaterialRequestsController.cs" />
+    <Compile Include="Controllers\Gen_BOMController.cs" />
+    <Compile Include="Controllers\Gen_BrandsController.cs" />
+    <Compile Include="Controllers\Gen_CatagoriesController.cs" />
+    <Compile Include="Controllers\Gen_ComponentMaterialsController.cs" />
+    <Compile Include="Controllers\Gen_ComponentsController.cs" />
+    <Compile Include="Controllers\Gen_DesignController.cs" />
+    <Compile Include="Controllers\Gen_FinishedStocksController.cs" />
+    <Compile Include="Controllers\Gen_JobOrderItemsController.cs" />
+    <Compile Include="Controllers\Gen_JobOrdersController.cs" />
+    <Compile Include="Controllers\Gen_MachineParametersController.cs" />
+    <Compile Include="Controllers\Gen_MachinesController.cs" />
+    <Compile Include="Controllers\Gen_ProductsController.cs" />
+    <Compile Include="Controllers\Gen_ServiceRatesController.cs" />
+    <Compile Include="Controllers\Gen_ServiceTypeController.cs" />
+    <Compile Include="Controllers\Gen_StocksController.cs" />
+    <Compile Include="Controllers\Gen_StoreController.cs" />
+    <Compile Include="Controllers\Gen_SuppliersController.cs" />
+    <Compile Include="Controllers\Gen_TheServicesController.cs" />
+    <Compile Include="Controllers\Gen_ThreadsController.cs" />
+    <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\Hr_CustomersController.cs" />
+    <Compile Include="Controllers\IssueMaterialsController.cs" />
+    <Compile Include="Controllers\JobTrackingHistoriesController.cs" />
+    <Compile Include="Controllers\MachineCostProfilesController.cs" />
+    <Compile Include="Controllers\ProductionLedgerController .cs" />
+    <Compile Include="Controllers\ProductionPlansController.cs" />
+    <Compile Include="Controllers\PurchaseOrdersController.cs" />
+    <Compile Include="Controllers\PurchaseRequisitionsController.cs" />
+    <Compile Include="Controllers\PurchasesController.cs" />
+    <Compile Include="Controllers\QC_InspectionController.cs" />
+    <Compile Include="Controllers\QC_InspectionItemsController.cs" />
+    <Compile Include="Controllers\ReportsController.cs" />
+    <Compile Include="Controllers\StockLedgerController.cs" />
+    <Compile Include="Controllers\WorkOrderItemsController.cs" />
+    <Compile Include="Controllers\WorkOrdersController.cs" />
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Infrastructure\JsonNetResult.cs" />
+    <Compile Include="Models\Adm_CompanyProfile.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Adm_Departments.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Adm_Designations.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Adm_Roles.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Adm_Users.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Branches.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DailyProduction.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DailyProductionStops.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DesignCosting.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Dispatch.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DispatchItems.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\ExtraMaterialRequest.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\ExtraMaterialRequestItems.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_BOM.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_Brands.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_Catagories.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_ComponentMaterials.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_Components.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_ComponentSpecs.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_Design.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_DesignFiles.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_FinishedStocks.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_JobOrderItems.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_JobOrders.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_MachineParameters.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_Machines.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_Products.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_RawItems.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_ServiceRates.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_ServiceType.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_StockLedger.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_Stocks.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_Store.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_Suppliers.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_TheServices.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_Threads.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Gen_Units.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Hr_Customers.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\JobTrackingHistory.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\MachineCostProfile.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Model1.Context.cs" />
+    <Compile Include="Models\Model1.Context1.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Model1.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Model1.cs" />
+    <Compile Include="Models\Model1.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Model1.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Model11.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\ProductionPlan.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\ProductionPlanItems.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Purchase.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\PurchaseItems.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\PurchaseOrder.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\PurchaseOrderItems.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\PurchaseRequisition.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\PurchaseRequisitionItems.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\QC_Inspection.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\QC_InspectionItems.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\StockAdjustment.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\WorkOrderItems.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\WorkOrders.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Services\DesignCostingService.cs" />
+    <Compile Include="ViewModels\BomViewModels.cs" />
+    <Compile Include="ViewModels\BranchesPageViewModel.cs" />
+    <Compile Include="ViewModels\BranchExportRow.cs" />
+    <Compile Include="ViewModels\BranchForm.cs" />
+    <Compile Include="ViewModels\BranchRowViewModel.cs" />
+    <Compile Include="ViewModels\BrandDetailViewModel.cs" />
+    <Compile Include="ViewModels\BrandListViewModel.cs" />
+    <Compile Include="ViewModels\BrandsPageViewModel.cs" />
+    <Compile Include="ViewModels\CategoriesPageViewModel.cs" />
+    <Compile Include="ViewModels\CategoryRowViewModel.cs" />
+    <Compile Include="ViewModels\ChangePasswordViewModel.cs" />
+    <Compile Include="ViewModels\CompanyDetailDto.cs" />
+    <Compile Include="ViewModels\CompanyPageViewModel.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ViewModels\CompanyProfileViewModel.cs" />
+    <Compile Include="ViewModels\ComponentsPageViewModel.cs" />
+    <Compile Include="ViewModels\ComponentsRowViewModel.cs" />
+    <Compile Include="ViewModels\CustomerExcelRow.cs" />
+    <Compile Include="ViewModels\CustomerRowViewModel.cs" />
+    <Compile Include="ViewModels\CustomersPageViewModel.cs" />
+    <Compile Include="ViewModels\DailyProductionStopRowViewModel.cs" />
+    <Compile Include="ViewModels\DailyProductionViewModels.cs" />
+    <Compile Include="ViewModels\DesignationDto.cs" />
+    <Compile Include="ViewModels\DesignCostingViewModel.cs" />
+    <Compile Include="ViewModels\DesignDetailViewModel.cs" />
+    <Compile Include="ViewModels\DesignPageViewModel.cs" />
+    <Compile Include="ViewModels\DispatchItemViewModels.cs" />
+    <Compile Include="ViewModels\DispatchViewModels.cs" />
+    <Compile Include="ViewModels\FinishedStockViewModels.cs" />
+    <Compile Include="ViewModels\GenComponentMaterialViewModels.cs" />
+    <Compile Include="ViewModels\GenStoreViewModels.cs" />
+    <Compile Include="ViewModels\IssueMaterialDto.cs" />
+    <Compile Include="ViewModels\JobOrderViewModel.cs" />
+    <Compile Include="ViewModels\JobOrderItemDetailViewModel.cs" />
+    <Compile Include="ViewModels\JobOrderItemDto.cs" />
+    <Compile Include="ViewModels\JobOrdersPageViewModel.cs" />
+    <Compile Include="ViewModels\JobTrackingHistoryViewModels.cs" />
+    <Compile Include="ViewModels\MachineCostProfileViewModel.cs" />
+    <Compile Include="ViewModels\MachineDto.cs" />
+    <Compile Include="ViewModels\MachineParameterDto.cs" />
+    <Compile Include="ViewModels\MachineParameterRowViewModel.cs" />
+    <Compile Include="ViewModels\MachineParametersPageViewModel.cs" />
+    <Compile Include="ViewModels\MachinesPageViewModel.cs" />
+    <Compile Include="ViewModels\ModuleTemplateDtos.cs" />
+    <Compile Include="ViewModels\ProductDetailViewModel.cs" />
+    <Compile Include="ViewModels\ProductDto.cs" />
+    <Compile Include="ViewModels\ProductionQcLedgerRowVm.cs" />
+    <Compile Include="ViewModels\ProductRowViewModel.cs" />
+    <Compile Include="ViewModels\ProductsPageViewModel.cs" />
+    <Compile Include="ViewModels\PurchaseDto.cs" />
+    <Compile Include="ViewModels\PurchaseReturnDto.cs" />
+    <Compile Include="ViewModels\PurchaseViewModels.cs" />
+    <Compile Include="ViewModels\QCInspectionItemsViewModels.cs" />
+    <Compile Include="ViewModels\QCInspectionRowViewModel.cs" />
+    <Compile Include="ViewModels\ServiceDto.cs" />
+    <Compile Include="ViewModels\ServiceRatesDto.cs" />
+    <Compile Include="ViewModels\ServiceRatesPageViewModel.cs" />
+    <Compile Include="ViewModels\ServiceRatesRowViewModel.cs" />
+    <Compile Include="ViewModels\ServiceRowViewModel.cs" />
+    <Compile Include="ViewModels\ServicesPageViewModel.cs" />
+    <Compile Include="ViewModels\ServiceTypeDto.cs" />
+    <Compile Include="ViewModels\ServiceTypeRowViewModel.cs" />
+    <Compile Include="ViewModels\ServiceTypesPageViewModel.cs" />
+    <Compile Include="ViewModels\StockLedgerRowViewModel.cs" />
+    <Compile Include="ViewModels\StockRowViewModel.cs" />
+    <Compile Include="ViewModels\StocksPageViewModel.cs" />
+    <Compile Include="ViewModels\StocksPrintViewModel.cs" />
+    <Compile Include="ViewModels\SupplierDetailViewModel.cs" />
+    <Compile Include="ViewModels\SupplierDto.cs" />
+    <Compile Include="ViewModels\SupplierRowViewModel.cs" />
+    <Compile Include="ViewModels\ThreadFormViewModel.cs" />
+    <Compile Include="ViewModels\ThreadRowViewModel.cs" />
+    <Compile Include="ViewModels\ThreadsPageViewModel.cs" />
+    <Compile Include="ViewModels\UserRowViewModel.cs" />
+    <Compile Include="ViewModels\UsersPageViewModel.cs" />
+    <Compile Include="ViewModels\WorkOrderDto.cs" />
+    <Compile Include="ViewModels\WorkOrderItemDetailViewModel.cs" />
+    <Compile Include="ViewModels\WorkOrderItemDto.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="bin\EMB_Production.dll" />
+    <Content Include="bin\EMB_Production.pdb" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\%40angular_cdk_bidi.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\%40angular_core.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\%40angular_material_button.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\%40angular_material_toolbar.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\%40angular_platform-browser.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\%40angular_platform-browser_animations.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\chunk-7WPKBMSW.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\chunk-CX7MUXYP.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\chunk-QXO2ETR5.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\chunk-TXDUYLVM.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\chunk-UXU6AY6D.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\chunk-WI3U5ODF.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\zone__js.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\%40angular_core.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\%40angular_platform-browser.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\%40angular_platform-server.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\%40angular_platform-server_init.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\%40angular_router.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\%40angular_ssr.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\%40angular_ssr_node.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\chunk-6TQNZWQL.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\chunk-LC7BGKDY.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\chunk-PRK4HEXR.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\chunk-VZS6XURG.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\chunk-YHCV7DAQ.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\chunk-YSVBSQTZ.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\express.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\xhr2-WBTWOK2V.js" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\zone__js_node.js" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\app.component.js" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\app.config.js" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\app.routes.js" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\app.spec.js" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\gen-product\gen-product.component.js" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\gen-product\gen-product.component.spec.js" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\services\customer.service.js" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\services\order.service.js" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\services\products.service.js" />
+    <Content Include="ClientApp\emb-products\out-tsc\main.js" />
+    <Content Include="ClientApp\emb-products\out-tsc\polyfills.js" />
+    <Content Include="ClientApp\emb-products\public\favicon.ico" />
+    <Content Include="ClientApp\emb-products\src\app\adm-branch\adm-branch.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\adm-branch\adm-branch.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\adm-role\adm-roles.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\adm-user\adm-user.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\adm-user\adm-user.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\app.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\app.html" />
+    <Content Include="ClientApp\emb-products\src\app\auth\change-password.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\auth\change-password.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\auth\login.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\auth\login.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\brands\gen-brand.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\brands\gen-brand.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\categories\gen-category.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\categories\gen-category.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\components\gen-components.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\components\gen-components.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\customers\hr-customer.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\customers\hr-customer.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\dashboard\dashboard.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\dashboard\dashboard.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\design\gen-design.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\design\gen-design.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\gen-machine-parameters\gen-machine-parameters.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\gen-machine-parameters\gen-machine-parameters.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\gen-machines\gen-machines.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\gen-machines\gen-machines.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\gen-product\gen-product.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\gen-product\gen-product.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\gen-service-rates\gen-service-rates.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\gen-service-rates\gen-service-rates.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\gen-services\gen-services.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\gen-services\gen-services.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\gen-threads\gen-threads.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\gen-threads\gen-threads.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\home\home.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\home\home.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\job-orders\job-orders.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\job-orders\job-orders.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\layout\layout.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\layout\layout.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\servicetype\servicetype.component.css" />
+    <Content Include="ClientApp\emb-products\src\app\servicetype\servicetype.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\sidebar\sidebar.css" />
+    <Content Include="ClientApp\emb-products\src\app\sidebar\sidebar.html" />
+    <Content Include="ClientApp\emb-products\src\index.html" />
+    <Content Include="ClientApp\emb-products\src\styles.css" />
+    <Content Include="Content\CompanyLogo\1.jpeg" />
+    <Content Include="Content\CompanyLogo\2.jpeg" />
+    <Content Include="Content\CompanyLogo\4.jpeg" />
+    <Content Include="Content\CompanyLogo\6195a678-1db0-41cc-a3fe-3f2fa180a8ad_1.jpeg" />
+    <Content Include="Content\CompanyLogo\9899841d-e674-4045-ac4f-cea350526447.jpg" />
+    <Content Include="Content\CompanyLogo\c00e0658-0e07-4a5e-9064-9e27adf110c7_1.jpeg" />
+    <Content Include="Content\CompanyLogo\IMG-20240517-WA0021.jpg" />
+    <Content Include="Content\CompanyLogo\IMG-20240517-WA0022.jpg" />
+    <Content Include="Content\CompanyLogo\IMG-20240517-WA0023.jpg" />
+    <Content Include="Content\CompanyLogo\IMG-20240517-WA0025.jpg" />
+    <Content Include="Content\CompanyLogo\Monogram.jpg" />
+    <Content Include="Content\CompanyLogo\P.jpg" />
+    <Content Include="Content\CompanyLogo\Sir Gee.jpg" />
+    <Content Include="favicon.ico" />
+    <Content Include="Global.asax" />
+    <Content Include="Uploads\FacialRecognition\00b21716-37f3-48df-ab95-653ac2b8ccc9.jpg" />
+    <Content Include="Uploads\FacialRecognition\02978258-e8df-4ca2-b51a-05c4809e4c94.jpg" />
+    <Content Include="Uploads\FacialRecognition\1bbbe9f1-a5e3-48ec-8cd4-7722a2eb6a0e.jpg" />
+    <Content Include="Uploads\FacialRecognition\28b2addc-490f-4460-bb59-0733a02ad20b.jpg" />
+    <Content Include="Uploads\FacialRecognition\39fb448c-5f1d-459a-9703-564bb83cb9e1.jpg" />
+    <Content Include="Uploads\FacialRecognition\43628e95b42a41c0831c7829fded9a38.jpg" />
+    <Content Include="Uploads\FacialRecognition\46177778-42fe-46f0-afe1-c9e5d3b8dca1.jpg" />
+    <Content Include="Uploads\FacialRecognition\4cfb97d2-5a3b-403f-b798-7dd049039dd3.jpg" />
+    <Content Include="Uploads\FacialRecognition\80e41b6b-86a4-49b0-b4ce-fdb9ff7cef43.jpg" />
+    <Content Include="Uploads\FacialRecognition\8fe91d2b-cc92-48a6-9aac-4722faa3fea7.jpg" />
+    <Content Include="Uploads\FacialRecognition\94e43c86-1bae-4365-8f68-58779d0c0084.jpg" />
+    <Content Include="Uploads\FacialRecognition\979937dc-edd4-45b0-a9b8-bf1c37b5210b.jpg" />
+    <Content Include="Uploads\FacialRecognition\b6bcf916-d65b-4127-9b7b-9d10b75423e6.jpg" />
+    <Content Include="Uploads\FacialRecognition\c32f6cf3-80c4-40f8-b50d-20c31eb93b90.jpg" />
+    <Content Include="Uploads\FacialRecognition\d101dc64-f6fa-4aeb-8386-edd61b7ab2fc.jpg" />
+    <Content Include="Uploads\FacialRecognition\d8a02e3d-e953-42f5-ade4-8c5fc2880e8f.jpg" />
+    <Content Include="Uploads\FacialRecognition\eb67b953-514d-49cb-92ce-5d5b5b5ee71c.jpg" />
+    <Content Include="Uploads\FacialRecognition\f50d4dd5-583f-401b-ad05-174e7031d3d8.jpg" />
+    <Content Include="Uploads\FacialRecognition\f62b7b0b-5315-40a4-93c5-5f3b260bf77b.jpg" />
+    <Content Include="Uploads\Users\0f0b7994-055d-47d1-8d1a-c59e026cdb99.jpg" />
+    <Content Include="Uploads\Users\20b7789a-d8af-40f0-842f-a34d3d7f01f8.jpg" />
+    <Content Include="Uploads\Users\a863c7b2-8e17-4d7c-aab8-d03a42beb8a6.jpg" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-grid.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-grid.min.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-grid.rtl.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-grid.rtl.min.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-reboot.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-reboot.min.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-reboot.rtl.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-reboot.rtl.min.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-utilities.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-utilities.min.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-utilities.rtl.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-utilities.rtl.min.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap.min.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap.rtl.css" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap.rtl.min.css" />
+    <Content Include="wwwroot\lib\bootstrap\js\bootstrap.bundle.js" />
+    <Content Include="wwwroot\lib\bootstrap\js\bootstrap.bundle.min.js" />
+    <Content Include="wwwroot\lib\bootstrap\js\bootstrap.esm.js" />
+    <Content Include="wwwroot\lib\bootstrap\js\bootstrap.esm.min.js" />
+    <Content Include="wwwroot\lib\bootstrap\js\bootstrap.js" />
+    <Content Include="wwwroot\lib\bootstrap\js\bootstrap.min.js" />
+    <Content Include="libman.json" />
+    <Content Include="ClientApp\emb-products\src\app\app.component.css" />
+    <Content Include="ClientApp\emb-products\src\styles.scss" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\6f2fdeb71ebce856ddbd4edc3fe744eb31e70a92\0.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\6f2fdeb71ebce856ddbd4edc3fe744eb31e70a92\1.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\6f2fdeb71ebce856ddbd4edc3fe744eb31e70a92\10.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\6f2fdeb71ebce856ddbd4edc3fe744eb31e70a92\2.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\6f2fdeb71ebce856ddbd4edc3fe744eb31e70a92\3.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\6f2fdeb71ebce856ddbd4edc3fe744eb31e70a92\4.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\6f2fdeb71ebce856ddbd4edc3fe744eb31e70a92\5.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\6f2fdeb71ebce856ddbd4edc3fe744eb31e70a92\6.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\6f2fdeb71ebce856ddbd4edc3fe744eb31e70a92\7.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\6f2fdeb71ebce856ddbd4edc3fe744eb31e70a92\8.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\6f2fdeb71ebce856ddbd4edc3fe744eb31e70a92\9.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\6f2fdeb71ebce856ddbd4edc3fe744eb31e70a92\index.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\6f2fdeb71ebce856ddbd4edc3fe744eb31e70a92\index.pack.old" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\9c4d77f44290d97752ee16195d7b02b54b843483\0.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\9c4d77f44290d97752ee16195d7b02b54b843483\1.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\9c4d77f44290d97752ee16195d7b02b54b843483\2.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\9c4d77f44290d97752ee16195d7b02b54b843483\index.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\9c4d77f44290d97752ee16195d7b02b54b843483\index.pack.old" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\a7ff6f9a8be3e91cf92d863a1913d861c40d6b8b\0.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\a7ff6f9a8be3e91cf92d863a1913d861c40d6b8b\1.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\a7ff6f9a8be3e91cf92d863a1913d861c40d6b8b\2.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\a7ff6f9a8be3e91cf92d863a1913d861c40d6b8b\3.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\a7ff6f9a8be3e91cf92d863a1913d861c40d6b8b\index.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\a7ff6f9a8be3e91cf92d863a1913d861c40d6b8b\index.pack.old" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\b94a0ebb2192d6e883c4ca6de74719ad025c041a\0.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\angular-webpack\b94a0ebb2192d6e883c4ca6de74719ad025c041a\index.pack" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\01add80d174f7a79.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\020187c3115fa9b8.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\021528bfa881213d.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\02546e3b33d7958b.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\03664200a94da011.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\039b54829bb404bb.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\0412066112e2709c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\046330550e91aa09.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\04c4b8a51a163eb0.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\07a26a3773c1bfb7.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\08166fee04dcd1af.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\0b86ceffcbc72509.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\0c2de71ccdaadcb5.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\0c6da3231371e09c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\0cbfa762e561d24b.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\0da64ed78dcf5cab.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\0e10df303d4e788d.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\0e26b450318e8261.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\0f50440c260f4945.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\0f9e22c29e60f283.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\104ef618f6862076.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\1117e5abbe8ca2b3.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\111822afc4611577.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\1189f19d49d36841.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\129e86697e7c8ad6.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\13c1b6d81897d353.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\1669a0bd3bcd39d8.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\1704292a82852704.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\17975fd9213e1002.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\1811a76b756e3c0e.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\18f9f297cace8861.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\1927432f4c277c57.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\1a684465e039ac89.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\1b2f611f2df1ee14.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\1b61608e86f76ba7.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\1ba44401754b5bd6.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\1bc4b4ba8f92e4a0.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\1d32dc9aa79070f2.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\1ea46463f6ea5c29.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\216cb096947ce529.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\222de10f343be711.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\225a76afea4c8879.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2365c7f5cdc727b6.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2378e153e543735f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2383c3cf109327f0.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2456a6392c750851.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2465cfdbf65f2f2b.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\252242528d84904f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\25de6909c6715487.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\26e4fe2610509135.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2723e4a45d79b5fc.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\277b4356a5c1bbe8.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2780e90ef53e3aa4.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\281aad68ebccd3ac.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2839865189661424.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2b85e7ddb9f4edf2.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2cfb6767459895df.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2d3040e939dd26ca.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2d437aff979b606e.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2dac79fd6ae7d7f1.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2dd00ab106b22e26.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2f28e08de26621d7.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\2fba711747be4311.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\300a86702b1ca0e2.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\3153355641dd64bd.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\3216391c20453043.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\344be2ca1b8ffb58.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\34730e903e03fcbe.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\35c3ded23187f8db.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\35eecedd301850dd.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\367f71d2571d66c7.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\3a2dde5bfe072ead.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\3ae9910d765d17ed.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\3ba27261b6a16f77.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\3c5f96081e6413b4.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\3cfd5ef0df94c7a0.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\3d7c304e1a1c991f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\3ebfb4f9627718d0.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\3f1b4325a51c801c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\3fae983908c5537b.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\3fc8c28739acb985.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\40bbdcbfe132c246.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\419325fd5de107aa.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\42fb3be22504554a.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\43803b353f4bdaeb.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\4397f0c5ee698206.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\44008df9a80f368c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\459270e85323e1cc.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\45a899a4afeb7e27.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\45eabe738cffb4aa.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\477e7863925a975a.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\47b108ffc78cc514.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\4a3167675917a2be.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\4a73caac376de62c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\4b10dfc266b8bbd3.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\4c570fd837cdc7e0.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\4cf564329478bdca.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\4d90c74188abd857.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\4f99f5ede8d970b2.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\4fd55990e0c39061.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\5403961a76e99c96.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\5466c9c2df533b48.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\546cd2c955206594.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\5471150965c4fe8f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\54cee29d003bd5e5.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\558044b763498dd3.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\55895159e141632f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\55ab5eb2b975c7e1.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\57458e04933eaaf0.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\583de794ccd53331.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\586192a62018556c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\59be1a7431267dbb.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\59f24dc61a3cb11b.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\5a2ea7aeef807b83.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\5ba7892a8bc2db5f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\5c11b25fa085e3a1.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\5c74c701d18a86f2.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\5ca6b515cd8023a4.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\5e324b0d711825ad.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\5f10c97292878ffe.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\5ffbeff896159b6a.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\6144c2b9da34e2aa.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\616dad16469019b3.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\622749ba46d7b5ab.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\63148e1bffdd29ea.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\63246c4717a5a326.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\63a7bd6272033944.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\63f41888cbf9789c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\6499b475270c2389.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\64d13d6bcbae76ac.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\64f92ae2fd6911f2.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\66be00ec72da5e5e.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\6748c8fc3945bf34.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\67ba70aa7f73796c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\6992a7cc10d590e1.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\6acaffcf2cc0649c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\6ae220d948feecb0.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\6cb2cb5acbc648c9.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\6d4f91ddfce7f71a.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\6d98e64c67af8f57.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\6e207585937dea1e.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\6e68844ba8cb6f5f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\6fd95ddb08a912d5.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\7208009b1c94a9f8.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\739de79a56f00b5d.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\73a81da24d027b16.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\74112f1861fb8013.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\74605acdc58bf9a1.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\74c9b928ffad2bad.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\75943dc3e1893d2d.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\75fadece03ace22d.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\76cca9f04c8c9538.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\76f0a386579a2015.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\771ecf5bdb9ff854.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\77860008a79e0073.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\796de1b5c6eaeb95.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\79736fe20fc5d31e.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\7996b90a8f5811ee.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\79a054bba62af2bb.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\7ca510456021b062.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\7d307f0ef8529dc2.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\7d428e2b9b4ff0e0.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\7e063787e84dd755.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\80355ddceb77e140.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\806a8bd691199a5e.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\816d4e30512cf0ad.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\8193fc25eb2ea2b3.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\819b31c4f51761a2.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\819cb4cc5ad246c6.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\83004d17e0d31ae6.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\8456c1117c81ca34.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\84cfd597f6d35311.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\858191cef3da0390.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\88b9d07e7a49855f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\88fdf788d78f1251.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\890e448c0a2093cf.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\894fa5050c5814d1.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\8b4b101f20c4a5bb.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\8bbae08906816134.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\8bc27cfaf8ae8a9a.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\8cd8924ee0c3456f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\8d303424dae9d6a9.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\8d5df332fcff95cb.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\8dc7a635a7f17970.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\8dcd4795bca73bb5.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\8df9bd9a35630333.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\8e002cb5fb6b58f7.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\8e85184c8a0756c7.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\9066f592cbe1839b.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\90aae16aef67f8a6.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\91a8ade0c46f4e57.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\92752ebe6321db80.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\92acc274f81a22cb.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\9489449f20ee25df.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\95a008828f7e91bc.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\95c967953a88a283.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\95e8743da6f42500.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\963aaaf1ad230c03.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\988a8b8c41707fa8.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\99b79217933f0754.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\9a45207a53a331aa.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\9bf33a26bd66468c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\9ca3cb7b6dba7fc6.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\9cd0a11abee80195.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\9d3a37d479074ac0.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\9ea683196b548481.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\a17065e5b6c18e02.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\a2f5235fb75e8726.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\a2f56b2aaf724917.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\a47b238b1d69be80.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\a5b34e546953efc8.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\a63f8695538de1bb.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\a65dc61417084eb2.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\a6aeee632539fb55.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\a83aec80c97d3214.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\a8d0084fd992d605.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\a986777831b80111.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\aa1b1353659aa292.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\aa37e598ac9d7dab.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ac999c7c3906042f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\acb5146bc84a7427.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\acca1a3d31c0f065.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ad1c38c6a4db5e48.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\adc94ccbd5647f51.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\aeb921185070a75f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\aee21f9edb4bf49c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\b00ee0ba63112187.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\b18f1358b46ee51c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\b31b21fc3cef7edf.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\b41da6f84af1c571.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\b43a81f5cd736916.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\b61c318b112f8a72.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\b64bb7c59038baa0.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\b66db127658000b9.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\b7fad1b10d7b3110.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\b8eefb0a5594b9f6.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\b968de01c5ea8905.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\b9aa662474953f21.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\b9e126a19a185d54.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\b9ed5629b62dc76a.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ba0198f1d9c15fd3.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\bb1a38e0da389e37.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\bb6c8b147b499d70.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\bee7201802cce176.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c0007001fc2f7d2c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c00efdc790170e5a.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c025404d950ef5c3.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c08c3c08fd24b83a.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c193376aa7ce2042.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c250484304827076.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c327be3e8b54b658.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c398eb9fe9196903.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c4a480a046db79a9.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c52cdbba600249f7.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c5ec91c8ef78cb85.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c71472eb843f356f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c72feaeb0b4a3ca3.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c7483c6ba7643064.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c7558bc5d4090a84.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c78e989e0c408853.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c799df7354f262f5.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c7bb6935ce61f0af.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c7d10db30c592e01.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c8e9f4718f8fcda8.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\c91af4783d820520.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ca732892a35a7038.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\cbe2424b6e99fc44.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\cc3b322bc7313e27.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\cc3f42a9f32d3702.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\cc880b4cdce6eaae.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ce0e9c6bda82b990.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ceab46259fcaf0fc.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\cffaa1bfcac80f57.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d0179dadb12df3b8.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d06204cdb8d01ae7.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d0a850e05d6ae576.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d0ab853e2eaf97b9.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d246eaeab7b53180.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d26b146847309234.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d27b178004e49160.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d288f4d30ac895db.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d4004ad2ee5edbc2.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d422b1e8a705cae6.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d4435547a2be8653.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d447e64f3507aac6.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d5d4b2a2c202271c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d60e4c4a73282de9.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d6ba3225629feb49.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d77ae59b6183b552.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d7a9a7d3e8bdcc5f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d85b19ee6e517ae8.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d8c5daff1c9d8181.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\d9ef231738598fa5.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\dab47b817d54d5b1.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\dd00e7b854854c03.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ddfb3b578a4c0cd7.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\de212cc1133320ed.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\de72db3131ab7b56.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\df1393cc50aa17b1.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\df93e09a61454dd0.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\dfbb21641e2bae14.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\e05e0ffc5688c96c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\e233364e1709485a.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\e264653c2d99405a.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\e4ff1fd1f85280ce.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\e56db50be04feced.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\e5bdca9c2f2e79ca.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\e5f8592549f2a79f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\e635f3c27f72d5ad.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\e6650c449b96fb2c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\e910c7d6c7e2cf22.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\e923b50b53498997.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ea105486a2823657.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ea15ad55de8b10cd.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ea34c595f8489226.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ea5863c2669be020.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\eb0296e65946ba3a.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ebba99821ae8f3a5.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ecb86871611cb13e.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ecf5e0fa0433033e.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ee39d31de06ad8c6.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\f11723d6da52af61.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\f136abd87544c20a.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\f34a49fedf6f8a40.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\f386e3f3483b2928.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\f46b24e1827c567f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\f5b9d19bf63be891.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\f780633d9fedab5b.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\f7cecaf019a59a8c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\f866ed4dfe123bf3.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\f8e61c32b0fb2b0c.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\f943606014c1f65f.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\f9af01e7c2dc18d6.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\fa68b94520643bf4.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\fb66cffacd09399e.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\fb66f6c6fb90f6d9.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\fc2b34625c137e12.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\fc405477845c8568.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\fd2a17dd1c61b5ba.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\fe1e451370938044.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ff2cb63ea4da3440.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ff61ac3d580cb7ab.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ff6a052e6025cdff.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\babel-webpack\ffcafe34161d5950.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\.tsbuildinfo" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\angular-compiler.db" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\angular-compiler.db-lock" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\com.chrome.devtools.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\%40angular_cdk_bidi.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\%40angular_core.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\%40angular_material_button.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\%40angular_material_toolbar.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\%40angular_platform-browser.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\%40angular_platform-browser_animations.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\chunk-7WPKBMSW.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\chunk-CX7MUXYP.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\chunk-QXO2ETR5.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\chunk-TXDUYLVM.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\chunk-UXU6AY6D.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\chunk-WI3U5ODF.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\package.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\zone__js.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps\_metadata.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\%40angular_core.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\%40angular_platform-browser.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\%40angular_platform-server.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\%40angular_platform-server_init.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\%40angular_router.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\%40angular_ssr.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\%40angular_ssr_node.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\chunk-6TQNZWQL.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\chunk-LC7BGKDY.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\chunk-PRK4HEXR.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\chunk-VZS6XURG.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\chunk-YHCV7DAQ.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\chunk-YSVBSQTZ.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\express.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\package.json" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\xhr2-WBTWOK2V.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\zone__js_node.js.map" />
+    <Content Include="ClientApp\emb-products\.angular\cache\20.2.0\emb-products\vite\deps_ssr\_metadata.json" />
+    <Content Include="ClientApp\emb-products\.editorconfig" />
+    <Content Include="ClientApp\emb-products\.gitignore" />
+    <Content Include="ClientApp\emb-products\package-lock.json" />
+    <Content Include="ClientApp\emb-products\package.json" />
+    <Content Include="ClientApp\emb-products\proxy.conf.json" />
+    <Content Include="ClientApp\emb-products\README.md" />
+    <Content Include="ClientApp\emb-products\tsconfig.app.json" />
+    <Content Include="ClientApp\emb-products\tsconfig.json" />
+    <Content Include="ClientApp\emb-products\tsconfig.spec.json" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\app.component.js.map" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\app.config.js.map" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\app.routes.js.map" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\app.spec.js.map" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\gen-product\gen-product.component.js.map" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\gen-product\gen-product.component.spec.js.map" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\services\customer.service.js.map" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\services\order.service.js.map" />
+    <Content Include="ClientApp\emb-products\out-tsc\app\services\products.service.js.map" />
+    <Content Include="ClientApp\emb-products\out-tsc\main.js.map" />
+    <Content Include="ClientApp\emb-products\out-tsc\polyfills.js.map" />
+    <Content Include="ClientApp\emb-products\angular.json" />
+    <Content Include="ClientApp\emb-products\angular.json.backup" />
+    <Content Include="ClientApp\emb-products\src\web.config" />
+    <Content Include="ClientApp\emb-products\src\app\adm-company\adm-company.component.html" />
+    <Content Include="ClientApp\emb-products\src\app\adm-company\adm-company.component.css" />
+    <Content Include="Content\emb-products\web.config" />
+    <Content Include="ClientApp\emb-products\src\app\production-ledger\production-ledger.html" />
+    <Content Include="Web.config" />
+    <Content Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Views\Web.config" />
+    <Content Include="Views\_ViewStart.cshtml" />
+    <Content Include="Views\Shared\Error.cshtml" />
+    <Content Include="Views\Shared\_Layout.cshtml" />
+    <Content Include="Views\Home\About.cshtml" />
+    <Content Include="Views\Home\Contact.cshtml" />
+    <Content Include="Views\Home\Index.cshtml" />
+    <Content Include="Views\Gen_Brands\Delete.cshtml" />
+    <Content Include="Views\Gen_Brands\Details.cshtml" />
+    <Content Include="Views\Gen_Brands\Index.cshtml" />
+    <Content Include="Views\Adm_Users\_UserDeleteConfirm.cshtml" />
+    <Content Include="Views\Adm_Users\_UserDetailPartial.cshtml" />
+    <Content Include="Views\Adm_Users\Index.cshtml" />
+    <Content Include="Views\Adm_CompanyProfile\Index.cshtml" />
+    <Content Include="Views\Home\Login.cshtml" />
+    <Content Include="Views\Gen_Catagories\Delete.cshtml" />
+    <Content Include="Views\Gen_Catagories\Details.cshtml" />
+    <Content Include="Views\Gen_Catagories\Index.cshtml" />
+    <Content Include="Views\Gen_Catagories\ExportTable.cshtml" />
+    <Content Include="Views\Gen_Components\Delete.cshtml" />
+    <Content Include="Views\Gen_Components\Details.cshtml" />
+    <Content Include="Views\Gen_Components\ExportComponentsTable.cshtml" />
+    <Content Include="Views\Gen_Components\Index.cshtml" />
+    <Content Include="Views\Gen_Design\Delete.cshtml" />
+    <Content Include="Views\Gen_Design\Details.cshtml" />
+    <Content Include="Views\Gen_Design\ExportTable.cshtml" />
+    <Content Include="Views\Gen_Design\Index.cshtml" />
+    <Content Include="Views\Branches\_BranchesDeleteModal.cshtml" />
+    <Content Include="Views\Branches\_BranchesDetail.cshtml" />
+    <Content Include="Views\Branches\_BranchesForm.cshtml" />
+    <Content Include="Views\Branches\Index.cshtml" />
+    <Content Include="Views\Gen_Machines\Delete.cshtml" />
+    <Content Include="Views\Gen_Machines\Details.cshtml" />
+    <Content Include="Views\Gen_Machines\ExportMachinesTable.cshtml" />
+    <Content Include="Views\Gen_Machines\Index.cshtml" />
+    <Content Include="Views\Gen_JobOrders\Delete.cshtml" />
+    <Content Include="Views\Gen_JobOrders\Details.cshtml" />
+    <Content Include="Views\Gen_JobOrders\ExportJobOrdersTable.cshtml" />
+    <Content Include="Views\Gen_JobOrders\Index.cshtml" />
+    <Content Include="Views\Gen_Threads\Delete.cshtml" />
+    <Content Include="Views\Gen_Threads\Details.cshtml" />
+    <Content Include="Views\Gen_Threads\ExportThreadsTable.cshtml" />
+    <Content Include="Views\Gen_Threads\Index.cshtml" />
+    <Content Include="Views\Hr_Customers\Delete.cshtml" />
+    <Content Include="Views\Hr_Customers\Details.cshtml" />
+    <Content Include="Views\Hr_Customers\ExportCustomersTable.cshtml" />
+    <Content Include="Views\Hr_Customers\Index.cshtml" />
+    <Content Include="Views\Gen_MachineParameters\Delete.cshtml" />
+    <Content Include="Views\Gen_MachineParameters\Details.cshtml" />
+    <Content Include="Views\Gen_MachineParameters\ExportMachineParametersTable.cshtml" />
+    <Content Include="Views\Gen_MachineParameters\Index.cshtml" />
+    <Content Include="Views\Gen_Products\Delete.cshtml" />
+    <Content Include="Views\Gen_Products\Details.cshtml" />
+    <Content Include="Views\Gen_Products\ExportProductsTable.cshtml" />
+    <Content Include="Views\Gen_Products\Index.cshtml" />
+    <Content Include="Views\Gen_Stocks\Delete.cshtml" />
+    <Content Include="Views\Gen_Stocks\Details.cshtml" />
+    <Content Include="Views\Gen_Stocks\ExportStocksTable.cshtml" />
+    <Content Include="Views\Gen_Stocks\Index.cshtml" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-grid.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-grid.min.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-grid.rtl.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-grid.rtl.min.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-reboot.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-reboot.min.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-reboot.rtl.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-reboot.rtl.min.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-utilities.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-utilities.min.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-utilities.rtl.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap-utilities.rtl.min.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap.min.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap.rtl.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\css\bootstrap.rtl.min.css.map" />
+    <Content Include="wwwroot\lib\bootstrap\js\bootstrap.bundle.js.map" />
+    <Content Include="wwwroot\lib\bootstrap\js\bootstrap.bundle.min.js.map" />
+    <Content Include="wwwroot\lib\bootstrap\js\bootstrap.esm.js.map" />
+    <Content Include="wwwroot\lib\bootstrap\js\bootstrap.esm.min.js.map" />
+    <Content Include="wwwroot\lib\bootstrap\js\bootstrap.js.map" />
+    <Content Include="wwwroot\lib\bootstrap\js\bootstrap.min.js.map" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_accordion.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_alert.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_badge.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_breadcrumb.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_button-group.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_buttons.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_card.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_carousel.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_close.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_containers.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_dropdown.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_forms.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_functions.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_grid.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_helpers.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_images.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_list-group.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_maps.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_mixins.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_modal.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_nav.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_navbar.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_offcanvas.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_pagination.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_placeholders.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_popover.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_progress.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_reboot.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_root.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_spinners.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_tables.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_toasts.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_tooltip.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_transitions.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_type.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_utilities.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\bootstrap-grid.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\bootstrap-reboot.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\bootstrap-utilities.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\bootstrap.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\forms\_floating-labels.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\forms\_form-check.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\forms\_form-control.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\forms\_form-range.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_variables-dark.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\_variables.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\forms\_form-select.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\forms\_form-text.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\forms\_input-group.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\forms\_labels.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\forms\_validation.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\helpers\_clearfix.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\helpers\_color-bg.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\helpers\_colored-links.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\helpers\_focus-ring.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\helpers\_icon-link.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\helpers\_position.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\helpers\_ratio.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\helpers\_stacks.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\helpers\_stretched-link.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\helpers\_text-truncation.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\helpers\_visually-hidden.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\helpers\_vr.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_alert.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_backdrop.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_banner.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_border-radius.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_box-shadow.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_breakpoints.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_buttons.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_caret.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_clearfix.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_color-mode.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_color-scheme.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_container.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_deprecate.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_forms.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_gradients.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_grid.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_image.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_list-group.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_lists.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_pagination.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_reset-text.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_resize.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_table-variants.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_text-truncate.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_transition.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_utilities.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\mixins\_visually-hidden.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\utilities\_api.scss" />
+    <Content Include="wwwroot\lib\bootstrap\scss\vendor\_rfs.scss" />
+    <Content Include="Views\Gen_TheServices\Delete.cshtml" />
+    <Content Include="Views\Gen_TheServices\Details.cshtml" />
+    <Content Include="Views\Gen_TheServices\Edit.cshtml" />
+    <Content Include="Views\Gen_TheServices\Index.cshtml" />
+    <Content Include="Views\Gen_ServiceType\Delete.cshtml" />
+    <Content Include="Views\Gen_ServiceType\Details.cshtml" />
+    <Content Include="Views\Gen_ServiceType\Edit.cshtml" />
+    <Content Include="Views\Gen_ServiceType\Index.cshtml" />
+    <Content Include="Views\Gen_ServiceRates\Delete.cshtml" />
+    <Content Include="Views\Gen_ServiceRates\Details.cshtml" />
+    <Content Include="Views\Gen_ServiceRates\Edit.cshtml" />
+    <Content Include="Views\Gen_ServiceRates\Index.cshtml" />
+    <Content Include="Views\Adm_Users\ChangePassword.cshtml" />
+    <Content Include="Views\Adm_CompanyProfile\ExportCompaniesTable.cshtml" />
+    <Content Include="Views\Adm_CompanyProfile\_CompanyForm.cshtml" />
+    <Content Include="Views\Adm_CompanyProfile\_CompanyTable.cshtml" />
+    <Content Include="Views\Adm_CompanyProfile\_CompanyDetail.cshtml" />
+    <Content Include="Views\Adm_CompanyProfile\_CompanyDeleteConfirmation.cshtml" />
+    <Content Include="Views\Adm_Users\_UsersForm.cshtml" />
+    <Content Include="Views\Adm_Users\_UsersGrid.cshtml" />
+    <Content Include="Views\Branches\_BranchesGrid.cshtml" />
+    <Content Include="Views\Branches\ExportBranchesTable.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="App_Data\" />
+    <Folder Include="ClientApp\AspNetProject\Content\emb-products\" />
+    <Folder Include="Views\Adm_Roles\" />
+    <Folder Include="Views\Auth\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\app.component.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\app.config.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\app.routes.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\app.spec.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\auth\auth.guard.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\auth\change-password.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\auth\login.component.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\bom\gen-bom.component.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\component-material\component-materials.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\components\gen-components.component.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\core\guards\auth.guard.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\dashboard\dashboard.component.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\designcosting\design-costing.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\design\gen-design.component.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\dispatch-items\dispatch-items.component.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\fabric\fabric.component.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\finished-stock\finished-stock.component.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\gen-store\gen-store.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\gen-threads\gen-threads.component.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\layout\layout.component.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\machine-cost-profile\machine-cost-profile.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\qc-inspection-items\qc-inspection-items.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\adm-branch.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\adm-company.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\adm-roles.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\adm-user.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\component-material.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\components.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\customer.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\daily-production-stops.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\daily-production.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\design-costing.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\design.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\dispatch-items.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\dispatch.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\fabric.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\finished-stock.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\gen-bom.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\gen-brand.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\gen-category.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\gen-products.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\gen-services.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\gen-stocks.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\gen-store.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\hr-customer.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\index.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\job-orders.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\job-tracking-history.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\machine-cost-profile.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\machine-parameters.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\machines.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\module-template.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\order.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\production-ledger.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\purchase.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\qc-inspection-items.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\qc-inspection.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\servicerates.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\servicetype.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\supplier.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\thread-usage.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\thread.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\ui-modal.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\work-order-items.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\services\work-order.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\servicetype\servicetype.component.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\api-response.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\auth.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\brand.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\category.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\component-material.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\component.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\customer.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\daily-production-stops.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\daily-production.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\design-costing.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\design.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\dispatch-item.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\dispatch.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\fabric.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\finished-stock.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\gen-bom.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\gen-services.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\gen-stocks.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\gen-store.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\job-order.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\job-tracking-history.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\machine-cost-profile.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\machine-parameter.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\machine.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\module-template.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\pagination.model.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\production-ledger.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\purchase-row.viewdto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\purchase.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\qc-inspection-item.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\qc-inspection.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\role.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\service-rate.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\service-type.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\supplier.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\thread-usage.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\thread.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\user.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\work-order-item.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\models\work-order.dto.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\services\api-data.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\services\auth.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\services\dropdown-data.service.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\utils\array-utils.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\shared\utils\response-utils.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\sidebar\sidebar.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\thread-usage\thread-usage.component.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\app\topbar.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\environments\environment.prod.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\environments\environment.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\main.ts" />
+    <TypeScriptCompile Include="ClientApp\emb-products\src\polyfills.ts" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <Target Name="MvcBuildViews" AfterTargets="AfterBuild" Condition="'$(MvcBuildViews)'=='true'">
+    <AspNetCompiler VirtualPath="temp" PhysicalPath="$(WebProjectOutputDir)" />
+  </Target>
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>60600</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>https://localhost:44310/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets'))" />
+    <Error Condition="!Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets'))" />
+  </Target>
+  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets')" />
+  <Import Project="..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target> -->
+</Project>

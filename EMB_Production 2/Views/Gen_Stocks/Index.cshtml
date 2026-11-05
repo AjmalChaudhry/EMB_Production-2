@@ -1,0 +1,380 @@
+﻿@model EMB_Production.ViewModels.StocksPageViewModel
+@using PagedList.Mvc
+@using PagedList
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var cf = Model.Search ?? "";
+    var af = Model.ActiveFilter ?? "";
+}
+
+<style>
+    .toolbar {
+        background: #f8f9fa;
+        padding: .5rem 1rem;
+        border-radius: .25rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,.1);
+        margin-bottom: 1rem;
+    }
+
+    .inline-form .form-control-sm {
+        font-size: .75rem;
+    }
+
+    .inline-form .form-select-sm {
+        font-size: .75rem;
+    }
+
+    .inline-form .btn-sm {
+        font-size: .75rem;
+        padding: .25rem .5rem;
+    }
+
+    .table-small th, .table-small td {
+        padding: .25rem .5rem;
+        font-size: .75rem;
+    }
+</style>
+
+<div class="d-flex align-items-center gap-3 mb-4 p-3 bg-primary rounded shadow-sm">
+    <h5 class="text-white mb-0">Stocks</h5>
+
+    @* “Add” or “Modify” button *@
+    @if (!Model.ShowCreate && !Model.ShowEdit)
+    {
+        <a class="btn btn-success btn-sm"
+           href="@Url.Action("Index", new { showCreate = true, search=cf, activeFilter = af })">
+            <i class="bi bi-plus-lg"></i> Add
+        </a>
+    }
+    else if (Model.ShowEdit)
+    {
+        <span class="btn btn-warning btn-sm disabled">
+            <i class="bi bi-pencil"></i> Modify
+        </span>
+    }
+
+    @* Search / Filters / Actions *@
+    <form method="get" action="@Url.Action("Index")"
+          class="d-flex align-items-center ms-auto gap-2">
+        <input name="search"
+               value="@cf"
+               class="form-control form-control-sm bg-light border-0"
+               placeholder="Search…" style="width:160px;" />
+
+        <select name="activeFilter"
+                class="form-select form-select-sm bg-light border-0"
+                style="width:100px">
+            <option value="">All</option>
+            <option value="Yes" @(af == "Yes" ? "selected" : "")>Active</option>
+            <option value="No" @(af == "No" ? "selected" : "")>Inactive</option>
+        </select>
+
+        <button type="submit" class="btn btn-light btn-sm">
+            <i class="bi bi-search text-bg-primary"></i>
+        </button>
+        <a class="btn btn-light btn-sm" href="@Url.Action("Index")" title="Clear">
+            <i class="bi bi-x-circle text-bg-danger"></i>
+        </a>
+        <button type="button" onclick="location.reload()" class="btn btn-light btn-sm" title="Refresh">
+            <i class="bi bi-arrow-clockwise text-bg-warning"></i>
+        </button>
+        <button type="button" onclick="window.print()" class="btn btn-light btn-sm" title="Print">
+            <i class="bi bi-printer text-bg-dark"></i>
+        </button>
+
+        <a class="btn btn-light btn-sm"
+           href="@Url.Action("ExportToExcel","Gen_Stocks", new { search=cf, activeFilter = af })"
+           title="Export to Excel">
+            <i class="bi bi-file-earmark-spreadsheet text-bg-success"></i>
+        </a>
+        <a class="btn btn-light btn-sm"
+           href="@Url.Action("ExportToPdf","Gen_Stocks", new { search=cf, activeFilter = af })"
+           title="Export to PDF">
+            <i class="bi bi-file-earmark-pdf text-bg-danger"></i>
+        </a>
+    </form>
+</div>
+
+@if (Model.ShowCreate)
+{
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body p-2">
+            @using (Html.BeginForm("CreateFromIndex", "Gen_Stocks", FormMethod.Post, new { @class = "inline-form row gx-2 gy-1 align-items-end" }))
+            {
+                @Html.AntiForgeryToken()
+                <!-- Row 1: pick product, branch, qty flags -->
+                <div class="col-auto">
+                    @Html.DropDownListFor(m => m.NewStock.ProdId, Model.ProductList, "–Product–",
+                                         new { @class = "form-select form-select-sm" })
+                </div>
+                <div class="col-auto">
+                    <label class="form-check-label small">InStock</label>
+                    <div class="form-check form-switch">
+                        @Html.CheckBox("NewStock.InStock", Model.NewStock.InStock.GetValueOrDefault(false),
+                                        new { @class = "form-check-input" })
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <label class="form-check-label small">New</label>
+                    <div class="form-check form-switch">
+                        @Html.CheckBox("NewStock.New", Model.NewStock.New.GetValueOrDefault(false),
+                                        new { @class = "form-check-input" })
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <label class="form-check-label small">In</label>
+                    <div class="form-check form-switch">
+                        @Html.CheckBox("NewStock.In", Model.NewStock.In.GetValueOrDefault(false),
+                                        new { @class = "form-check-input" })
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <label class="form-check-label small">Out</label>
+                    <div class="form-check form-switch">
+                        @Html.CheckBox("NewStock.Out", Model.NewStock.Out.GetValueOrDefault(false),
+                                        new { @class = "form-check-input" })
+                    </div>
+                </div>
+
+                <!-- Row 2: description, rack, shelf, measure, stock, price -->
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.NewStock.StockDescription,
+                                     new { @class = "form-control form-control-sm", placeholder = "Desc", style = "width:120px" })
+                </div>
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.NewStock.Rack, new { @class = "form-control form-control-sm", placeholder = "Rack", style = "width:65px" })
+                </div>
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.NewStock.Shelf, new { @class = "form-control form-control-sm", placeholder = "Shelf", style = "width:65px" })
+                </div>
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.NewStock.MeasureValue, new { @class = "form-control form-control-sm", placeholder = "Measure", style = "width:65px" })
+                </div>
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.NewStock.TotalStock, new { @class = "form-control form-control-sm", placeholder = "Total", style = "width:65px" })
+                </div>
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.NewStock.TotalPrice, "{0:F2}",
+                                     new { @class = "form-control form-control-sm", placeholder = "Price", style = "width:65px" })
+                </div>
+
+                <!-- row 3: bill, pass, branch, active/deleted, save/cancel -->
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.NewStock.BillNumber,
+                                     new { @class = "form-control form-control-sm", placeholder = "Bill#", style = "width:65px" })
+                </div>
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.NewStock.GatePass,
+                                     new { @class = "form-control form-control-sm", placeholder = "Gate", style = "width:65px" })
+                </div>
+                <div class="col-auto">
+                    @Html.DropDownListFor(m => m.NewStock.BranchId, Model.BranchList, "–Branch–",
+                                          new { @class = "form-select form-select-sm" })
+                </div>
+                <div class="col-auto">
+                    <label class="form-check-label small">Active</label>
+                    <div class="form-check form-switch">
+                        @Html.CheckBox("NewStock.Active", Model.NewStock.Active.GetValueOrDefault(false),
+                                        new { @class = "form-check-input" })
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <label class="form-check-label small">Deleted</label>
+                    <div class="form-check form-switch">
+                        @Html.CheckBox("NewStock.Deleted", Model.NewStock.Deleted.GetValueOrDefault(false),
+                                        new { @class = "form-check-input" })
+                    </div>
+                </div>
+                <div class="col-auto ms-auto d-flex gap-1">
+                    <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-save"></i> Save</button>
+                    <a href="@Url.Action("Index", new { showCreate = false, search = cf, activeFilter = af })"
+                       class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-circle"></i> Cancel</a>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@if (Model.ShowEdit)
+{
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body p-1">
+            @using (Html.BeginForm("EditFromIndex", "Gen_Stocks", FormMethod.Post, new { @class = "inline-form row gx-2 gy-1 align-items-end" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.EditStock.Id)
+
+                <!-- Row 1: product picker + flags -->
+                <div class="col-auto">
+                    @Html.DropDownListFor(m => m.EditStock.ProdId, Model.ProductList, "– Product –", new { @class = "form-select form-select-sm", style = "width:100px" })
+                </div>
+                <div class="col-auto">
+                    <label class="form-check-label small">InStock</label>
+                    <div class="form-check form-switch">
+                        @Html.CheckBox("EditStock.InStock", Model.EditStock.InStock.GetValueOrDefault(false), new { @class = "form-check-input" })
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <label class="form-check-label small">New</label>
+                    <div class="form-check form-switch">
+                        @Html.CheckBox("EditStock.New", Model.EditStock.New.GetValueOrDefault(false), new { @class = "form-check-input" })
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <label class="form-check-label small">In</label>
+                    <div class="form-check form-switch">
+                        @Html.CheckBox("EditStock.In", Model.EditStock.In.GetValueOrDefault(false), new { @class = "form-check-input" })
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <label class="form-check-label small">Out</label>
+                    <div class="form-check form-switch">
+                        @Html.CheckBox("EditStock.Out", Model.EditStock.Out.GetValueOrDefault(false), new { @class = "form-check-input" })
+                    </div>
+                </div>
+
+                <!-- Row 2: description, rack, shelf, measure, totals -->
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.EditStock.StockDescription, new { @class = "form-control form-control-sm", placeholder = "Desc", style = "width:110px" })
+                </div>
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.EditStock.Rack, new { @class = "form-control form-control-sm", placeholder = "Rack", style = "width:65px" })
+                </div>
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.EditStock.Shelf, new { @class = "form-control form-control-sm", placeholder = "Shelf", style = "width:65px" })
+                </div>
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.EditStock.MeasureValue, new { @class = "form-control form-control-sm", placeholder = "Measure", style = "width:65px" })
+                </div>
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.EditStock.TotalStock, new { @class = "form-control form-control-sm", placeholder = "Total", style = "width:65px" })
+                </div>
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.EditStock.TotalPrice, "{0:F2}", new { @class = "form-control form-control-sm", placeholder = "Price", style = "width:65px" })
+                </div>
+
+                <!-- Row 3: bill#, gate, branch, active/deleted, save/cancel -->
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.EditStock.BillNumber, new { @class = "form-control form-control-sm", placeholder = "Bill#", style = "width:65px" })
+                </div>
+                <div class="col-auto">
+                    @Html.TextBoxFor(m => m.EditStock.GatePass, new { @class = "form-control form-control-sm", placeholder = "Gate", style = "width:65px" })
+                </div>
+                <div class="col-auto">
+                    @Html.DropDownListFor(m => m.EditStock.BranchId, Model.BranchList, "– Branch –", new { @class = "form-select form-select-sm", style = "width:65px" })
+                </div>
+                <div class="col-auto">
+                    <label class="form-check-label small">Active</label>
+                    <div class="form-check form-switch">
+                        @Html.CheckBox("EditStock.Active", Model.EditStock.Active.GetValueOrDefault(false), new { @class = "form-check-input" })
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <label class="form-check-label small">Deleted</label>
+                    <div class="form-check form-switch">
+                        @Html.CheckBox("EditStock.Deleted", Model.EditStock.Deleted.GetValueOrDefault(false), new { @class = "form-check-input" })
+                    </div>
+                </div>
+
+                <div class="col-auto ms-auto d-flex gap-1">
+                    <button type="submit" class="btn btn-sm btn-success">
+                        <i class="bi bi-save"></i> Update
+                    </button>
+                    <a href="@Url.Action("Index", new { showEdit = false, search = Model.Search, activeFilter = Model.ActiveFilter })"
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+
+<div class="table-responsive shadow-sm rounded">
+    <table class="table table-striped table-hover table-small mb-0">
+        <thead class="table-secondary">
+            <tr>
+                <th>Prod</th>
+                <th>InSt</th>
+                <th>New</th>
+                <th>In</th>
+                <th>Out</th>
+                <th class="text-wrap">Desc</th>
+                <th>Rack</th>
+                <th>Shelf</th>
+                <th>Meas</th>
+                <th>TotSt</th>
+                <th>ToPrice</th>
+                <th>Bill</th>
+                <th>Gate</th>
+                <th>Br</th>
+                <th class="text-center">Act</th>
+                <th class="text-center">Del</th>
+                <th class="text-center">Time</th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model.Rows)
+            {
+                <tr>
+                    <td>@r.ProdName</td>
+                    <td>@(r.InStock == 1 ? "✔" : "")</td>
+                    <td>@(r.IsNew   == 1 ? "✔" : "")</td>
+                    <td>@(r.IsIn    == 1 ? "✔" : "")</td>
+                    <td>@(r.IsOut   == 1 ? "✔" : "")</td>
+                    <td class="text-wrap">@r.StockDescription</td>
+                    <td>@r.Rack</td>
+                    <td>@r.Shelf</td>
+                    <td>@r.MeasureValue</td>
+                    <td>@r.TotalStock</td>
+                    <td>@r.TotalPrice</td>
+                    <td>@r.BillNumber</td>
+                    <td>@r.GatePass</td>
+                    <td>@r.BranchName</td>
+                    <td class="text-center">
+                        <span class="badge @(r.Active?"bg-success":"bg-secondary")">
+                            @(r.Active?"Yes":"No")
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge @(r.Deleted?"bg-danger":"bg-secondary")">
+                            @(r.Deleted?"Yes":"No")
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        @(r.UpdatedDate?.ToString("yyyy-MM-dd") ?? "")
+                    </td>
+                    <td class="text-center">
+                        <a class="btn btn-outline-primary btn-sm me-1"
+                           href="@Url.Action("Index","Gen_Stocks", new { showEdit=true, editId=r.Id, search=cf, activeFilter=af })">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a class="btn btn-outline-info btn-sm me-1"
+                           href="@Url.Action("Details","Gen_Stocks", new { id=r.Id })">
+                            <i class="bi bi-info-circle"></i>
+                        </a>
+                        <a class="btn btn-outline-danger btn-sm"
+                           href="@Url.Action("Delete","Gen_Stocks", new { id=r.Id })">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="d-flex justify-content-center mt-2">
+    @Html.PagedListPager(Model.Rows,
+      page => Url.Action("Index", new { page, search = cf, activeFilter = af }),
+      new PagedListRenderOptions
+        {
+        UlElementClasses = new[] { "pagination" },
+        LiElementClasses = new[] { "page-item" },
+
+      }
+    )
+</div>

@@ -1,0 +1,234 @@
+/* ================= PAGE WRAP ================= */
+.page-wrap {
+  padding: 16px;
+}
+
+/* ================= CARD ================= */
+.card {
+  border-radius: 14px;
+  border: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* ================= TABLE ================= */
+.table {
+  font-size: 13.5px;
+  white-space: nowrap;
+  margin-bottom: 0;
+}
+
+  .table th,
+  .table td {
+    vertical-align: middle;
+    padding: 0.55rem 0.6rem;
+  }
+
+  .table thead th {
+    font-weight: 600;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .table tbody tr:hover {
+    background-color: #fafbfc;
+  }
+
+.table-warning-subtle td {
+  transition: background-color 0.2s ease;
+}
+
+/* ================= ALIGNMENT ================= */
+.text-end {
+  text-align: right !important;
+}
+
+/* ================= BADGES ================= */
+.badge {
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* QC Result Badges */
+.badge-result-pass {
+  background-color: #198754;
+}
+
+.badge-result-fail {
+  background-color: #dc3545;
+}
+
+.badge-result-rework {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.badge-result-partial {
+  background-color: #0dcaf0;
+  color: #000;
+}
+
+/* ================= QC ACTIONS ================= */
+.qc-action-stack {
+  min-width: 86px;
+}
+
+.qc-action-row {
+  min-height: 34px;
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+  .action-btn i {
+    font-size: 14px;
+  }
+
+/* ================= QC MODALS ================= */
+.qc-edit-modal {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.qc-edit-content {
+  border-radius: 12px;
+  border: none;
+  overflow: hidden;
+}
+
+.qc-modal-header {
+  background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+  color: #fff;
+  border-bottom: none;
+  padding: 12px 16px;
+}
+
+  .qc-modal-header .btn-close,
+  .btn-close.btn-close-white {
+    filter: brightness(0) invert(1);
+  }
+
+.qc-modal-subtitle {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.qc-modal-body {
+  padding: 1.25rem;
+}
+
+.qc-modal-footer {
+  padding: 0.85rem 1rem;
+  border-top: 1px solid #eef0f2;
+}
+
+/* ================= FORM ================= */
+.form-label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.form-control,
+.form-select {
+  border-radius: 8px;
+  font-size: 13.5px;
+}
+
+.form-control-sm,
+.form-select-sm {
+  font-size: 12.5px;
+  border-radius: 6px;
+}
+
+input[type="number"] {
+  text-align: right;
+}
+
+/* ================= BUTTONS ================= */
+.btn {
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.btn-sm {
+  font-size: 12px;
+}
+
+/* ================= TEXTAREA ================= */
+textarea.form-control {
+  resize: vertical;
+}
+
+/* ================= ALERT ================= */
+.alert {
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+/* ================= SUMMARY ================= */
+.summary-box {
+  padding: 8px 10px;
+}
+
+.summary-label {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.summary-value {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* ================= HELPERS ================= */
+.bg-light-subtle {
+  border-top: 1px solid #e9ecef;
+}
+
+.border-top {
+  border-top: 1px solid #e9ecef !important;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  .page-wrap {
+    padding: 10px;
+  }
+
+  .table {
+    font-size: 12px;
+  }
+
+    .table th,
+    .table td {
+      padding: 0.45rem 0.45rem;
+    }
+
+  .btn {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  .action-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+    .action-btn i {
+      font-size: 13px;
+    }
+}

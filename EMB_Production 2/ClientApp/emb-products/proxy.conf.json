@@ -1,0 +1,7 @@
+{
+  "/Gen_Products": {
+    "target": "https://localhost:44310",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

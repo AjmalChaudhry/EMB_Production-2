@@ -1,0 +1,58 @@
+﻿@model EMB_Production.Models.DailyProductionStops
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>DailyProductionStops</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.StopStart)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.StopStart)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.StopEnd)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.StopEnd)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Reason)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Reason)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.DailyProduction.Shift)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.DailyProduction.Shift)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

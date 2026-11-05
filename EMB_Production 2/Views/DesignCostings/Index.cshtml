@@ -1,0 +1,117 @@
+﻿@model IEnumerable<EMB_Production.Models.DesignCosting>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.ThreadCost)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MachineCost)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.LaborCost)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ElectricityCost)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.OtherCost)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.TotalCost)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Active)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Deleted)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.UpdatedDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.RecordTimeStamp)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CostPerUnit)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Adm_Users.UserName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Adm_Users1.UserName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Gen_Design.D_Code)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.ThreadCost)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MachineCost)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.LaborCost)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ElectricityCost)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.OtherCost)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.TotalCost)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.CreatedDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Active)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Deleted)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.UpdatedDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.RecordTimeStamp)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.CostPerUnit)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Adm_Users.UserName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Adm_Users1.UserName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Gen_Design.D_Code)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.Id }) |
+            @Html.ActionLink("Details", "Details", new { id=item.Id }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.Id })
+        </td>
+    </tr>
+}
+
+</table>

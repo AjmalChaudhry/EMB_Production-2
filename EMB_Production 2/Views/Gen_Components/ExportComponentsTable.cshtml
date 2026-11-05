@@ -1,0 +1,52 @@
+﻿@model EMB_Production.ViewModels.ComponentsPageViewModel
+
+@{
+    // No layout so only the table is rendered in PDF
+    Layout = null;
+}
+
+<table class="table table-bordered table-sm">
+    <thead class="table-light">
+        <tr>
+            <th>ID</th>
+            <th>Code</th>
+            <th>D_Code</th>
+            <th>Name</th>
+            <th>HeadToHead</th>
+            <th>Stitch</th>
+            <th>Tilla</th>
+            <th>Seq_A</th>
+            <th>Seq_B</th>
+            <th>Branch ID</th>
+            <th>Active</th>
+            <th>Deleted</th>
+            <th>Created By</th>
+            <th>Created Date</th>
+            <th>Updated By</th>
+            <th>Updated Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var comp in Model.Components)
+        {
+            <tr>
+                <td>@comp.Id</td>
+                <td>@comp.Code</td>
+                <td>@comp.D_Code</td>
+                <td>@comp.Name</td>
+                <td>@comp.HeadToHead</td>
+                <td>@comp.Stitch</td>
+                <td>@comp.Tilla</td>
+                <td>@comp.Seq_A</td>
+                <td>@comp.Seq_B</td>
+                <td>@comp.BranchId</td>
+                <td>@(comp.Active.GetValueOrDefault() ? "Yes" : "No")</td>
+                <td>@(comp.Deleted.GetValueOrDefault() ? "Yes" : "No")</td>
+                <td>@comp.CreatedBy</td>
+                <td>@comp.CreatedDate?.ToString("g")</td>
+                <td>@comp.UpdatedBy</td>
+                <td>@comp.UpdatedDate?.ToString("g")</td>
+            </tr>
+        }
+    </tbody>
+</table>

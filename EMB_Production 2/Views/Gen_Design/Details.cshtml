@@ -1,0 +1,156 @@
+﻿@model EMB_Production.Models.Gen_Design
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Design Details";
+    var currentFilter = Request.QueryString["search"] ?? "";
+    var activeFilter = Request.QueryString["activeFilter"] ?? "";
+}
+
+<style>
+    .detail-card {
+        background: #fff;
+        border-left: 5px solid #007bff;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-top: 1rem;
+    }
+
+    .details-header {
+        background: #007bff;
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 6px 6px 0 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: -2rem -2rem 1rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.95rem;
+    }
+
+    .detail-value {
+        color: #34495e;
+        font-size: 1rem;
+        word-break: break-word;
+    }
+
+    .toolbar-container .btn {
+        margin-left: 0.5rem;
+        border-radius: 4px;
+    }
+</style>
+
+<div class="container-fluid py-4">
+   
+    <!-- DETAIL CARD -->
+    <div class="detail-card">
+        <div class="details-header">Design Details</div>
+        <div class="toolbar-container d-flex justify-content-end mb-3">
+            <button type="button" onclick="location.reload()" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button type="button" onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-printer"></i>
+            </button>
+            <a href="@Url.Action("ExportDetailToExcel","Gen_Design", new { id = Model.Id })"
+               class="btn btn-success btn-sm">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+            </a>
+            <a href="@Url.Action("ExportDetailToPdf","Gen_Design", new { id = Model.Id })"
+               class="btn btn-danger btn-sm">
+                <i class="bi bi-file-earmark-pdf"></i>
+            </a>
+        </div>
+        <div class="row gy-4">
+            <!-- Branch -->
+            <div class="col-md-3">
+                <div class="detail-label">Branch</div>
+                <div class="detail-value">
+                    @(Model.Branches != null && Model.Branches.Name != null
+              ? Model.Branches.Name
+              : "(none)")
+                </div>
+            </div>
+
+            <!-- Scalar properties -->
+            @foreach (var prop in ViewData.ModelMetadata.Properties
+                   .Where(p => p.ShowForDisplay && p.PropertyName != "Id" && p.PropertyName != "Branches" && p.PropertyName != "Gen_Components"))
+            {
+                <div class="col-md-3">
+                    <div class="detail-label">@prop.GetDisplayName()</div>
+                    <div class="detail-value">
+                        @{
+                            var val = prop.Model;
+                            if (val is DateTime dt)
+                            {
+                                @dt.ToString("yyyy-MM-dd HH:mm:ss")
+                            }
+                            else
+                            {
+                                @(val ?? "(none)")
+                            }
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Components collection -->
+            <div class="col-12">
+                <div class="detail-label">Components (@Model.Gen_Components.Count)</div>
+                <div class="detail-value p-0">
+                    @if (Model.Gen_Components != null && Model.Gen_Components.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Code</th>
+                                        <th>Name</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var c in Model.Gen_Components.OrderBy(c => c.Id))
+                                    {
+                                        <tr>
+                                            <td class="align-middle">@c.Id</td>
+                                            <td class="align-middle">@c.Code</td>
+                                            <td class="align-middle">@c.Name</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <em>(no components)</em>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="mt-4 d-flex justify-content-center gap-3">
+            @Html.ActionLink("Edit", "Index", new { showEdit = true, editId = Model.Id, search = currentFilter, activeFilter }, new { @class = "btn btn-primary" })
+            @Html.ActionLink("Back to List", "Index", new { search = currentFilter, activeFilter }, new { @class = "btn btn-outline-secondary" })
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            // hover highlight for values
+            $('.detail-value').hover(
+                function () { $(this).addClass('bg-light rounded'); },
+                function () { $(this).removeClass('bg-light rounded'); }
+            );
+        });
+    </script>
+}

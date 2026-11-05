@@ -1,0 +1,427 @@
+/* ===================== RAW MATERIAL PURCHASE MODULE ===================== */
+
+.purchase-page {
+  font-size: 13px;
+}
+
+/* ===================== PHASE F.3 - ANALYTICS STRIP ===================== */
+.purchase-analytics .analytics-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.purchase-analytics .analytics-sub {
+  font-size: 0.7rem;
+}
+.purchase-analytics .analytics-row {
+  font-size: 0.82rem;
+  padding: 1px 0;
+  border-bottom: 1px dashed #eef1f4;
+}
+.purchase-analytics .analytics-row:last-child { border-bottom: 0; }
+.purchase-analytics .supplier-link {
+  color: #0d6efd;
+  text-decoration: none;
+}
+.purchase-analytics .supplier-link:hover {
+  text-decoration: underline;
+}
+.purchase-analytics .analytics-block + .analytics-block {
+  border-left: 1px solid #eef1f4;
+}
+.purchase-analytics .trend-chart {
+  height: 96px;
+}
+.purchase-analytics .trend-bar-wrap {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.purchase-analytics .trend-value-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #0d6efd;
+  line-height: 1.1;
+  margin-bottom: 2px;
+  min-height: 12px;
+}
+.purchase-analytics .trend-value-label.text-muted {
+  color: #adb5bd !important;
+  font-weight: 500;
+}
+.purchase-analytics .trend-bar {
+  background: linear-gradient(180deg, #0d6efd 0%, #5a9bff 100%);
+  border-radius: 3px 3px 0 0;
+  min-height: 3px;
+  transition: height 0.3s ease;
+}
+.purchase-analytics .trend-bar.trend-bar-empty {
+  background: #e9ecef;
+}
+.purchase-analytics .trend-month-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #495057;
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+}
+
+/* ===================== PHASE F.2 - PRINT VOUCHER ===================== */
+.purchase-print-sheet { display: none; }
+
+@media print {
+  /* Hide everything on the page except the print sheet itself. */
+  body * { visibility: hidden !important; }
+  .purchase-print-sheet,
+  .purchase-print-sheet * { visibility: visible !important; }
+
+  .purchase-print-sheet {
+    display: block !important;
+    position: absolute;
+    left: 0; top: 0; right: 0;
+    padding: 18mm 14mm;
+    background: #fff;
+    color: #000;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 11pt;
+  }
+
+  .ppv-header {
+    text-align: center;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #000;
+    padding-bottom: 8px;
+  }
+  .ppv-brand { font-size: 18pt; font-weight: 700; letter-spacing: 2px; }
+  .ppv-doc-title { font-size: 12pt; font-weight: 600; margin-top: 2px; }
+  .ppv-doc-no { font-size: 9.5pt; color: #444; margin-top: 2px; }
+
+  .ppv-meta-table {
+    width: 100%; border-collapse: collapse;
+    margin: 10px 0 14px 0;
+    font-size: 10pt;
+  }
+  .ppv-meta-table td {
+    padding: 4px 6px;
+    border: 1px solid #aaa;
+  }
+
+  .ppv-items {
+    width: 100%; border-collapse: collapse;
+    font-size: 10pt;
+  }
+  .ppv-items th, .ppv-items td {
+    border: 1px solid #888;
+    padding: 4px 6px;
+  }
+  .ppv-items thead th { background: #eee; font-weight: 700; }
+  .ppv-items tfoot td { background: #f6f6f6; }
+  .text-end { text-align: right; }
+
+  .ppv-remarks {
+    margin-top: 10px;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    font-size: 10pt;
+  }
+
+  .ppv-signoff {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 40px;
+  }
+  .ppv-sig-block { width: 30%; text-align: center; }
+  .ppv-sig-line {
+    border-top: 1px solid #000;
+    height: 1px;
+    margin-bottom: 4px;
+  }
+  .ppv-sig-label { font-size: 9.5pt; color: #444; }
+
+  .ppv-footer {
+    text-align: center;
+    font-size: 8.5pt;
+    color: #777;
+    margin-top: 18px;
+    border-top: 1px dashed #aaa;
+    padding-top: 4px;
+  }
+}
+
+/* ===================== PHASE F.1 - PURCHASE PROFILE MODAL ===================== */
+.purchase-profile-modal .modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+}
+.purchase-profile-modal .modal-header {
+  border-bottom: 0;
+}
+.purchase-profile-modal .modal-body {
+  background: #f4f6f9;
+}
+
+.purchase-profile-modal .profile-section.card {
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+.purchase-profile-modal .profile-section .card-header {
+  background: #f8f9fb;
+  border-bottom: 1px solid #eef1f4;
+  font-size: 0.86rem;
+}
+
+.purchase-profile-modal .profile-field-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  font-weight: 600;
+}
+.purchase-profile-modal .profile-field-value {
+  font-size: 0.92rem;
+  color: #212529;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.purchase-profile-modal .profile-kpi-row .kpi-tile {
+  border: 1px solid #e9ecef;
+  border-left-width: 4px;
+  border-radius: 8px;
+  transition: transform 0.15s ease;
+}
+.purchase-profile-modal .profile-kpi-row .kpi-tile:hover {
+  transform: translateY(-1px);
+}
+.purchase-profile-modal .profile-kpi-row .kpi-tile-primary { border-left-color: #0d6efd; }
+.purchase-profile-modal .profile-kpi-row .kpi-tile-success { border-left-color: #198754; }
+.purchase-profile-modal .profile-kpi-row .kpi-tile-info    { border-left-color: #0dcaf0; }
+.purchase-profile-modal .profile-kpi-row .kpi-tile-muted   { border-left-color: #adb5bd; }
+.purchase-profile-modal .profile-kpi-row .kpi-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  font-weight: 600;
+}
+.purchase-profile-modal .profile-kpi-row .kpi-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #212529;
+}
+.purchase-profile-modal .profile-kpi-row .kpi-sub {
+  font-size: 0.68rem;
+  margin-top: 2px;
+}
+
+.purchase-profile-modal .profile-table {
+  font-size: 0.85rem;
+}
+.purchase-profile-modal .profile-table thead th {
+  background: #f8f9fb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #495057;
+  border-bottom: 1px solid #e9ecef;
+  white-space: nowrap;
+}
+.purchase-profile-modal .profile-table tbody tr:hover {
+  background: #fcfcfd;
+}
+.purchase-profile-modal .profile-table tfoot td {
+  border-top: 2px solid #dee2e6;
+}
+
+.purchase-filter-bar .form-label.small {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.78rem;
+}
+.purchase-filter-bar .form-control-sm,
+.purchase-filter-bar .form-select-sm {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.purchase-summary-strip .badge {
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.78rem;
+}
+.purchase-summary-strip .badge strong { font-weight: 700; }
+
+  .purchase-page h4 {
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  /* ===================== HEADER ===================== */
+
+  .purchase-page .page-header {
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 10px;
+  }
+
+    .purchase-page .page-header .btn {
+      white-space: nowrap;
+    }
+
+/* ===================== LIST TABLE ===================== */
+
+.purchase-list-wrap {
+  background: #fff;
+  border-radius: 8px;
+}
+
+.purchase-list-table {
+  background: #fff;
+}
+
+  .purchase-list-table th {
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    vertical-align: middle;
+    padding: 0.35rem;
+  }
+
+  .purchase-list-table td {
+    font-size: 13px;
+    vertical-align: middle;
+    padding: 0.35rem;
+  }
+
+.raw-item-cell {
+  max-width: 420px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.table-success-soft {
+  background-color: #f3fff7;
+}
+
+/* ===================== FORM CONTROLS ===================== */
+
+.purchase-page input,
+.purchase-page select,
+.purchase-page textarea {
+  font-size: 13px;
+}
+
+.purchase-page .form-control-sm,
+.purchase-page .form-select-sm {
+  height: 32px;
+  font-size: 13px;
+}
+
+.purchase-page table input.form-control-sm,
+.purchase-page table select.form-select-sm {
+  padding: 0.25rem 0.4rem;
+}
+
+.purchase-page textarea {
+  resize: vertical;
+}
+
+/* ===================== MODALS ===================== */
+
+.purchase-page .modal-dialog {
+  max-width: calc(100vw - 340px);
+  margin-left: 280px;
+  margin-top: 85px;
+}
+
+.purchase-page .modal-xl {
+  max-width: calc(100vw - 340px);
+}
+
+.purchase-page .modal-content {
+  max-height: calc(100vh - 120px);
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.purchase-page .modal-header {
+  padding: 0.65rem 1rem;
+}
+
+.purchase-page .modal-title {
+  font-weight: 600;
+}
+
+.purchase-page .modal-body {
+  font-size: 13px;
+  overflow-y: auto;
+  max-height: calc(100vh - 230px);
+}
+
+.purchase-page .modal-footer {
+  padding: 0.6rem 1rem;
+}
+
+/* ===================== ITEM TABLE ===================== */
+
+.purchase-page .table th,
+.purchase-page .table td {
+  padding: 0.35rem;
+}
+
+.purchase-page tfoot th,
+.purchase-page tfoot td {
+  font-weight: 600;
+  background: #f8f9fa;
+}
+
+/* ===================== BADGES & BUTTONS ===================== */
+
+.purchase-page .badge {
+  font-size: 11px;
+  padding: 0.35em 0.55em;
+}
+
+.purchase-page td .btn-sm,
+.action-group .btn {
+  padding: 0.2rem 0.45rem;
+  line-height: 1.1;
+}
+
+  .purchase-page td .btn-sm i {
+    font-size: 13px;
+  }
+
+/* ===================== EMPTY STATE ===================== */
+
+.purchase-page .text-muted {
+  color: #6c757d !important;
+}
+
+/* ===================== RESPONSIVE ===================== */
+
+@media (max-width: 992px) {
+  .purchase-page .modal-dialog,
+  .purchase-page .modal-xl {
+    max-width: 96vw;
+    margin: 1rem auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .purchase-page .page-header {
+    gap: 10px;
+  }
+
+    .purchase-page .page-header .col-md-8 {
+      justify-content: flex-start !important;
+    }
+
+  .purchase-page .input-group {
+    width: 100% !important;
+  }
+}

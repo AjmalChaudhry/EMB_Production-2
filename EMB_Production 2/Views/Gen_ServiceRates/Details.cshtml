@@ -1,0 +1,204 @@
+﻿@model EMB_Production.Models.Gen_ServiceRates
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Rate Details";
+}
+
+<style>
+    .detail-card {
+        background: #fff;
+        border-left: 5px solid #17a2b8;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        margin-top: 1rem;
+    }
+
+    .details-header {
+        font-size: 1.25rem;
+        font-weight: 600;
+        background: #17a2b8;
+        color: #fff;
+        padding: .75rem 1rem;
+        border-radius: 6px 6px 0 0;
+        margin: -1.5rem -1.5rem 1rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        font-size: .9rem;
+        color: #2c3e50;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        color: #34495e;
+        word-wrap: break-word;
+    }
+</style>
+
+<div class="detail-card">
+    <div class="detail-card">
+        <div class="details-header">Rate Details</div>
+
+        <!-- TOOLBAR: Print / Excel / PDF / Refresh -->
+        <div class="toolbar-container d-flex align-items-center justify-content-end mb-3">
+            <!-- Print -->
+            <button type="button"
+                    onclick="window.print()"
+                    class="btn btn-sm btn-outline-secondary me-2"
+                    title="Print">
+                <i class="bi bi-printer"></i>
+            </button>
+
+            <!-- Excel -->
+            <a  href="@Url.Action("ExportSingleToExcel","Gen_ServiceRates", new { id = Model.Id })"
+               class="btn btn-sm btn-success me-2"
+               title="Export to Excel">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+            </a>
+
+            <!-- PDF -->
+            <a href="@Url.Action("ExportSingleToPdf","Gen_ServiceRates", new { id = Model.Id })"
+               class="btn btn-sm btn-danger me-2"
+               title="Export to PDF">
+                <i class="bi bi-file-earmark-pdf"></i>
+            </a>
+
+            <!-- Refresh -->
+            <button type="button"
+                    onclick="location.reload()"
+                    class="btn btn-sm btn-outline-secondary"
+                    title="Refresh">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+        </div>
+
+        <div class="bg-white p-4 rounded shadow-sm mb-4">
+            <!-- …your existing 4-column detail grid here… -->
+        </div>
+
+        <!-- …rest of view (Back/Edit/Delete form) … -->
+    </div>
+
+
+    <div class="bg-white p-4 rounded shadow-sm mb-4">
+        <div class="row gy-3">
+            <!-- ID -->
+            <div class="col-md-3">
+                <div class="detail-label">ID</div>
+                <div class="detail-value">@Model.Id</div>
+            </div>
+
+            <!-- Customer -->
+            <div class="col-md-3">
+                <div class="detail-label">Customer</div>
+                <div class="detail-value">
+                    @(Model.Hr_Customers?.Customer_Id ?? "(none)")
+                </div>
+            </div>
+
+            <!-- Service -->
+            <div class="col-md-3">
+                <div class="detail-label">Service</div>
+                <div class="detail-value">
+                    @(Model.Gen_TheServices?.Service_Name ?? "(none)")
+                </div>
+            </div>
+
+            <!-- Charge Factor -->
+            <div class="col-md-3">
+                <div class="detail-label">Charge Factor</div>
+                <div class="detail-value">@Model.Charge_Fector</div>
+            </div>
+
+            <!-- Remarks -->
+            <div class="col-md-3">
+                <div class="detail-label">Remarks</div>
+                <div class="detail-value">@Model.Remarks</div>
+            </div>
+
+            <!-- Branch -->
+            <div class="col-md-3">
+                <div class="detail-label">Branch</div>
+                <div class="detail-value">
+                    @(Model.Branches?.Name ?? "(none)")
+                </div>
+            </div>
+
+            <!-- Active -->
+            <div class="col-md-3">
+                <div class="detail-label">Active</div>
+                <div class="detail-value">
+                    <span class="badge @(Model.Active == true ? "bg-success" : "bg-secondary")">
+                        @(Model.Active == true ? "Yes" : "No")
+                    </span>
+                </div>
+            </div>
+
+            <!-- Deleted -->
+            <div class="col-md-3">
+                <div class="detail-label">Deleted</div>
+                <div class="detail-value">
+                    <span class="badge @(Model.Deleted == true ? "bg-danger" : "bg-secondary")">
+                        @(Model.Deleted == true ? "Yes" : "No")
+                    </span>
+                </div>
+            </div>
+
+            <!-- Record Timestamp -->
+            <div class="col-md-3">
+                <div class="detail-label">Record Timestamp</div>
+                <div class="detail-value">
+                    @(Model.RecordTimeStamp.HasValue
+              ? Model.RecordTimeStamp.Value.ToString("yyyy-MM-dd HH:mm:ss")
+              : "(none)")
+                </div>
+            </div>
+
+            <!-- Created By -->
+            <div class="col-md-3">
+                <div class="detail-label">Created By</div>
+                <div class="detail-value">
+                    @(Model.CreatedBy?.ToString() ?? "(none)")
+                </div>
+            </div>
+
+            <!-- Created Date -->
+            <div class="col-md-3">
+                <div class="detail-label">Created Date</div>
+                <div class="detail-value">
+                    @(Model.CreatedDate.HasValue
+              ? Model.CreatedDate.Value.ToString("yyyy-MM-dd HH:mm:ss")
+              : "(none)")
+                </div>
+            </div>
+
+            <!-- Updated By -->
+            <div class="col-md-3">
+                <div class="detail-label">Updated By</div>
+                <div class="detail-value">
+                    @(Model.UpdatedBy?.ToString() ?? "(none)")
+                </div>
+            </div>
+
+            <!-- Updated Date -->
+            <div class="col-md-3">
+                <div class="detail-label">Updated Date</div>
+                <div class="detail-value">
+                    @(Model.UpdatedDate.HasValue
+              ? Model.UpdatedDate.Value.ToString("yyyy-MM-dd HH:mm:ss")
+              : "(none)")
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center mb-4">
+        @Html.ActionLink("Back to List", "Index", null,
+          new { @class = "btn btn-outline-secondary me-3" })
+        @Html.ActionLink("Edit", "Edit", new { id = Model.Id },
+          new { @class = "btn btn-primary" })
+    </div>
+</div>

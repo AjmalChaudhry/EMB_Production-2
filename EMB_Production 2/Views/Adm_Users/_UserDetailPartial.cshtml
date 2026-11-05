@@ -1,0 +1,205 @@
+﻿@model EMB_Production.Models.Adm_Users
+@using System
+
+@{    
+    var branchName = Model.Branches?.Name ?? "—";
+    var companyName = Model.Adm_CompanyProfile?.CompanyName ?? "—";
+    
+    Func<DateTime?, string> pkt = dt =>
+    {
+        if (!dt.HasValue) return "—";
+        try
+        {
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("Pakistan Standard Time");
+            var utc = DateTime.SpecifyKind(dt.Value, DateTimeKind.Utc);
+            var pk = TimeZoneInfo.ConvertTimeFromUtc(utc, tz);
+            return pk.ToString("yyyy-MM-dd HH:mm");
+        }
+        catch
+        {
+            return dt.Value.ToString("yyyy-MM-dd HH:mm");
+        }
+    };
+
+    var createdAt = pkt(Model.CreatedDate);
+    var updatedAt = pkt(Model.UpdatedDate);
+    var lastLogin = pkt(Model.LastLoginDate);
+    var lastPwd = pkt(Model.LastPasswordChangeDate);
+}
+
+<div class="card detail-card shadow-sm m-2 border-0">
+    <div class="card-header d-flex justify-content-between align-items-center bg-primary bg-gradient text-white">
+        <h5 class="mb-0">User Details</h5>
+        <button type="button" class="btn-close btn-close-white btn-detail-close" aria-label="Close"></button>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="detail-label">User ID</div>
+                <div class="detail-value">@Model.Id</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Employee ID</div>
+                <div class="detail-value">@Model.EmployeeId</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Username</div>
+                <div class="detail-value">@Model.UserName</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Email</div>
+                <div class="detail-value">@Model.EmailAddress</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">First Name</div>
+                <div class="detail-value">@Model.FirstName</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Last Name</div>
+                <div class="detail-value">@Model.LastName</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Mobile (Primary)</div>
+                <div class="detail-value">@Model.MobilePrimary</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Mobile (Secondary)</div>
+                <div class="detail-value">@Model.MobileSecondary</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Landline</div>
+                <div class="detail-value">@Model.Landline</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Ext</div>
+                <div class="detail-value">@Model.LandlineExt</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Branch</div>
+                <div class="detail-value">@branchName</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Company</div>
+                <div class="detail-value">@companyName</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Role ID</div>
+                <div class="detail-value">@Model.RoleId</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Designation ID</div>
+                <div class="detail-value">@Model.DesignationId</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Salesman Code</div>
+                <div class="detail-value">@Model.SalesmanCode</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Approvel</div>
+                <div class="detail-value">@Model.Approvel</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Login Ticket</div>
+                <div class="detail-value">@Model.LoginTicket</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Device Ticket</div>
+                <div class="detail-value">@Model.DeviceTicket</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Facial Recognition</div>
+                <div class="detail-value">@Model.FacialRecognition</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Biomatric</div>
+                <div class="detail-value">@Model.Biomatric</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Password</div>
+                <div class="detail-value">@(String.IsNullOrEmpty(Model.Password) ? "—" : "••••••")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Password Question</div>
+                <div class="detail-value">@Model.PasswordQuestion</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Password Answer</div>
+                <div class="detail-value">@Model.PasswordAnswer</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Last Login</div>
+                <div class="detail-value">@lastLogin</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Last Password Change</div>
+                <div class="detail-value">@lastPwd</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Active</div>
+                <div class="detail-value">
+                    <span class="badge @( (Model.Active ?? false) ? "bg-success" : "bg-secondary")">
+                        @((Model.Active ?? false) ? "Yes" : "No")
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Deleted</div>
+                <div class="detail-value">
+                    <span class="badge @( (Model.Deleted ?? false) ? "bg-danger" : "bg-secondary")">
+                        @((Model.Deleted ?? false) ? "Yes" : "No")
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Dashboard Access</div>
+                <div class="detail-value">@((Model.DashboardAccess ?? false) ? "Yes" : "No")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Salesman Linked</div>
+                <div class="detail-value">@((Model.IsSalesmanLinked ?? false) ? "Yes" : "No")</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Created By</div>
+                <div class="detail-value">@Model.CreatedBy</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Created Date</div>
+                <div class="detail-value">@createdAt</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Updated By</div>
+                <div class="detail-value">@Model.UpdatedBy</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Updated Date</div>
+                <div class="detail-value">@updatedAt</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-footer text-end p-2">
+        <button type="button" class="btn btn-secondary btn-sm btn-detail-close">
+            <i class="bi bi-arrow-left me-1"></i> Close
+        </button>
+    </div>
+</div>
+<style>
+    .detail-card .detail-label {
+        font-size: .75rem;
+        color: #6c757d;
+        margin-bottom: .25rem;
+    }
+
+    .detail-card .detail-value {
+        font-weight: 500;
+    }
+</style>

@@ -1,0 +1,442 @@
+<div class="row align-items-center mb-2 job-toolbar">
+
+  <!-- LEFT -->
+  <div class="col-auto d-flex align-items-center job-title">
+    <i class="bi bi-clock-history me-2 text-primary"></i>
+    <span class="fw-semibold">Job Tracking History</span>
+    <span class="text-muted small ms-2">WOI: {{ workOrderItemId }}</span>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="col d-flex justify-content-end align-items-center gap-1 job-actions">
+
+    <!-- ADD -->
+    <button class="btn btn-sm btn-primary d-flex align-items-center"
+            (click)="openCreate()">
+      <i class="bi bi-plus-circle me-1"></i>
+      Add
+    </button>
+
+
+    <!-- SEARCH -->
+    <input type="text"
+           class="form-control form-control-sm action-search"
+           placeholder="Search"
+           [(ngModel)]="searchText"
+           (keyup.enter)="load()" />
+
+    <button class="btn btn-sm btn-outline-secondary icon-btn"
+            title="Refresh"
+            (click)="load()">
+      <i class="bi bi-arrow-clockwise"></i>
+    </button>
+
+    <select class="form-select form-select-sm action-select"
+            [(ngModel)]="branchId"
+            (change)="load()">
+      <option value="">Branch</option>
+      <option *ngFor="let b of branches" [value]="b.id">
+        {{ b.name }}
+      </option>
+    </select>
+
+    <select class="form-select form-select-sm action-select"
+            [(ngModel)]="statusFilter"
+            (change)="load()">
+      <option value="">Status</option>
+      <option value="Started">Start</option>
+      <option value="In Progress">Prog</option>
+      <option value="Completed">Done</option>
+    </select>
+
+    <!-- EXPORTS -->
+    <button class="btn btn-sm btn-outline-success icon-btn" title="Excel">
+      <i class="bi bi-file-earmark-excel"></i>
+    </button>
+
+    <button class="btn btn-sm btn-outline-danger icon-btn" title="PDF">
+      <i class="bi bi-file-earmark-pdf"></i>
+    </button>
+
+    <button class="btn btn-sm btn-outline-dark icon-btn" title="Print">
+      <i class="bi bi-printer"></i>
+    </button>
+
+  </div>
+</div>
+
+
+
+
+<!-- ================= HEADER ================= -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+
+  <h5 class="mb-0">
+    <i class="bi bi-clock-history me-2 text-primary"></i>
+    Job Tracking History
+    <span class="text-muted small ms-2">
+      (WOI #{{ workOrderItemId }})
+    </span>
+  </h5>
+
+  <button class="btn btn-sm btn-outline-secondary"
+          routerLink="/work-order-items">
+    <i class="bi bi-arrow-left me-1"></i>
+    Back
+  </button>
+
+</div>
+
+<!-- ================= TABLE ================= -->
+<div class="card shadow-sm">
+  <div class="card-body">
+
+    <!-- LOADING -->
+    <div *ngIf="loading" class="text-center py-4">
+      <div class="spinner-border"></div>
+      <div class="mt-2 small text-muted">Loading...</div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-responsive" *ngIf="!loading">
+      <table class="table table-hover align-middle mb-0">
+
+        <thead class="table-light">
+          <tr>
+            <th style="width:70px;">Id</th>
+            <th style="width:130px;">WO Item</th>
+            <th>Status</th>
+            <th style="width:170px;">Date</th>
+            <th>Remarks</th>
+            <th style="width:120px;">Branch</th>
+            <th style="width:90px;">Active</th>
+            <th style="width:150px;" class="text-end">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <!-- DATA -->
+          <tr *ngFor="let x of items">
+            <td>{{ x.id }}</td>
+
+            <td>
+              <strong>
+                {{ x.workOrderItemLabel || ('WOI #' + x.workOrderItemId) }}
+              </strong>
+            </td>
+
+            <td>
+              <span class="badge bg-info text-dark">
+                {{ x.status }}
+              </span>
+            </td>
+
+            <td>
+              {{ x.statusDate | date:'dd-MMM-yyyy HH:mm' }}
+            </td>
+
+            <td>
+              {{ x.remarks || '-' }}
+            </td>
+
+            <td>
+              {{ x.branchName || '-' }}
+            </td>
+
+            <td>
+              <span class="badge"
+                    [class.bg-success]="x.active"
+                    [class.bg-secondary]="!x.active">
+                {{ x.active ? 'Yes' : 'No' }}
+              </span>
+            </td>
+
+            <td class="text-end">
+              <button class="btn btn-sm btn-outline-primary me-1"
+                      (click)="openDetail(x.id)">
+                <i class="bi bi-eye"></i>
+              </button>
+
+              <button class="btn btn-sm btn-outline-warning me-1"
+                      (click)="openEdit(x.id)">
+                <i class="bi bi-pencil-square"></i>
+              </button>
+
+              <button class="btn btn-sm btn-outline-danger"
+                      (click)="openDelete(x.id)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+
+          <!-- EMPTY -->
+          <tr *ngIf="items.length === 0">
+            <td colspan="8" class="text-center text-muted py-4">
+              No history found.
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="d-flex justify-content-between align-items-center mt-3"
+         *ngIf="!loading && totalCount > 0">
+
+      <div class="text-muted small">
+        Total: {{ totalCount }} |
+        Page {{ page }} of {{ totalPages }}
+      </div>
+
+      <div class="btn-group btn-group-sm">
+        <button class="btn btn-outline-secondary"
+                (click)="prevPage()"
+                [disabled]="page <= 1">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <button class="btn btn-outline-secondary"
+                (click)="nextPage()"
+                [disabled]="page >= totalPages">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+
+
+<!-- FORM MODAL -->
+<div #formModal class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">{{ mode === 'edit' ? 'Edit Status' : 'Add Status' }}</h5>
+        <button type="button" class="btn-close" (click)="closeForm()"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- WORK ORDER ITEM (READ ONLY) -->
+        <div class="col-md-6">
+          <label class="form-label">Work Order Item</label>
+          <input class="form-control form-control-sm"
+                 [value]="'WOI #' + workOrderItemId"
+                 disabled />
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Status *</label>
+            <select class="form-select"
+                    [(ngModel)]="form.status">
+              <option value="">-- Select Status --</option>
+              <option *ngFor="let s of statusList"
+                      [value]="s">
+                {{ s }}
+              </option>
+            </select>
+
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Status Date</label>
+            <input type="datetime-local"
+                   class="form-control form-control-sm"
+                   [value]="form.statusDate | date:'yyyy-MM-ddTHH:mm'"
+                   (change)="form.statusDate = $any($event.target).valueAsDate" />
+
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Branch</label>
+            <select class="form-select form-select-sm"
+                    [(ngModel)]="form.branchId"
+                    required>
+              <option [ngValue]="null">-- Select Branch --</option>
+              <option *ngFor="let b of branches" [ngValue]="b.id">
+                {{ b.name }}
+              </option>
+            </select>
+          </div>
+
+
+          <div class="col-md-6 d-flex align-items-center gap-2 mt-4">
+            <input type="checkbox" class="form-check-input" [(ngModel)]="form.active" />
+            <label class="form-check-label">Active</label>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Remarks</label>
+            <textarea rows="3" class="form-control" [(ngModel)]="form.remarks"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" (click)="closeForm()">Cancel</button>
+
+        <button *ngIf="mode === 'edit'" class="btn btn-primary" (click)="saveUpdate()">
+          <i class="bi bi-save me-1"></i> Update
+        </button>
+
+        <button *ngIf="mode !== 'edit'" class="btn btn-primary" (click)="saveCreate()">
+          <i class="bi bi-save me-1"></i> Save
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div #detailModal class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <!-- HEADER -->
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-info-circle me-2"></i>
+          Job Tracking Detail
+        </h5>
+        <button type="button"
+                class="btn-close btn-close-white"
+                (click)="closeDetail()">
+        </button>
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body" *ngIf="detailItem">
+        <div class="row g-2 small">
+
+          <!-- STATUS -->
+          <div class="col-md-6">
+            <b>Status:</b>
+            <span class="badge bg-secondary ms-1">
+              {{ detailItem.status }}
+            </span>
+          </div>
+
+          <div class="col-md-6">
+            <b>Status Date:</b>
+            {{ detailItem.statusDateText || (detailItem.statusDate | date:'dd-MMM-yyyy HH:mm') }}
+          </div>
+
+          <!-- WORK ORDER ITEM -->
+          <div class="col-md-6">
+            <b>Work Order Item:</b>
+            {{ detailItem.workOrderItemLabel || detailItem.workOrderItemId }}
+          </div>
+
+          <div class="col-md-6">
+            <b>Branch:</b>
+            {{ detailItem.branchName || '-' }}
+          </div>
+
+          <!-- FLAGS -->
+          <div class="col-md-6">
+            <b>Active:</b>
+            {{ detailItem.active ? 'Yes' : 'No' }}
+          </div>
+
+          <div class="col-md-6">
+            <b>Deleted:</b>
+            {{ detailItem.deleted ? 'Yes' : 'No' }}
+          </div>
+
+          <!-- REMARKS -->
+          <div class="col-12">
+            <b>Remarks:</b>
+            <div class="border rounded p-2 mt-1 bg-light">
+              {{ detailItem.remarks || '-' }}
+            </div>
+          </div>
+
+          <hr class="my-2" />
+
+          <!-- AUDIT -->
+          <div class="col-md-6 text-muted">
+            <b>Created:</b>
+            {{ detailItem.createdDateText || (detailItem.createdDate | date:'dd-MMM-yyyy HH:mm') }}
+            <br />
+            <b>By:</b> {{ detailItem.createdByEmployeeId || '-' }}
+          </div>
+
+          <div class="col-md-6 text-muted">
+            <b>Updated:</b>
+            {{ detailItem.updatedDateText || (detailItem.updatedDate | date:'dd-MMM-yyyy HH:mm') }}
+            <br />
+            <b>By:</b> {{ detailItem.updatedByEmployeeId || '-' }}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary btn-sm"
+                (click)="closeDetail()">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<div #deleteModal class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+
+      <!-- HEADER -->
+      <div class="modal-header bg-light">
+        <h6 class="modal-title d-flex align-items-center text-danger">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Confirm Delete
+        </h6>
+        <button type="button"
+                class="btn-close"
+                (click)="closeDelete()">
+        </button>
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body text-center small">
+        <p class="mb-2">
+          Are you sure you want to delete this
+          <b>Job Tracking History</b> record?
+        </p>
+
+        <div class="text-muted">
+          This action cannot be undone.
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="modal-footer justify-content-center gap-2">
+        <button class="btn btn-sm btn-outline-secondary"
+                (click)="closeDelete()">
+          Cancel
+        </button>
+
+        <button class="btn btn-sm btn-danger"
+                (click)="confirmDelete()">
+          <i class="bi bi-trash me-1"></i>
+          Delete
+        </button>
+      </div>
+
+
+    </div>
+  </div>
+</div>
+

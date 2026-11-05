@@ -1,0 +1,249 @@
+﻿@model EMB_Production.ViewModels.CompanyPageViewModel
+@using PagedList.Mvc
+@using System.Web.Mvc
+
+@{
+    var isAjax = Request.IsAjaxRequest();
+    Layout = isAjax ? null : "~/Views/Shared/_Layout.cshtml";
+
+    // 2) Preserve current search/filter
+    var cf = Model.Search ?? "";
+    var af = Model.ActiveFilter ?? "";
+}
+
+@section Styles {
+    <style>
+
+        .logo-cell {
+            width: 6rem;
+        }
+
+        #company-detail-container {
+            margin-top: 1rem;
+        }
+    </style>
+}
+
+@if (!isAjax)
+{
+    <!-- TOOLBAR (only on full‐page render) -->
+    <div class="d-flex align-items-center justify-content-between mb-3 bg-primary text-white p-3 rounded">
+        <h4 class="mb-0">Company Profiles</h4>
+        <div class="d-flex align-items-center toolbar">
+            @* create vs. modify *@
+            @if (Model.ShowEdit)
+            {
+                <button type="button"
+                        class="btn btn-warning btn-sm me-2 btn-edit-ajax"
+                        data-url="@Url.Action("Index","Adm_CompanyProfile",
+                        new { showEdit = false, search = cf, activeFilter = af })">
+                    <i class="bi bi-pencil-fill me-1"></i>Modify
+                </button>
+            }
+            else
+            {
+                <button type="button"
+                        class="btn btn-success btn-sm me-2 btn-create-ajax"
+                        data-url="@Url.Action("Index","Adm_CompanyProfile",
+                        new { showCreate = !Model.ShowCreate, search = cf, activeFilter = af })">
+                    <i class="bi bi-plus-lg me-1"></i>Add New
+                </button>
+            }
+
+            @* search/filter *@
+            <input type="text"
+                   name="search"
+                   class="form-control form-control-sm me-2"
+                   style="width:160px;"
+                   placeholder="Search…"
+                   value="@cf" />
+
+            <select name="activeFilter" class="form-select form-select-sm me-2" style="width:120px;">
+                <option value="">All Status</option>
+                <option value="active" @(Model.ActiveFilter == "active" ? "selected" : "")>Active</option>
+                <option value="inactive" @(Model.ActiveFilter == "inactive" ? "selected" : "")>Inactive</option>
+            </select>
+
+            <button class="btn btn-outline-light btn-sm me-2 btn-search">
+                <i class="bi bi-search"></i>
+            </button>
+            <button class="btn btn-outline-light btn-sm me-2 btn-refresh">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button class="btn btn-outline-light btn-sm me-2" onclick="window.print()">
+                <i class="bi bi-printer"></i>
+            </button>
+
+            <a class="btn btn-light btn-sm me-2"
+               href="@Url.Action("ExportToExcel","Adm_CompanyProfile", new { search = cf, activeFilter = af })"
+               title="Excel">
+                <i class="bi bi-file-earmark-spreadsheet text-success"></i>
+            </a>
+            <a class="btn btn-light btn-sm"
+               href="@Url.Action("ExportToPdf","Adm_CompanyProfile", new { search = cf, activeFilter = af })"
+               title="PDF">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        </div>
+    </div>
+}
+
+<div id="company-index-wrapper">
+
+    @* 1) Inline form for Create/Edit *@
+    @if (Model.ShowCreate || Model.ShowEdit)
+    {
+        @Html.Partial("_CompanyForm", Model)
+    }
+
+    @* 2) Company table *@
+    <div id="company-table-container" class="table-responsive shadow-sm rounded mb-3">
+        @Html.Partial("_CompanyTable", Model)
+    </div>
+
+    @* 3) Pager *@
+    @if (Model.Companies != null && Model.Companies.Any())
+    {
+        <div class="d-flex justify-content-center mb-3">
+            @Html.PagedListPager(Model.Companies, page => Url.Action("Index", new { page, search = Model.Search, activeFilter = Model.ActiveFilter, parentFilter = Model.ParentFilter }),
+                new PagedListRenderOptions
+                {
+                    UlElementClasses = new[] { "pagination" },
+                    LiElementClasses = new[] { "page-item" }
+                }
+            )
+        </div>
+    }
+
+    @* 4) Detail placeholder *@
+    <div id="company-detail-container"></div>
+</div>
+
+@section Scripts {
+    <script>
+        (function($) {
+            $(function(){
+
+      // 1) INLINE CREATE / EDIT (load the form via AJAX into #company-index-wrapper)
+                  $(document).on('click', '.btn-create-ajax, .btn-edit-ajax', function(e) {
+                    e.preventDefault();
+                    var url = $(this).data('url');
+                    $.get(url, function(html) {
+                      // extract the new wrapper
+                      var $new = $(html).find('#company-index-wrapper');
+                      if (!$new.length) {
+                        // fallback if wrapped differently
+                        $new = $('<div>').append(html).find('#company-index-wrapper');
+                      }
+                      $('#company-index-wrapper').replaceWith($new);
+                    });
+                  });
+
+                  // 2) CANCEL inline form
+                  //   Assumes your inline form is wrapped in <tr class="inline-row">…</tr>
+                $(document).on('click', '.cancel-btn', function (e) {
+                    e.preventDefault();
+                    $(this).closest('.inline-card').remove();
+                });
+
+                  // 3) DELETE confirmation modal
+                  $(document).on('click', '.btn-delete-ajax', function(e) {
+                    e.preventDefault();
+                    $.get($(this).data('url'), function(html) {
+                      // remove any old modal, append fresh, then show it
+                      $('#companyDeleteModal').remove();
+                      $('body').append(html);
+                      new bootstrap.Modal($('#companyDeleteModal')[0]).show();
+                    });
+                  });
+
+              // 4) CONFIRM DELETE
+                $(document).on('click', '#confirm-delete-btn', function(e) {
+                    e.preventDefault();
+                    var $btn = $(this).prop('disabled', true),
+                        postUrl = '@Url.Action("DeleteFromIndexConfirmed","Adm_CompanyProfile")',
+                     data = {
+                          __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+                          id:            $btn.data('id'),
+                          search:        $btn.data('search'),
+                          activeFilter:  $btn.data('activefilter'),
+                          parentFilter:  $btn.data('parentfilter'),
+                          page:          $btn.data('page')
+                     };
+
+                      $.post(postUrl, data)
+                      .done(function(html) {
+                        // replace just the table container
+                        $('#company-table-container').html(html);
+                        $('#companyDeleteModal').modal('hide');
+                      })
+                      .fail(function(xhr) {
+                            if (xhr.status === 409) {
+                              alert(xhr.responseText);
+                            } else {
+                              console.error(xhr);
+                              alert('Delete failed, please try again.');
+                            }
+                      })
+                      .always(function() {
+                        $btn.prop('disabled', false);
+                      });
+                });
+
+                  // 5) DETAILS row injection
+                $(document).on('click', '.btn-detail-ajax', function (e) {
+                    e.preventDefault();
+                    $('.detail-row').remove();
+
+                    var $btn = $(this),
+                        $tr = $btn.closest('tr'),
+                        colCount = $tr.children('td,th').length,
+                        url = $btn.data('detail-url');
+
+                    $.get(url, function (html) {
+                        var $r = $(
+                            '<tr class="detail-row">' +
+                            '<td colspan="' + colCount + '" class="p-0 border-0"></td>' +
+                            '</tr>'
+                        );
+                        $r.find('td').append(html);
+                        $tr.after($r);
+                    })
+                        .fail(function (xhr) {
+                            console.error("Detail load failed:", xhr);
+                            alert("Could not load details. See console for more info.");
+                        });
+                });
+
+                $(document).on('click', '.btn-detail-close', function (e) {
+                    e.preventDefault();
+                    $(this).closest('tr.detail-row').remove();
+                });
+
+                  // 6) SEARCH (includes parentFilter if present)
+                  $(document).on('click', '.btn-search', function(e) {
+                    e.preventDefault();
+                    var q  = encodeURIComponent($('[name=search]').val() || ''),
+                        af = encodeURIComponent($('[name=activeFilter]').val() || ''),
+                        pf = encodeURIComponent($('[name=parentFilter]').val() || '');
+                    window.location = '@Url.Action("Index","Adm_CompanyProfile")'
+                                    + '?search=' + q
+                                    + '&activeFilter=' + af
+                                    + '&parentFilter=' + pf;
+                  });
+
+                  // 7) REFRESH
+                 $(document).on('click','.btn-search',function(){
+                      var q  = encodeURIComponent($('[name=search]').val()||''),
+                          af = encodeURIComponent($('[name=activeFilter]').val()||''),
+                          pf = encodeURIComponent($('[name=parentFilter]').val()||'');
+                      window.location = '@Url.Action("Index","Adm_CompanyProfile")'
+                                      + '?search=' + q
+                                      + '&activeFilter=' + af
+                                      + '&parentFilter=' + pf;
+                 });
+
+            });
+        })(jQuery);
+    </script>
+}

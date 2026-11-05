@@ -1,0 +1,19 @@
+<!-- app.component.html -->
+<!-- Logged-in layout -->
+<ng-container *ngIf="isLoggedIn; else loggedOut">
+  <div class="app-container d-flex">
+   
+
+    <!-- Main content area -->
+    <main class="content flex-grow-1 p-3">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</ng-container>
+
+<!-- Logged-out layout (login page or public routes) -->
+<ng-template #loggedOut>
+  <div class="login-container">
+    <router-outlet></router-outlet>
+  </div>
+</ng-template>

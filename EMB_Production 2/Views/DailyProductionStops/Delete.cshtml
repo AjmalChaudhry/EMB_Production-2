@@ -1,0 +1,64 @@
+﻿@model EMB_Production.Models.DailyProductionStops
+
+@{
+    ViewBag.Title = "Delete";
+}
+
+<h2>Delete</h2>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>DailyProductionStops</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.StopStart)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.StopStart)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.StopEnd)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.StopEnd)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Reason)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Reason)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.DailyProduction.Shift)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.DailyProduction.Shift)
+        </dd>
+
+    </dl>
+
+    @using (Html.BeginForm()) {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            <input type="submit" value="Delete" class="btn btn-default" /> |
+            @Html.ActionLink("Back to List", "Index")
+        </div>
+    }
+</div>

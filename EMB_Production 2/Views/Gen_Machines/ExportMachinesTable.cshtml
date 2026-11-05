@@ -1,0 +1,62 @@
+﻿@model EMB_Production.ViewModels.MachinesPageViewModel
+
+@{
+    
+    Layout = null;
+}
+
+<table class="table table-bordered table-sm">
+    <thead class="table-light">
+        <tr>
+            <th>ID</th>
+            <th>Code</th>
+            <th>Brand</th>
+            <th>Service</th>
+            <th>HeadToHead</th>
+            <th>FrameHeight</th>
+            <th>HeadsNum</th>
+            <th>NeedlesNum</th>
+            <th>Serial #</th>
+            <th>Call #</th>
+            <th>PurchaseDate</th>
+            <th>Warranty</th>
+            <th>ServiceEnd</th>
+            <th>ServiceNext</th>
+            <th>Branch ID</th>
+            <th>Active</th>
+            <th>Deleted</th>
+            <th>Created By</th>
+            <th>Created Date</th>
+            <th>Updated By</th>
+            <th>Updated Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var m in Model.Machines)
+        {
+            <tr>
+                <td>@m.Id</td>
+                <td>@m.Code</td>
+                <td>@(m.Gen_Brands?.BrandName ?? "")</td>
+                <td>@(m.Gen_TheServices?.Service_Name ?? "")</td>
+                <td>@m.HeadtoHead</td>
+                <td>@m.FrameHeight</td>
+                <td>@m.HeadsNum</td>
+                <td>@m.NeedlesNum</td>
+                <td>@m.Serial_Number</td>
+                <td>@m.Calling_Number</td>
+                <td>@m.PurchaseDate?.ToString("yyyy-MM-dd")</td>
+                <td>@m.Warranty</td>
+                <td>@m.ServiceEnd?.ToString("yyyy-MM-dd")</td>
+                <td>@m.ServiceNext?.ToString("yyyy-MM-dd")</td>
+                <td>@m.BranchId</td>
+                <td>@(m.Active.GetValueOrDefault() ? "Yes" : "No")</td>
+                <td>@(m.Deleted.GetValueOrDefault() ? "Yes" : "No")</td>
+                <td>@m.CreatedBy</td>
+                <td>@m.CreatedDate?.ToString("g")</td>
+                <td>@m.UpdatedBy</td>
+                <td>@m.UpdatedDate?.ToString("g")</td>
+            </tr>
+        }
+    </tbody>
+</table>

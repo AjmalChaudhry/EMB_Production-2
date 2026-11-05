@@ -1,0 +1,222 @@
+<div class="dashboard-wrap">
+
+  <!-- ============ HERO + RANGE FILTER ============ -->
+  <div class="hero-card mb-3">
+    <div class="hero-left">
+      <h4 class="mb-1">Welcome back, {{ userName }}</h4>
+      <p class="mb-0 small opacity-75">
+        Real-time ERP overview &middot;
+        <span class="range-pill">{{ rangeLabel }}</span>
+      </p>
+    </div>
+
+    <div class="hero-right d-flex flex-wrap gap-2 align-items-center">
+      <div class="range-group btn-group btn-group-sm">
+        <button *ngFor="let r of ranges"
+                type="button"
+                class="btn"
+                [class.btn-light]="selectedRange === r.key"
+                [class.btn-outline-light]="selectedRange !== r.key"
+                (click)="onRangeChange(r.key)">
+          {{ r.label }}
+        </button>
+      </div>
+
+      <button class="btn btn-light btn-sm" (click)="loadDashboard()" title="Refresh">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ ALERTS STRIP ============ -->
+  <div class="alerts-strip" *ngIf="!loading && alerts.length > 0">
+    <span class="alerts-label">
+      <i class="bi bi-bell-fill me-1"></i>
+      Needs attention
+    </span>
+    <button *ngFor="let a of alerts; trackBy: trackAlert"
+            type="button"
+            class="alert-chip"
+            [class.warn]="a.level === 'warn'"
+            [class.info]="a.level === 'info'"
+            [class.danger]="a.level === 'danger'"
+            (click)="goTo(a.route)"
+            [title]="'Go to ' + a.label">
+      <i class="bi me-1" [ngClass]="a.icon"></i>
+      {{ a.label }}: <strong class="ms-1">{{ a.value }}</strong>
+    </button>
+  </div>
+
+  <!-- ============ LOADING ============ -->
+  <div *ngIf="loading" class="text-center py-4">
+    <span class="spinner-border spinner-border-sm me-2"></span>
+    Loading dashboard...
+  </div>
+
+  <!-- ============ WORKFLOW PIPELINE ============ -->
+  <div class="workflow-card" *ngIf="!loading">
+    <div class="workflow-header">
+      <div class="workflow-title">
+        <i class="bi bi-diagram-3 me-2"></i>
+        Workflow Pipeline
+      </div>
+      <div class="workflow-total">
+        <span class="text-muted small me-2">Total pending</span>
+        <span class="badge"
+              [class.bg-success-subtle]="workflowTotalPending === 0"
+              [class.text-success-emphasis]="workflowTotalPending === 0"
+              [class.bg-warning-subtle]="workflowTotalPending > 0 && workflowTotalPending < 10"
+              [class.text-warning-emphasis]="workflowTotalPending > 0 && workflowTotalPending < 10"
+              [class.bg-danger-subtle]="workflowTotalPending >= 10"
+              [class.text-danger-emphasis]="workflowTotalPending >= 10">
+          <strong>{{ workflowTotalPending }}</strong>
+        </span>
+      </div>
+    </div>
+
+    <div class="workflow-pipeline">
+      <ng-container *ngFor="let s of workflow; let last = last; trackBy: trackWorkflow">
+        <button type="button"
+                class="workflow-stage"
+                [class.has-pending]="s.count > 0"
+                [class.is-clear]="s.count === 0"
+                (click)="goTo(s.route)"
+                [title]="s.hint">
+          <div class="stage-icon-wrap">
+            <i class="bi" [ngClass]="s.icon"></i>
+            <span class="stage-count">{{ s.count }}</span>
+          </div>
+          <div class="stage-label">{{ s.label }}</div>
+          <div class="stage-hint">{{ s.hint }}</div>
+        </button>
+        <div class="workflow-arrow" *ngIf="!last">
+          <i class="bi bi-chevron-right"></i>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- ============ ROW 1: PRIMARY KPIs (click-through) ============ -->
+  <div class="row g-2 mt-1" *ngIf="!loading">
+
+    <div class="col-xl-3 col-md-6">
+      <button class="dash-card blue w-100" (click)="goTo('/job-orders')" type="button">
+        <div class="icon"><i class="bi bi-clipboard-check"></i></div>
+        <div class="card-body-inner">
+          <h4>{{ n(data.productionSummary?.activeJobOrders) }}</h4>
+          <p>Active Job Orders</p>
+        </div>
+      </button>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <button class="dash-card purple w-100" (click)="goTo('/work-orders')" type="button">
+        <div class="icon"><i class="bi bi-kanban"></i></div>
+        <div class="card-body-inner">
+          <h4>{{ n(data.productionSummary?.runningWorkOrders) }}</h4>
+          <p>Running Work Orders</p>
+        </div>
+      </button>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <button class="dash-card green w-100" (click)="goTo('/daily-production')" type="button">
+        <div class="icon"><i class="bi bi-gear-wide-connected"></i></div>
+        <div class="card-body-inner">
+          <h4>{{ n(data.productionSummary?.todayProductionQty) }}</h4>
+          <p>Today Production</p>
+        </div>
+      </button>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <button class="dash-card orange w-100" (click)="goTo('/qc-inspection')" type="button">
+        <div class="icon"><i class="bi bi-shield-check"></i></div>
+        <div class="card-body-inner">
+          <h4>{{ n(data.qcSummary?.pendingQcQty) }}</h4>
+          <p>Pending QC Qty</p>
+        </div>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ============ ROW 2: SECONDARY KPIs ============ -->
+  <div class="row g-2 mt-1" *ngIf="!loading">
+
+    <div class="col-xl-3 col-md-6">
+      <!-- /stock loads GenStocksComponent — the comprehensive Finished
+           Stock dashboard (reserved vs free split, valuation, profit).
+           /finished-stock loads a thin table view that isn't as useful
+           as the landing for someone clicking from the dashboard. -->
+      <button class="info-card w-100" (click)="goTo('/stock')" type="button">
+        <div class="label">Finished Stock</div>
+        <div class="value text-success">{{ n(data.stockSummary?.finishedStockQty) }}</div>
+      </button>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <button class="info-card w-100" (click)="goTo('/qc-inspection')" type="button">
+        <div class="label">Rework Qty</div>
+        <div class="value text-warning">{{ n(data.stockSummary?.reworkQty) }}</div>
+      </button>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <button class="info-card w-100" (click)="goTo('/qc-inspection')" type="button">
+        <div class="label">Reversed QC</div>
+        <div class="value text-danger">{{ n(data.stockSummary?.reversedQcCount) }}</div>
+      </button>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <button class="info-card w-100" (click)="goTo('/daily-production')" type="button">
+        <div class="label">Active Operators Today</div>
+        <div class="value text-primary">{{ n(data.operatorSummary?.activeOperatorsToday) }}</div>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ============ ROW 3: RATIOS ============ -->
+  <div class="row g-2 mt-1" *ngIf="!loading">
+
+    <div class="col-lg-4">
+      <div class="panel-card">
+        <h6>Daily Efficiency</h6>
+        <div class="metric">{{ n(data.productionSummary?.dailyEfficiency) }}%</div>
+        <div class="progress">
+          <div class="progress-bar"
+               [style.width.%]="n(data.productionSummary?.dailyEfficiency)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="panel-card">
+        <h6>QC Pass Ratio</h6>
+        <div class="metric text-success">{{ n(data.qcSummary?.passRatio) }}%</div>
+        <div class="progress">
+          <div class="progress-bar bg-success"
+               [style.width.%]="n(data.qcSummary?.passRatio)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="panel-card">
+        <h6>Machine Utilization</h6>
+        <div class="metric text-info">{{ n(data.machineSummary?.machineUtilization) }}%</div>
+        <div class="progress">
+          <div class="progress-bar bg-info"
+               [style.width.%]="n(data.machineSummary?.machineUtilization)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>

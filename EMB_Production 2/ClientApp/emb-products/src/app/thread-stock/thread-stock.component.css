@@ -1,0 +1,30 @@
+:root {
+  --topbar-height: 72px;
+}
+
+.thread-stock-page {
+  padding: 10px 4px;
+}
+
+.thread-stock-table {
+  font-size: 0.85rem;
+}
+.thread-stock-table th,
+.thread-stock-table td {
+  padding: 0.5rem 0.6rem !important;
+  vertical-align: middle;
+}
+.thread-stock-table .nowrap-cell { white-space: nowrap; }
+
+.thread-history-modal {
+  background: rgba(0, 0, 0, 0.4);
+  padding-top: calc(var(--topbar-height) + 8px);
+  overflow-y: auto;
+}
+.thread-history-modal .modal-dialog {
+  max-width: 980px;
+  margin: 0 auto;
+}
+.thread-history-modal .modal-dialog-scrollable .modal-content {
+  max-height: calc(100vh - var(--topbar-height) - 30px);
+}

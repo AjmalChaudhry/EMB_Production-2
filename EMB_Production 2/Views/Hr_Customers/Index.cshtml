@@ -1,0 +1,330 @@
+﻿@model EMB_Production.ViewModels.CustomersPageViewModel
+@using PagedList.Mvc
+@using PagedList
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentFilter = Model.Search ?? "";
+    var activeFilter = Model.ActiveFilter ?? "";
+}
+@* ===================== INLINE EDIT ===================== *@
+<style>
+    /* small labels and full-width controls */
+    .inline-cust .form-label {
+        font-size: 0.75rem;
+    }
+
+    .inline-cust .form-control,
+    .inline-cust .form-select {
+        width: 80%;
+    }
+</style>
+<div class="container-fluid py-4">
+
+    <div class="d-flex align-items-center gap-2 mb-4 p-2 bg-dark bg-opacity-75 rounded shadow-sm">
+        <!-- Title -->
+        <h2 class="text-white mb-0">Customers</h2>
+
+        <!-- Add New -->
+        <a class="btn btn-sm btn-warning text-dark"
+           href="@Url.Action("Index", new { showCreate = true, search = Model.Search, activeFilter = Model.ActiveFilter })">
+            <i class="bi bi-plus-lg"></i> Add New
+        </a>
+
+        <!-- Search / Filter / Export form -->
+        @using (Html.BeginForm("Index", "Hr_Customers", FormMethod.Get, new { @class = "d-flex align-items-center gap-2 mb-0 ms-auto" }))
+        {
+            <!-- Search Input -->
+            @Html.TextBox("search", Model.Search, new
+            {
+                @class = "form-control form-control-sm",
+                                  placeholder = "🔍 Search name/city…",
+                style = "width:100px;"
+            })
+
+            @* Active/Inactive filter *@
+            <select name="activeFilter"
+                    class="form-select form-select-sm"
+                    style="width:70px;">
+                <option value="">All</option>
+                <option value="Yes" @(Model.ActiveFilter == "Yes" ? "selected" : "")>Active</option>
+                <option value="No" @(Model.ActiveFilter == "No" ? "selected" : "")>Inactive</option>
+            </select>
+
+            @* Submit search *@
+            <button type="submit" class="btn btn-sm btn-primary">
+                <i class="bi bi-search"></i>
+            </button>
+            <a href="@Url.Action("Index","Hr_Customers")"
+               class="btn btn-sm btn-outline-light"
+               title="Reset">
+                <i class="bi bi-x-circle"></i>
+            </a>
+
+            <button type="button" onclick="location.reload()"
+                    class="btn btn-outline-light btn-sm me-2" title="Refresh">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button type="button" onclick="window.print()"
+                    class="btn btn-outline-light btn-sm me-2" title="Print">
+                <i class="bi bi-printer"></i>
+            </button>
+            @* Export to Excel *@
+            <a class="btn btn-sm btn-success text-white"
+               href="@Url.Action("ExportToExcel", new { search = Model.Search, activeFilter = Model.ActiveFilter })">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+            </a>
+
+            @* Export to PDF *@
+            <a class="btn btn-sm btn-outline-danger"
+               href="@Url.Action("ExportToPdf", new { search = Model.Search, activeFilter = Model.ActiveFilter })">
+                <i class="bi bi-file-earmark-pdf"></i>
+            </a>
+        }
+    </div>
+    @* ===================== INLINE CREATE ===================== *@
+   @if (Model.ShowCreate)
+    {
+        <div class="card mb-2 shadow-sm inline-cust">
+            <div class="card-body">
+               @using (Html.BeginForm("CreateFromIndex", "Hr_Customers", FormMethod.Post, new { @class = "d-flex flex-wrap" }))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <div class="col-1">
+                        @Html.LabelFor(m => m.NewCustomer.Customer_Id, "Cust ID", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.NewCustomer.Customer_Id, new { @class = "form-control form-control-sm text-center" })
+                    </div>
+                    <div class="col-3">
+                        @Html.LabelFor(m => m.NewCustomer.Customer_Name, "Name", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.NewCustomer.Customer_Name, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.NewCustomer.NTN_Number, "NTN #", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.NewCustomer.NTN_Number, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.NewCustomer.STRN_Number, "STRN #", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.NewCustomer.STRN_Number, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.NewCustomer.Customer_Email, "Email", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.NewCustomer.Customer_Email, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.NewCustomer.Customer_Phone, "Phone", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.NewCustomer.Customer_Phone, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.NewCustomer.Customer_Mobile, "Mobile", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.NewCustomer.Customer_Mobile, new { @class = "form-control form-control-sm" })
+                    </div>
+
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.NewCustomer.Customer_Credit_Limit_CAP, "Credit Limit", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.NewCustomer.Customer_Credit_Limit_CAP, new { @class = "form-control form-control-sm text-center" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.NewCustomer.Customer_Invoice_Period, "Inv Period", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.NewCustomer.Customer_Invoice_Period, new { @class = "form-control form-control-sm text-center" })
+                    </div>
+                    <div class="col-2">
+                        @Html.Label("Branch", new { @class = "form-label" })
+                        @Html.DropDownListFor(m => m.NewCustomer.BranchId, Model.BranchList, "--", new { @class = "form-select form-select-sm" })
+                    </div>
+
+                    <div class="row g-2 mt-3 align-items-center">
+                        <div class="col-2">
+                            <div class="form-check form-switch">
+                                @Html.CheckBox("NewCustomer.Active", Model.NewCustomer.Active ?? false, new { @class = "form-check-input", id = "newAct", style = "transform: scale(1.5);" })
+                                <label class="form-check-label small ms-3" for="newAct">Active</label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-check form-switch">
+                                @Html.CheckBox("NewCustomer.Deleted", Model.NewCustomer.Deleted ?? false, new { @class = "form-check-input", id = "newDel", style = "transform: scale(1.5);" })
+                                <label class="form-check-label small ms-3" for="newDel">Deleted</label>
+                            </div>
+                        </div>
+
+
+                        <div class="col text-end">
+                            <button type="submit" class="btn btn-success btn-sm small me-4"><i class="bi bi-save"></i> Save</button>
+                            <a href="@Url.Action("Index",new{ showCreate=false, search=Model.Search, activeFilter=Model.ActiveFilter })"
+                               class="btn btn-danger btn-sm small ms-2"><i class="bi bi-x-circle"></i> Cancel</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+
+    @* ===================== INLINE EDIT ===================== *@
+   @if (Model.ShowEdit)
+    {
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body p-2">
+               @using (Html.BeginForm("EditFromIndex", "Hr_Customers", FormMethod.Post, new { @class = "d-flex flex-wrap" }))
+               {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.EditCustomer.Id)
+
+                    <div class="col-1">
+                        @Html.LabelFor(m => m.EditCustomer.Customer_Id, "Cust ID", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.EditCustomer.Customer_Id, new { @class = "form-control form-control-sm text-center" })
+                    </div>
+                    <div class="col-3">
+                        @Html.LabelFor(m => m.EditCustomer.Customer_Name, "Name", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.EditCustomer.Customer_Name, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.EditCustomer.NTN_Number, "NTN #", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.EditCustomer.NTN_Number, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.EditCustomer.STRN_Number, "STRN #", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.EditCustomer.STRN_Number, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.EditCustomer.Customer_Email, "Email", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.EditCustomer.Customer_Email, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.EditCustomer.Customer_Phone, "Phone", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.EditCustomer.Customer_Phone, new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.EditCustomer.Customer_Mobile, "Mobile", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.EditCustomer.Customer_Mobile, new { @class = "form-control form-control-sm" })
+                    </div>
+
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.EditCustomer.Customer_Credit_Limit_CAP, "Credit Limit", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.EditCustomer.Customer_Credit_Limit_CAP, new { @class = "form-control form-control-sm text-center" })
+                    </div>
+                    <div class="col-2">
+                        @Html.LabelFor(m => m.EditCustomer.Customer_Invoice_Period, "Inv Period", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.EditCustomer.Customer_Invoice_Period, new { @class = "form-control form-control-sm text-center" })
+                    </div>
+                    <div class="col-2">
+                        @Html.Label("Branch", new { @class = "form-label" })
+                        @Html.DropDownListFor(m => m.EditCustomer.BranchId, Model.BranchList, "--", new { @class = "form-select form-select-sm" })
+                    </div>
+
+                    <div class="row g-2 mt-3 align-items-center">
+                        <div class="col-2">
+                            <div class="form-check form-switch">
+                                @Html.CheckBox("EditCustomer.Active", Model.EditCustomer.Active ?? false, new { @class = "form-check-input", id = "newAct", style = "transform: scale(1.5);" })
+                                <label class="form-check-label small ms-3" for="newAct">Active</label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-check form-switch">
+                                @Html.CheckBox("EditCustomer.Deleted", Model.EditCustomer.Deleted ?? false, new { @class = "form-check-input", id = "newDel", style = "transform: scale(1.5);" })
+                                <label class="form-check-label small ms-3" for="newDel">Deleted</label>
+                            </div>
+                        </div>
+
+
+                        <div class="col text-end">
+                            <button type="submit" class="btn btn-success btn-sm small me-4"><i class="bi bi-save"></i> Save</button>
+                            <a href="@Url.Action("Index",new{ showCreate=false, search=Model.Search, activeFilter=Model.ActiveFilter })"
+                               class="btn btn-danger btn-sm small ms-2"><i class="bi bi-x-circle"></i> Cancel</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @* ---------- GRID ---------- *@
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-striped table-hover mb-0">
+            <thead class="bg-primary text-white small">
+                <tr class="text-center align-middle">
+                    <th>Cust ID</th>
+                    <th>Name</th>
+                    <th>NTN#</th>
+                    <th>STRN#</th>
+                    <th>City</th>
+                    <th>Country</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Mobile</th>
+                    <th>C Limit</th>
+                    <th>I P</th>
+                    <th>Branch</th>
+                    <th>Active</th>
+                    <th>Deleted</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody class="small">
+                @foreach (var c in Model.Customers)
+                {
+                    <tr class="text-center align-middle">
+                        <td class="text-wrap">@c.CustomerId</td>
+                        <td class="text-wrap">@c.Name</td>
+                        <td class="text-wrap">@c.NTN_Number</td>
+                        <td class="text-wrap">@c.STRN_Number</td>
+                        <td class="text-wrap">@c.Customer_City</td>
+                        <td class="text-wrap">@c.Customer_Country</td>
+                        <td class="text-wrap">@c.Customer_Email</td>
+                        <td class="text-wrap">@c.Customer_Phone</td>
+                        <td class="text-wrap">@c.Customer_Mobile</td>
+                        <td class="text-wrap">@c.Customer_Credit_Limit_CAP</td>
+                        <td class="text-wrap">@c.Customer_Invoice_Period</td>
+                        <td class="text-wrap">@c.BranchName</td>
+                        <td>
+                            <span class="badge @(c.Active?"bg-success":"bg-secondary")">@(c.Active?"Y":"N")</span>
+                        </td>
+                        <td>
+                            <span class="badge @(c.Deleted?"bg-danger":"bg-secondary")">@(c.Deleted?"Y":"N")</span>
+                        </td>
+                        <td>
+                            <a class="btn btn-outline-primary btn-sm small me-1"
+                               href="@Url.Action("Index","Hr_Customers",new{ showEdit=true, editId=c.Id, search=Model.Search, activeFilter=Model.ActiveFilter })">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a class="btn btn-outline-info btn-sm small me-1"
+                               href="@Url.Action("Details","Hr_Customers",new{ id=c.Id })">
+                                <i class="bi bi-info-circle"></i>
+                            </a>
+                            <a class="btn btn-outline-danger btn-sm small"
+                               href="@Url.Action("Delete","Hr_Customers",new{ id=c.Id })">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+
+    <!-- Pager -->
+    <div class="d-flex justify-content-center mt-3">
+        @Html.PagedListPager(
+          Model.Customers,
+          page => Url.Action("Index", new { page, search = currentFilter, activeFilter }),
+          new PagedListRenderOptions
+              {
+            UlElementClasses = new[] { "pagination" },
+            LiElementClasses = new[] { "page-item" },
+
+          }
+        )
+    </div>
+</div>
+    @section Scripts {
+        <script>
+            $(function () {
+                // row highlight
+                $('table.table-hover tbody tr').hover(
+                    function () { $(this).addClass('table-active'); },
+                    function () { $(this).removeClass('table-active'); }
+                );
+            });
+        </script>
+    }

@@ -1,0 +1,728 @@
+<div class="workorders-page container-fluid">
+
+  <!-- PAGE HEADER -->
+  <div class="row g-2 align-items-center mb-3 page-header">
+    <div class="col-md-4">
+      <div class="d-flex align-items-center">
+        <h5 class="mb-0">
+          <i class="bi bi-list-check me-2 text-primary"></i>
+          Work Order Items
+        </h5>
+      </div>
+      <small class="text-muted">Auto-generated from posted work orders</small>
+    </div>
+
+    <div class="col-md-8">
+      <div class="d-flex flex-wrap justify-content-md-end gap-2">
+
+        <button class="btn btn-outline-primary btn-sm"
+                type="button"
+                disabled>
+          <i class="bi bi-magic me-1"></i>
+          Auto Generated
+        </button>
+
+        <button class="btn btn-outline-secondary btn-sm"
+                type="button"
+                title="Refresh"
+                (click)="loadData()">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+
+        <button class="btn btn-success btn-sm"
+                type="button"
+                title="Export Excel"
+                (click)="exportExcel()">
+          <i class="bi bi-file-earmark-excel"></i>
+        </button>
+
+        <button class="btn btn-danger btn-sm"
+                type="button"
+                title="Export PDF"
+                (click)="exportPDF()">
+          <i class="bi bi-file-earmark-pdf"></i>
+        </button>
+
+        <button class="btn btn-secondary btn-sm"
+                type="button"
+                title="Print"
+                (click)="printTable()">
+          <i class="bi bi-printer"></i>
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== FILTER BAR (Phase L.0b) ===================== -->
+  <div class="card border-0 shadow-sm mb-2 woi-filter-bar">
+    <div class="card-body py-2">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-2">
+          <label class="form-label small mb-1">From date</label>
+          <input type="date" class="form-control form-control-sm"
+                 [(ngModel)]="filterFromDate" (change)="onFiltersChange()">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small mb-1">To date</label>
+          <input type="date" class="form-control form-control-sm"
+                 [(ngModel)]="filterToDate" (change)="onFiltersChange()">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small mb-1">Work Order</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="filterWorkOrderId" (ngModelChange)="onFiltersChange()">
+            <option [ngValue]="null">All work orders</option>
+            <option *ngFor="let w of workOrders" [ngValue]="w.id">
+              {{ w.code || w.name }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small mb-1">Branch</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="filterBranchId" (ngModelChange)="onFiltersChange()">
+            <option [ngValue]="null">All branches</option>
+            <option *ngFor="let b of branches" [ngValue]="b.id">
+              {{ b.name }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small mb-1">Status</label>
+          <input type="text" class="form-control form-control-sm"
+                 [(ngModel)]="filterStatus"
+                 (keyup.enter)="onFiltersChange()"
+                 placeholder="Pending, Production Complete...">
+        </div>
+        <div class="col-md-1 d-flex gap-1">
+          <input type="text" class="form-control form-control-sm"
+                 [(ngModel)]="searchText"
+                 (keyup.enter)="onFiltersChange()"
+                 placeholder="Search">
+          <button class="btn btn-outline-secondary btn-sm"
+                  (click)="clearFilters()" title="Clear filters">
+            <i class="bi bi-x-circle"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SUMMARY STRIP (Phase L.0b) ===================== -->
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-2 small woi-summary-strip">
+    <span class="badge bg-light text-dark border">
+      <i class="bi bi-list-ul me-1"></i>
+      Count: <strong>{{ summary.count | number }}</strong>
+    </span>
+    <span class="badge bg-light text-dark border">
+      <i class="bi bi-box me-1"></i>
+      Total Qty: <strong>{{ summary.totalQty | number }}</strong>
+    </span>
+    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">
+      <i class="bi bi-check-circle me-1"></i>
+      Completed: <strong>{{ summary.totalCompletedQty | number }}</strong>
+    </span>
+    <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">
+      <i class="bi bi-x-circle me-1"></i>
+      Rejected: <strong>{{ summary.totalRejectedQty | number }}</strong>
+    </span>
+    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+      <i class="bi bi-currency-rupee me-1"></i>
+      Total Price: <strong>{{ summary.totalAmount | number:'1.0-0' }}</strong>
+    </span>
+    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+      <i class="bi bi-cash-stack me-1"></i>
+      Total Cost: <strong>{{ summary.totalCost | number:'1.0-0' }}</strong>
+    </span>
+    <span *ngFor="let s of summary.byStatus"
+          class="badge bg-light text-dark border">
+      <i class="bi bi-tag me-1"></i>
+      {{ s.status }}: <strong>{{ s.count }}</strong>
+    </span>
+  </div>
+
+  <!-- TABLE CARD -->
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0 table-responsive">
+
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="nowrap-cell">WO Code</th>
+            <th class="nowrap-cell">Job Order</th>
+            <th>Component</th>
+            <th>Product</th>
+            <th>Design</th>
+            <th class="nowrap-cell">Machine</th>
+            <th class="text-end nowrap-cell">Qty</th>
+            <th class="text-end nowrap-cell">Unit Price</th>
+            <th class="text-end nowrap-cell">Total Price</th>
+            <th class="text-end nowrap-cell">Cost / Unit</th>
+            <th class="text-end nowrap-cell">Total Cost</th>
+            <th>Status</th>
+            <th class="text-end nowrap-cell">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let item of items">
+            <td class="nowrap-cell">{{ item.workOrderCode || '—' }}</td>
+            <td class="nowrap-cell">{{ item.jobOrderCode || '—' }}</td>
+            <td>
+              <div class="fw-semibold">{{ item.componentName || '—' }}</div>
+              <small class="text-muted">{{ item.componentCode || '' }}</small>
+            </td>
+            <td>{{ item.productName || '—' }}</td>
+            <td>
+              {{ item.designCode ? (item.designCode + ' - ') : '' }}
+              {{ item.designName || '—' }}
+            </td>
+            <td class="nowrap-cell">{{ item.machineName || '—' }}</td>
+            <td class="text-end nowrap-cell">{{ item.quantity || 0 }}</td>
+            <td class="text-end nowrap-cell">{{ (item.unitPrice ?? 0) | number:'1.0-0' }}</td>
+            <td class="text-end nowrap-cell">{{ (item.totalPrice ?? 0) | number:'1.0-0' }}</td>
+            <td class="text-end nowrap-cell">{{ (item.costPerUnit ?? 0) | number:'1.0-0' }}</td>
+            <td class="text-end nowrap-cell">{{ (item.totalCost ?? 0) | number:'1.0-0' }}</td>
+
+            <td>
+              <span *ngIf="item.deleted" class="badge bg-danger-subtle text-danger-emphasis border border-danger">
+                <i class="bi bi-trash3-fill me-1"></i> Deleted
+              </span>
+              <span *ngIf="!item.deleted" class="badge" [ngClass]="statusPill(item).cssClass">
+                <i class="bi me-1" [ngClass]="statusPill(item).icon"></i>
+                {{ statusPill(item).label }}
+              </span>
+            </td>
+
+            <td class="text-end text-nowrap">
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary"
+                        type="button"
+                        title="View"
+                        (click)="openDetail(item.id)">
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button class="btn btn-outline-primary"
+                        type="button"
+                        title="Edit Machine / Status"
+                        (click)="openEdit(item.id)"
+                        [disabled]="!!item.deleted || item.status === 'Production Complete' || item.status === 'QC Pending' || item.status === 'QC Approved'">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-outline-info"
+                        type="button"
+                        title="Tracking History"
+                        [routerLink]="['/job-tracking-history', item.id]"
+                        [class.disabled]="!!item.deleted"
+                        [attr.aria-disabled]="item.deleted ? true : null">
+                  <i class="bi bi-clock-history"></i>
+                </button>
+
+                <button class="btn btn-outline-danger"
+                        type="button"
+                        title="Delete"
+                        (click)="confirmDelete(item)"
+                        [disabled]="!!item.deleted || item.status !== 'Pending'">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="!loading && items.length === 0">
+            <td colspan="13" class="text-center py-4 text-muted">
+              No records found.
+            </td>
+          </tr>
+
+          <tr *ngIf="loading">
+            <td colspan="13" class="text-center py-4 text-muted">
+              <div class="spinner-border spinner-border-sm me-2"></div>
+              Loading...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="card-footer d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 py-2">
+      <div class="small text-muted">
+        Showing
+        <strong>{{ totalItems === 0 ? 0 : ((page - 1) * pageSize) + 1 }}</strong>
+        -
+        <strong>{{ endCount }}</strong>
+        of
+        <strong>{{ totalItems }}</strong>
+      </div>
+
+      <nav *ngIf="pages.length > 1">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" [class.disabled]="page === 1">
+            <button class="page-link" type="button" (click)="changePage(page - 1)">Prev</button>
+          </li>
+
+          <li class="page-item"
+              *ngFor="let p of pages"
+              [class.active]="p === page">
+            <button class="page-link" type="button" (click)="changePage(p)">
+              {{ p }}
+            </button>
+          </li>
+
+          <li class="page-item" [class.disabled]="page === pages.length">
+            <button class="page-link" type="button" (click)="changePage(page + 1)">Next</button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <!-- FORM MODAL -->
+  <div class="modal fade" #formModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content shadow-sm border-0">
+
+        <div class="modal-header modal-header-custom">
+          <h5 class="modal-title">
+            <i class="bi bi-diagram-3 me-2"></i>
+            {{ modalMode === 'create' ? 'Generate Work Order Item' : 'Edit Work Order Item' }}
+          </h5>
+          <button type="button"
+                  class="btn-close btn-close-white"
+                  (click)="closeForm()"
+                  aria-label="Close">
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+
+            <!-- WORK ORDER -->
+            <div class="col-md-6">
+              <label class="form-label">
+                Work Order <span class="text-danger">*</span>
+              </label>
+              <select class="form-select"
+                      [(ngModel)]="formModel.workOrderId"
+                      name="workOrderId"
+                      (change)="onWorkOrderChange()"
+                      required>
+                <option [ngValue]="null">-- Select Work Order --</option>
+                <option *ngFor="let item of workOrders" [ngValue]="item.id">
+                  {{ item.code || item.name }}
+                </option>
+              </select>
+              
+              <div class="alert alert-info mt-2 mb-0 py-2">
+                Work Order Items are auto-generated when Work Order is posted.
+              </div>
+
+              <small class="text-muted d-block mt-2">
+                Selecting Work Order auto-loads Job Order, Design, Product, Branch, Quantity, and Components.
+              </small>
+            </div>
+
+            <!-- COMPONENT -->
+            <div class="col-md-6">
+              <label class="form-label">
+                Component <span class="text-danger">*</span>
+              </label>
+              <select class="form-select"
+                      [(ngModel)]="formModel.compId"
+                      name="compId"
+                      required>
+                <option [ngValue]="null">-- Select Component --</option>
+                <option *ngFor="let item of componentOptions" [ngValue]="item.id">
+                  {{ item.name }}
+                </option>
+              </select>
+              <small class="text-muted d-block mt-2">
+                Component list is loaded from the selected Work Order design.
+              </small>
+            </div>
+
+            <!-- AUTO JOB ORDER -->
+            <div class="col-md-6">
+              <label class="form-label">Job Order</label>
+              <input type="text"
+                     class="form-control bg-light"
+                     [value]="getJobOrderName(formModel.jobOrderId)"
+                     readonly>
+            </div>
+
+            <!-- AUTO DESIGN -->
+            <div class="col-md-6">
+              <label class="form-label">Design</label>
+              <input type="text"
+                     class="form-control bg-light"
+                     [value]="getDesignName(formModel.designId)"
+                     readonly>
+            </div>
+
+            <!-- AUTO PRODUCT -->
+            <div class="col-md-6">
+              <label class="form-label">Product</label>
+              <input type="text"
+                     class="form-control bg-light"
+                    [value]="getSelectedProductName()"
+                     readonly>
+            </div>
+
+            <!-- AUTO BRANCH -->
+            <div class="col-md-6">
+              <label class="form-label">Branch</label>
+              <input type="text"
+                     class="form-control bg-light"
+                     [value]="getBranchName(formModel.branchId)"
+                     readonly>
+            </div>
+
+            <!-- MACHINE -->
+            <div class="col-md-6">
+              <label class="form-label">Machine</label>
+              <select class="form-select"
+                      [(ngModel)]="formModel.machineId"
+                      name="machineId">
+                <option [ngValue]="null">-- Select Machine --</option>
+                <option *ngFor="let m of machines" [ngValue]="m.id">
+                  {{ m.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- STATUS -->
+            <div class="col-md-3">
+              <label class="form-label">Status</label>
+              <select class="form-select"
+                      [(ngModel)]="formModel.status"
+                      name="status">
+                <option value="Pending">Pending</option>
+                <option value="Draft">Draft</option>
+                <option value="In Production">In Production</option>
+                <option value="Production Complete">Production Complete</option>
+                <option value="QC Pending">QC Pending</option>
+                <option value="QC Approved">QC Approved</option>
+              </select>
+            </div>
+
+            <!-- ACTIVE -->
+            <div class="col-md-3 d-flex align-items-end">
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input"
+                       type="checkbox"
+                       [(ngModel)]="formModel.active"
+                       name="active"
+                       id="activeToggle">
+                <label class="form-check-label" for="activeToggle">
+                  Active
+                </label>
+              </div>
+            </div>
+
+            <!-- QUANTITY -->
+            <div class="col-md-3">
+              <label class="form-label">
+                Quantity <span class="text-danger">*</span>
+              </label>
+              <input type="number"
+                     class="form-control"
+                     [(ngModel)]="formModel.quantity"
+                     name="quantity"
+                     min="1"
+                     [readonly]="isAutoGenerated"
+                     (input)="onQuantityChange()">
+            </div>
+
+            <!-- UNIT PRICE -->
+            <div class="col-md-3">
+              <label class="form-label">Unit Price</label>
+              <input type="text"
+                     class="form-control bg-light"
+                     [value]="(formModel.unitPrice ?? 0) | number:'1.2-2'"
+                     readonly>
+            </div>
+
+            <!-- TOTAL PRICE -->
+            <div class="col-md-3">
+              <label class="form-label">Total Price</label>
+              <input type="text"
+                     class="form-control bg-light"
+                     [value]="(formModel.totalPrice ?? 0) | number:'1.2-2'"
+                     readonly>
+            </div>
+
+            <!-- COST / UNIT -->
+            <div class="col-md-3">
+              <label class="form-label">Cost / Unit</label>
+              <input type="text"
+                     class="form-control bg-light"
+                     [value]="(formModel.costPerUnit ?? 0) | number:'1.2-2'"
+                     readonly>
+            </div>
+
+            <!-- TOTAL COST -->
+            <div class="col-md-3">
+              <label class="form-label">Total Cost</label>
+              <input type="text"
+                     class="form-control bg-light"
+                     [value]="(formModel.totalCost ?? 0) | number:'1.2-2'"
+                     readonly>
+            </div>
+
+            <!-- REMARKS -->
+            <div class="col-12">
+              <label class="form-label">Remarks</label>
+              <textarea class="form-control"
+                        [(ngModel)]="formModel.remarks"
+                        name="remarks"
+                        rows="3"
+                        placeholder="Enter remarks..."></textarea>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button"
+                  class="btn btn-light border"
+                  (click)="closeForm()">
+            Cancel
+          </button>
+
+          <button type="button"
+                  class="btn btn-primary"
+                  [disabled]="!formModel.workOrderId || !formModel.compId || !formModel.quantity || formModel.quantity <= 0"
+                  (click)="save()">
+            <i class="bi bi-check2-circle me-1"></i>
+            Save
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL MODAL -->
+  <div class="modal fade" #detailModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content shadow-sm border-0">
+
+        <div class="modal-header modal-header-custom">
+          <h5 class="modal-title">
+            <i class="bi bi-eye me-2"></i>
+            Work Order Item Details
+          </h5>
+          <button type="button"
+                  class="btn-close btn-close-white"
+                  (click)="closeDetail()"
+                  aria-label="Close">
+          </button>
+        </div>
+
+        <div class="modal-body" *ngIf="selectedDetail">
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Work Order</label>
+              <div class="fw-semibold">{{ selectedDetail.workOrderCode || '—' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Job Order</label>
+              <div class="fw-semibold">{{ selectedDetail.jobOrderCode || '—' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Component</label>
+              <div class="fw-semibold">{{ selectedDetail.componentName || '—' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Product</label>
+              <div class="fw-semibold">{{ selectedDetail.productName || '—' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Design</label>
+              <div class="fw-semibold">
+                {{ selectedDetail.designCode ? (selectedDetail.designCode + ' - ') : '' }}
+                {{ selectedDetail.designName || '—' }}
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Branch</label>
+              <div class="fw-semibold">{{ selectedDetail.branchName || '—' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Machine</label>
+              <div class="fw-semibold">{{ selectedDetail.machineName || '—' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Quantity</label>
+              <div class="fw-semibold">{{ selectedDetail.quantity || 0 }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Unit Price</label>
+              <div class="fw-semibold">{{ (selectedDetail.unitPrice ?? 0) | number:'1.0-0' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Total Price</label>
+              <div class="fw-semibold">{{ (selectedDetail.totalPrice ?? 0) |  number:'1.0-0' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Cost Per Unit</label>
+              <div class="fw-semibold">{{ (selectedDetail.costPerUnit ?? 0) |  number:'1.0-0' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Total Cost</label>
+              <div class="fw-semibold">{{ (selectedDetail.totalCost ?? 0) |  number:'1.0-0' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Thread Cost</label>
+              <div class="fw-semibold">{{ (selectedDetail.threadCost ?? 0) | number:'1.2-2' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Machine Cost</label>
+              <div class="fw-semibold">{{ (selectedDetail.machineCost ?? 0) | number:'1.2-2' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Labor Cost</label>
+              <div class="fw-semibold">{{ (selectedDetail.laborCost ?? 0) | number:'1.2-2' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Electricity Cost</label>
+              <div class="fw-semibold">{{ (selectedDetail.electricityCost ?? 0) | number:'1.2-2' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Other Cost</label>
+              <div class="fw-semibold">{{ (selectedDetail.otherCost ?? 0) | number:'1.2-2' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Status</label>
+              <div>
+                <span class="badge"
+                      [ngClass]="{
+                      'bg-secondary': (selectedDetail.status === 'Draft' || selectedDetail.status === 'Pending') && !selectedDetail.deleted,
+                      'bg-primary': selectedDetail.status === 'In Production' && !selectedDetail.deleted,
+                      'bg-success': selectedDetail.status === 'Production Complete' && !selectedDetail.deleted,
+                      'bg-warning text-dark': selectedDetail.status === 'QC Pending' && !selectedDetail.deleted,
+                      'bg-info text-dark': selectedDetail.status === 'QC Approved' && !selectedDetail.deleted,
+                      'bg-danger': selectedDetail.deleted
+                    }">
+                  {{ selectedDetail.deleted ? 'Deleted' : (selectedDetail.status || 'Pending') }}
+                </span>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Active</label>
+              <div class="fw-semibold">{{ selectedDetail.active ? 'Yes' : 'No' }}</div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label text-muted mb-1">Remarks</label>
+              <div class="fw-semibold">{{ selectedDetail.remarks || '—' }}</div>
+            </div>
+          </div>
+
+          <hr>
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Created By Employee ID</label>
+              <div class="fw-semibold">{{ selectedDetail.createdByEmployeeId || '—' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Created Date</label>
+              <div class="fw-semibold">
+                {{ selectedDetail.createdDateText || ConvertJsonDate(selectedDetail.createdDate) }}
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted mb-1">Updated By Employee ID</label>
+              <div class="fw-semibold">{{ selectedDetail.updatedByEmployeeId || '—' }}</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-muted mb-1">Updated Date</label>
+              <div class="fw-semibold">
+                {{ selectedDetail.updatedDateText || ConvertJsonDate(selectedDetail.updatedDate) }}
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-muted mb-1">Record Timestamp</label>
+              <div class="fw-semibold">{{ ConvertJsonDate(selectedDetail.recordTimeStamp) }}</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" (click)="closeDetail()">
+            Close
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE MODAL -->
+  <div class="modal fade" #deleteModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content shadow-sm border-0">
+
+        <div class="modal-header bg-danger text-white">
+          <h6 class="modal-title mb-0">Delete Work Order Item</h6>
+          <button type="button"
+                  class="btn-close btn-close-white"
+                  (click)="closeDelete()"
+                  aria-label="Close">
+          </button>
+        </div>
+
+        <div class="modal-body text-center">
+          <p class="mb-2">Are you sure you want to delete this record?</p>
+          <div class="fw-semibold">
+            #{{ itemToDelete?.id }} - {{ itemToDelete?.workOrderCode || '—' }}
+          </div>
+        </div>
+
+        <div class="modal-footer justify-content-between">
+          <button type="button"
+                  class="btn btn-light border btn-sm"
+                  (click)="closeDelete()">
+            Cancel
+          </button>
+
+          <button type="button"
+                  class="btn btn-danger btn-sm"
+                  (click)="confirmDeleteFinal()">
+            Delete
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

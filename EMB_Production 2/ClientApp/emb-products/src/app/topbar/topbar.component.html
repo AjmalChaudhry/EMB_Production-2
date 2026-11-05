@@ -1,0 +1,67 @@
+<nav class="topbar shadow-sm">
+
+  <!-- LEFT: Page Title -->
+  <div class="brand-title">
+    {{ pageTitle }}
+  </div>
+
+  <!-- CENTER: Search Bar -->
+  <div class="search-box">
+    <i class="bi bi-search"></i>
+    <input type="text" placeholder="Search..." />
+  </div>
+
+  <!-- RIGHT -->
+  <div class="user-section">
+
+    <div class="notification-box dropdown">
+      <i class="bi bi-bell-fill dropdown-toggle notif-icon"
+         data-bs-toggle="dropdown"></i>
+
+      <ul class="dropdown-menu dropdown-menu-end mt-2">
+        <li>
+          <span class="dropdown-item-text text-muted">
+            No new notifications
+          </span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="user-name">{{ userName }}</div>
+
+    <div class="dropdown">
+      <button class="btn p-0 border-0 bg-transparent"
+              data-bs-toggle="dropdown"
+              title="Account">
+        <img [src]="userImage" class="user-avatar">
+      </button>
+
+      <ul class="dropdown-menu dropdown-menu-end mt-2 shadow">
+        <li>
+          <span class="dropdown-item-text small">
+            <div class="fw-semibold">{{ userName }}</div>
+            <div class="text-muted">Signed in</div>
+          </span>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <button class="dropdown-item" type="button" (click)="goProfile()">
+            <i class="bi bi-person-circle me-2"></i> Profile
+          </button>
+        </li>
+        <li>
+          <button class="dropdown-item" type="button" (click)="goSettings()">
+            <i class="bi bi-sliders2 me-2"></i> Settings
+          </button>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <button class="dropdown-item text-danger" type="button" (click)="logout()">
+            <i class="bi bi-box-arrow-right me-2"></i> Logout
+          </button>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</nav>

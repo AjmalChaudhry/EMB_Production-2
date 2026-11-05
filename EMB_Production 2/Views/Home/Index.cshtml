@@ -1,0 +1,33 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Home";
+}
+
+<div class="container py-5">
+    <div class="card shadow-sm mx-auto text-center" style="max-width: 600px;">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0">Welcome, @User.Identity.Name!</h3>
+        </div>
+        <div class="card-body">
+            <p class="lead mb-4">You are now logged in.</p>
+            <button id="btnLogout" class="btn btn-danger">
+                <i class="bi bi-box-arrow-right"></i> Log out
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function() {
+            // Fade the card in on load
+            $('.card').hide().fadeIn(600);
+
+            // Smooth logout redirect
+            $('#btnLogout').on('click', function() {
+                // Optionally you could show a spinner/disable button here
+                window.location = '@Url.Action("Logout","Home")';
+            });
+        });
+    </script>
+}

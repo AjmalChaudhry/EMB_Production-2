@@ -1,0 +1,34 @@
+<!--
+  Global confirm dialog. Replaces window.confirm() so the prompt
+  doesn't anchor to the browser viewport's top (which collides with
+  our app topbar). Centered below the topbar.
+
+  Mounted in app.component.html — only one instance lives at a time.
+-->
+<ng-container *ngIf="current as c">
+  <!-- Backdrop. Clicking outside is treated as cancel. -->
+  <div class="confirm-backdrop" (click)="cancel()"></div>
+
+  <div class="confirm-dialog shadow-lg" role="dialog" aria-modal="true">
+    <div class="confirm-header">
+      <i class="bi me-2 confirm-header-icon" [ngClass]="iconFor(c.kind)"></i>
+      <strong class="flex-grow-1">{{ c.title }}</strong>
+      <button type="button" class="btn-close" (click)="cancel()" aria-label="Close"></button>
+    </div>
+    <div class="confirm-body">
+      {{ c.message }}
+    </div>
+    <div class="confirm-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="cancel()">
+        {{ c.cancelText }}
+      </button>
+      <button type="button"
+              class="btn"
+              [ngClass]="confirmBtnClass(c.kind)"
+              (click)="ok()"
+              autofocus>
+        {{ c.confirmText }}
+      </button>
+    </div>
+  </div>
+</ng-container>

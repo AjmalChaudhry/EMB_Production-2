@@ -1,0 +1,821 @@
+<div class="row align-items-end mb-3">
+
+  <!-- Title -->
+  <div class="col-md-3 pe-0">
+    <h4 class="d-flex align-items-center mb-1">
+      <i class="bi bi-cpu me-2 text-primary"></i>
+      Machines
+    </h4>
+  </div>
+
+  <!-- Right Toolbar -->
+  <div class="col-md-9 d-flex justify-content-end gap-2 flex-wrap">
+
+    <!-- Add -->
+    <button class="btn btn-primary btn-sm px-2 d-flex align-items-center"
+            (click)="openCreate()">
+      <i class="bi bi-plus-lg"></i>
+      <span class="ms-1">Add</span>
+    </button>
+
+    <!-- Refresh -->
+    <button class="btn btn-outline-secondary btn-sm px-2"
+            (click)="refresh()">
+      <i class="bi bi-arrow-clockwise"></i>
+    </button>
+
+    <!-- Search -->
+    <div class="d-flex flex-column toolbar-field">
+      <span class="toolbar-label">Search</span>
+      <div class="input-group input-group-sm" style="width:160px;">
+        <input type="text"
+               class="form-control"
+               placeholder="Search..."
+               [(ngModel)]="searchText" />
+        <button class="btn btn-outline-secondary" (click)="loadMachines()">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="d-flex flex-column toolbar-field">
+      <span class="toolbar-label">Status</span>
+      <select class="form-select form-select-sm"
+              style="width:110px;"
+              [(ngModel)]="activeFilter"
+              (change)="loadMachines()">
+        <option value="">All</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+    </div>
+
+    <!-- Brand -->
+    <div class="d-flex flex-column toolbar-field">
+      <span class="toolbar-label">Brand</span>
+      <select class="form-select form-select-sm"
+              style="width:120px;"
+              [(ngModel)]="brandFilter"
+              (change)="loadMachines()">
+        <option [ngValue]="null">All</option>
+        <option *ngFor="let b of brandList" [ngValue]="b.id">
+          {{ b.name }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Service -->
+    <div class="d-flex flex-column toolbar-field">
+      <span class="toolbar-label">Service</span>
+      <select class="form-select form-select-sm"
+              style="width:130px;"
+              [(ngModel)]="serviceFilter"
+              (change)="loadMachines()">
+        <option [ngValue]="null">All</option>
+        <option *ngFor="let s of serviceList" [ngValue]="s.id">
+          {{ s.name }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Branch -->
+    <div class="d-flex flex-column toolbar-field">
+      <span class="toolbar-label">Branch</span>
+      <select class="form-select form-select-sm"
+              style="width:130px;"
+              [(ngModel)]="branchFilter"
+              (change)="loadMachines()">
+        <option [ngValue]="null">All</option>
+        <option *ngFor="let br of branchList" [ngValue]="br.id">
+          {{ br.name }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Export -->
+    <div class="d-flex align-items-end gap-1">
+      <button class="btn btn-success btn-sm px-2" (click)="exportExcel()">
+        <i class="bi bi-file-earmark-excel"></i>
+      </button>
+
+      <button class="btn btn-danger btn-sm px-2" (click)="exportPDF()">
+        <i class="bi bi-file-earmark-pdf"></i>
+      </button>
+
+      <button class="btn btn-secondary btn-sm px-2" (click)="printTable()">
+        <i class="bi bi-printer"></i>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Phase R.4 - Summary Strip -->
+<div class="mach-summary-strip d-flex flex-wrap gap-2 align-items-center mb-3">
+  <span class="badge bg-primary-subtle text-primary">
+    <i class="bi bi-list-ul me-1"></i> Total <strong>{{ summary.count }}</strong>
+  </span>
+  <span class="badge bg-success-subtle text-success">
+    <i class="bi bi-check2-circle me-1"></i> Active <strong>{{ summary.activeCount }}</strong>
+  </span>
+  <span class="badge bg-secondary-subtle text-secondary">
+    <i class="bi bi-slash-circle me-1"></i> Inactive <strong>{{ summary.inactiveCount }}</strong>
+  </span>
+  <span class="badge bg-info-subtle text-info">
+    <i class="bi bi-bookmark me-1"></i> Brands <strong>{{ summary.distinctBrands }}</strong>
+  </span>
+  <span class="badge bg-info-subtle text-info">
+    <i class="bi bi-tools me-1"></i> Services <strong>{{ summary.distinctServices }}</strong>
+  </span>
+  <span class="badge bg-info-subtle text-info">
+    <i class="bi bi-building me-1"></i> Branches <strong>{{ summary.distinctBranches }}</strong>
+  </span>
+  <span class="badge bg-dark-subtle text-dark">
+    Heads <strong>{{ summary.totalHeads }}</strong>
+  </span>
+  <span class="badge bg-dark-subtle text-dark">
+    Needles <strong>{{ summary.totalNeedles }}</strong>
+  </span>
+  <span class="badge bg-warning-subtle text-warning" *ngIf="summary.serviceDueSoon > 0">
+    <i class="bi bi-clock-history me-1"></i> Due Soon <strong>{{ summary.serviceDueSoon }}</strong>
+  </span>
+  <span class="badge bg-danger-subtle text-danger" *ngIf="summary.serviceOverdue > 0">
+    <i class="bi bi-exclamation-triangle me-1"></i> Overdue <strong>{{ summary.serviceOverdue }}</strong>
+  </span>
+  <span class="badge bg-light text-dark border" *ngFor="let b of summary.byBrand | slice:0:3">
+    {{ b.brand }}: <strong>{{ b.count }}</strong>
+  </span>
+</div>
+
+
+<!-- Sprint-3: bulk action strip. -->
+<div *ngIf="selectedIds.size > 0"
+     class="alert alert-info d-flex flex-wrap align-items-center gap-2 py-2 mb-2"
+     role="status">
+  <span class="me-2"><strong>{{ selectedIds.size }}</strong> selected</span>
+  <button class="btn btn-sm btn-success" (click)="bulkActivate()" [disabled]="bulkBusy">
+    <i class="bi bi-check-circle me-1"></i>Activate
+  </button>
+  <button class="btn btn-sm btn-secondary" (click)="bulkDeactivate()" [disabled]="bulkBusy">
+    <i class="bi bi-pause-circle me-1"></i>Deactivate
+  </button>
+  <button class="btn btn-sm btn-outline-danger" (click)="bulkDeleteRows()" [disabled]="bulkBusy">
+    <i class="bi bi-trash me-1"></i>Delete
+  </button>
+  <button class="btn btn-sm btn-light ms-auto" (click)="clearSelection()" [disabled]="bulkBusy">
+    Clear
+  </button>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-bordered table-hover table-sm align-middle">
+    <thead class="table-light">
+      <tr>
+        <th class="text-center" style="width:30px;">
+          <input type="checkbox" class="form-check-input"
+                 [checked]="allVisibleSelected()"
+                 (change)="toggleSelectAll()" />
+        </th>
+        <th>Code</th>
+        <th>Brand</th>
+        <th>Service</th>
+        <th>Heads</th>
+        <th>Needles</th>
+        <th>Serial</th>
+        <th>Branch</th>
+        <th>Status</th>
+        <th style="width:120px;">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      <tr *ngFor="let m of rows">
+        <td class="text-center">
+          <input type="checkbox" class="form-check-input"
+                 [checked]="isSelected(m.Id)"
+                 (change)="toggleSelect(m.Id)" />
+        </td>
+        <td>{{ m.Code }}</td>
+        <td>{{ m.BrandName }}</td>
+        <td>{{ m.ServiceName }}</td>
+        <td>{{ m.HeadsNum }}</td>
+        <td>{{ m.NeedlesNum }}</td>
+        <td>{{ m.SerialNumber }}</td>
+        <td>{{ m.BranchName }}</td>
+
+        <td>
+          <span class="badge" [ngClass]="m.Active ? 'bg-success' : 'bg-danger'">
+            {{ m.Active ? 'Active' : 'Inactive' }}
+          </span>
+        </td>
+
+        <td>
+          <button class="btn btn-info btn-sm me-1" (click)="openProfile(m.Id)" title="360 Profile">
+            <i class="bi bi-eye"></i>
+          </button>
+
+          <button class="btn btn-warning btn-sm me-1" (click)="openEdit(m.Id)">
+            <i class="bi bi-pencil"></i>
+          </button>
+
+          <button class="btn btn-danger btn-sm" (click)="openDelete(m.Id)">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+
+      <tr *ngIf="rows.length === 0">
+        <td colspan="9" class="text-center text-muted py-3">
+          No records found
+        </td>
+      </tr>
+
+    </tbody>
+
+  </table>
+</div>
+<nav *ngIf="totalItems > pageSize" class="mt-2">
+  <ul class="pagination justify-content-center pagination-sm">
+
+    <li class="page-item" [class.disabled]="page === 1">
+      <button class="page-link" (click)="onPageChange(page - 1)">Previous</button>
+    </li>
+
+    <li class="page-item" *ngFor="let p of pages" [class.active]="p === page">
+      <button class="page-link" (click)="onPageChange(p)">{{ p }}</button>
+    </li>
+
+    <li class="page-item" [class.disabled]="page === totalPages">
+      <button class="page-link" (click)="onPageChange(page + 1)">Next</button>
+    </li>
+
+  </ul>
+</nav>
+<!-- ===================================================== -->
+<!-- CREATE / EDIT MODAL -->
+<!-- ===================================================== -->
+<div class="modal fade" #formModal tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header bg-modal">
+        <h5 class="modal-title">
+          {{ modalMode === 'create' ? 'Add New Machine' : 'Edit Machine' }}
+        </h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <form>
+
+          <!-- ===== ROW 1 ===== -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">
+                Code
+                <span class="badge bg-light text-muted ms-1" *ngIf="modalMode === 'create'">auto</span>
+              </label>
+              <input type="text" class="form-control bg-light"
+                     [(ngModel)]="formModel.Code"
+                     name="code"
+                     readonly
+                     autocomplete="off"
+                     placeholder="Auto-generated">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Brand</label>
+              <select class="form-select"
+                      [(ngModel)]="formModel.BrandId"
+                      name="brandId">
+                <option value="">-- Select --</option>
+                <option *ngFor="let b of brandList" [value]="b.id">
+                  {{ b.name }}
+                </option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Service</label>
+              <select class="form-select"
+                      [(ngModel)]="formModel.ServiceId"
+                      name="serviceId">
+                <option value="">-- Select --</option>
+                <option *ngFor="let s of serviceList" [value]="s.id">
+                  {{ s.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+
+          <!-- ===== ROW 2 ===== -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Head to Head</label>
+              <input type="text" class="form-control"
+                     [(ngModel)]="formModel.HeadtoHead"
+                     name="headToHead">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Frame Height</label>
+              <input type="text" class="form-control"
+                     [(ngModel)]="formModel.FrameHeight"
+                     name="frameHeight">
+            </div>
+
+            <div class="col-md-2">
+              <label class="form-label">Heads</label>
+              <input type="number" class="form-control"
+                     [(ngModel)]="formModel.HeadsNum"
+                     name="headsNum">
+            </div>
+
+            <div class="col-md-2">
+              <label class="form-label">Needles</label>
+              <input type="number" class="form-control"
+                     [(ngModel)]="formModel.NeedlesNum"
+                     name="needlesNum">
+            </div>
+          </div>
+
+
+          <!-- ===== ROW 3 ===== -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Serial Number</label>
+              <input type="text" class="form-control"
+                     [(ngModel)]="formModel.SerialNumber"
+                     name="serial">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Calling Number</label>
+              <input type="text" class="form-control"
+                     [(ngModel)]="formModel.CallingNumber"
+                     name="calling">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Branch</label>
+              <select class="form-select"
+                      [(ngModel)]="formModel.BranchId"
+                      name="branchId">
+                <option value="">-- Select --</option>
+                <option *ngFor="let b of branchList" [value]="b.id">
+                  {{ b.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+
+          <!-- ===== ROW 4 ===== -->
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <label class="form-label">Purchase Date</label>
+              <input type="date" class="form-control"
+                     [(ngModel)]="formModel.PurchaseDate"
+                     name="purchaseDate">
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Warranty (Months)</label>
+              <input type="number" class="form-control"
+                     [(ngModel)]="formModel.Warranty"
+                     name="warranty">
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Service End</label>
+              <input type="date" class="form-control"
+                     [(ngModel)]="formModel.ServiceEnd"
+                     name="serviceEnd">
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Next Service</label>
+              <input type="date" class="form-control"
+                     [(ngModel)]="formModel.ServiceNext"
+                     name="serviceNext">
+            </div>
+          </div>
+
+
+          <!-- ===== ROW 5 ===== -->
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <label class="form-label">Status</label>
+              <select class="form-select"
+                      [(ngModel)]="formModel.Active"
+                      name="active">
+                <option [value]="true">Active</option>
+                <option [value]="false">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+        <button *ngIf="modalMode === 'create'"
+                class="btn btn-primary"
+                (click)="saveCreate()">
+          Save Machine
+        </button>
+
+        <button *ngIf="modalMode === 'edit'"
+                class="btn btn-warning"
+                (click)="saveEdit()">
+          Update Machine
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- ===================================================== -->
+<!-- DETAIL MODAL -->
+<!-- ===================================================== -->
+<div class="modal fade" #detailModal tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header bg-modal">
+        <h5 class="modal-title">Machine Details</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body" *ngIf="detailModel">
+
+        <div class="card mb-3">
+          <div class="card-body">
+
+            <!-- ROW 1 -->
+            <div class="row mb-2">
+              <div class="col-md-2"><strong>ID:</strong><br>{{ detailModel.Id }}</div>
+              <div class="col-md-3"><strong>Code:</strong><br>{{ detailModel.Code }}</div>
+              <div class="col-md-3"><strong>Brand:</strong><br>{{ detailModel.BrandName }}</div>
+              <div class="col-md-4"><strong>Service:</strong><br>{{ detailModel.ServiceName }}</div>
+            </div>
+
+            <hr>
+
+            <!-- ROW 2 -->
+            <div class="row mb-2">
+              <div class="col-md-3"><strong>Head to Head:</strong><br>{{ detailModel.HeadtoHead }}</div>
+              <div class="col-md-3"><strong>Frame Height:</strong><br>{{ detailModel.FrameHeight }}</div>
+              <div class="col-md-3"><strong>Heads:</strong><br>{{ detailModel.HeadsNum }}</div>
+              <div class="col-md-3"><strong>Needles:</strong><br>{{ detailModel.NeedlesNum }}</div>
+            </div>
+
+            <hr>
+
+            <!-- ROW 3 -->
+            <div class="row mb-2">
+              <div class="col-md-4"><strong>Serial Number:</strong><br>{{ detailModel.SerialNumber }}</div>
+              <div class="col-md-4"><strong>Calling Number:</strong><br>{{ detailModel.CallingNumber }}</div>
+              <div class="col-md-4"><strong>Branch:</strong><br>{{ detailModel.BranchName }}</div>
+            </div>
+
+            <hr>
+
+            <!-- ROW 4 -->
+            <div class="row mb-2">
+              <div class="col-md-3"><strong>Purchase Date:</strong><br>{{ detailModel.PurchaseDate | date:'dd/MM/yyyy' }}</div>
+              <div class="col-md-3"><strong>Warranty:</strong><br>{{ detailModel.Warranty }}</div>
+              <div class="col-md-3"><strong>Service End:</strong><br>{{ detailModel.ServiceEnd | date:'dd/MM/yyyy' }}</div>
+              <div class="col-md-3"><strong>Service Next:</strong><br>{{ detailModel.ServiceNext | date:'dd/MM/yyyy' }}</div>
+            </div>
+
+            <hr>
+
+            <!-- ROW 5 -->
+            <div class="row mb-2">
+              <div class="col-md-3">
+                <strong>Status:</strong><br>
+                <span class="text-success" *ngIf="detailModel.Active">Active</span>
+                <span class="text-danger" *ngIf="!detailModel.Active">Inactive</span>
+              </div>
+
+              <div class="col-md-3">
+                <strong>Deleted:</strong><br>
+                <span class="text-danger" *ngIf="detailModel.Deleted">Yes</span>
+                <span class="text-success" *ngIf="!detailModel.Deleted">No</span>
+              </div>
+
+              <div class="col-md-6">
+                <strong>RecordTimeStamp:</strong><br>
+                {{ detailModel.RecordTimeStamp }}
+              </div>
+            </div>
+
+            <hr>
+
+            <!-- ROW 6 -->
+            <div class="row mb-2">
+              <div class="col-md-4"><strong>Created By:</strong><br>{{ detailModel.CreatedBy }}</div>
+              <div class="col-md-8"><strong>Created Date:</strong><br>{{ detailModel.CreatedDate }}</div>
+            </div>
+
+            <hr>
+
+            <div class="row mb-2">
+              <div class="col-md-4"><strong>Updated By:</strong><br>{{ detailModel.UpdatedBy }}</div>
+              <div class="col-md-8"><strong>Updated Date:</strong><br>{{ detailModel.UpdatedDate }}</div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- ===================================================== -->
+<!-- DELETE CONFIRMATION MODAL -->
+<!-- ===================================================== -->
+<div class="modal fade" #deleteModal tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header bg-danger text-white py-2">
+        <h6 class="modal-title">Confirm Delete</h6>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body text-center">
+        <p class="mb-1">Are you sure you want to delete?</p>
+        <strong>Machine ID: {{ deleteId }}</strong>
+      </div>
+
+      <div class="modal-footer d-flex justify-content-between">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button class="btn btn-danger btn-sm"
+                (click)="confirmDelete()">
+          Delete
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     Phase R.4 - 360 PROFILE DRAWER
+     ============================================================ -->
+<div class="modal mach-profile-modal" *ngIf="showProfile"
+     [class.show]="showProfile" [class.d-block]="showProfile"
+     (click)="closeProfile()" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-cpu me-2"></i>
+          Machine 360 Profile
+          <span *ngIf="profile?.header?.id" class="badge bg-light text-dark ms-2">#{{ profile.header.id }}</span>
+          <span *ngIf="profile?.header?.code" class="badge bg-primary ms-2">{{ profile.header.code }}</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeProfile()"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div *ngIf="profileLoading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <div class="mt-2 text-muted small">Loading profile…</div>
+        </div>
+
+        <ng-container *ngIf="!profileLoading && profile as p">
+
+          <!-- HEADER CARD -->
+          <div class="card mach-section-card mb-3">
+            <div class="card-header">Header</div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <div class="mach-label">Code</div>
+                  <div class="mach-value">{{ p.header?.code || '-' }}</div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mach-label">Brand</div>
+                  <div class="mach-value">{{ p.header?.brandName || '-' }}</div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mach-label">Service</div>
+                  <div class="mach-value">{{ p.header?.serviceName || '-' }}</div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mach-label">Branch</div>
+                  <div class="mach-value">{{ p.header?.branchName || '-' }}</div>
+                </div>
+
+                <div class="col-md-2">
+                  <div class="mach-label">Head to Head</div>
+                  <div class="mach-value">{{ p.header?.headtoHead || '-' }}</div>
+                </div>
+                <div class="col-md-2">
+                  <div class="mach-label">Frame Height</div>
+                  <div class="mach-value">{{ p.header?.frameHeight || '-' }}</div>
+                </div>
+                <div class="col-md-2">
+                  <div class="mach-label">Heads</div>
+                  <div class="mach-value">{{ p.header?.headsNum ?? '-' }}</div>
+                </div>
+                <div class="col-md-2">
+                  <div class="mach-label">Needles</div>
+                  <div class="mach-value">{{ p.header?.needlesNum ?? '-' }}</div>
+                </div>
+                <div class="col-md-2">
+                  <div class="mach-label">Serial #</div>
+                  <div class="mach-value">{{ p.header?.serialNumber || '-' }}</div>
+                </div>
+                <div class="col-md-2">
+                  <div class="mach-label">Calling #</div>
+                  <div class="mach-value">{{ p.header?.callingNumber || '-' }}</div>
+                </div>
+
+                <div class="col-md-3">
+                  <div class="mach-label">Status</div>
+                  <div class="mach-value">
+                    <span class="badge" [ngClass]="p.header?.active ? 'bg-success' : 'bg-secondary'">
+                      {{ p.header?.active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mach-label">Purchase</div>
+                  <div class="mach-value">{{ p.header?.purchaseDateText || '-' }}</div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mach-label">Service End</div>
+                  <div class="mach-value">{{ p.header?.serviceEndText || '-' }}</div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mach-label">Service Next</div>
+                  <div class="mach-value">
+                    {{ p.header?.serviceNextText || '-' }}
+                    <span *ngIf="p.kpis?.serviceStatus === 'OVERDUE'" class="badge bg-danger ms-1">Overdue</span>
+                    <span *ngIf="p.kpis?.serviceStatus === 'DUE_SOON'" class="badge bg-warning ms-1">Due Soon</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPI TILES -->
+          <div class="row g-3 mach-kpi-row mb-3">
+            <div class="col-md-2">
+              <div class="card kpi-tile kpi-tile-primary p-3">
+                <div class="kpi-label">Heads</div>
+                <div class="kpi-value">{{ p.kpis?.heads ?? 0 }}</div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="card kpi-tile kpi-tile-info p-3">
+                <div class="kpi-label">Needles</div>
+                <div class="kpi-value">{{ p.kpis?.needles ?? 0 }}</div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="card kpi-tile kpi-tile-warning p-3">
+                <div class="kpi-label">Parameters</div>
+                <div class="kpi-value">{{ p.kpis?.parameterCount ?? 0 }}</div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="card kpi-tile kpi-tile-success p-3">
+                <div class="kpi-label">Cost Profile</div>
+                <div class="kpi-value">{{ p.kpis?.hasCostProfile ? 'Yes' : 'No' }}</div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="card kpi-tile kpi-tile-info p-3">
+                <div class="kpi-label">Days to Service</div>
+                <div class="kpi-value">
+                  <span [ngClass]="(p.kpis?.daysToService ?? 0) < 0 ? 'text-danger' : ((p.kpis?.daysToService ?? 999) <= 30 ? 'text-warning' : '')">
+                    {{ p.kpis?.daysToService ?? '-' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="card kpi-tile kpi-tile-primary p-3">
+                <div class="kpi-label">Hourly Cost</div>
+                <div class="kpi-value">{{ p.cost?.totalHourly ? (p.cost.totalHourly | number:'1.2-2') : '-' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- COST PROFILE -->
+          <div class="card mach-section-card mb-3" *ngIf="p.cost">
+            <div class="card-header"><i class="bi bi-cash-coin me-1"></i> Active Cost Profile</div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-2">
+                  <div class="mach-label">Hourly Rate</div>
+                  <div class="mach-value">{{ p.cost.hourlyRate | number:'1.2-2' }}</div>
+                </div>
+                <div class="col-md-2">
+                  <div class="mach-label">Operator Rate</div>
+                  <div class="mach-value">{{ p.cost.operatorHourlyRate | number:'1.2-2' }}</div>
+                </div>
+                <div class="col-md-2">
+                  <div class="mach-label">Power (KW)</div>
+                  <div class="mach-value">{{ p.cost.powerKW | number:'1.2-2' }}</div>
+                </div>
+                <div class="col-md-2">
+                  <div class="mach-label">Elec / Unit</div>
+                  <div class="mach-value">{{ p.cost.electricityUnitRate | number:'1.2-2' }}</div>
+                </div>
+                <div class="col-md-2">
+                  <div class="mach-label">Elec / Hour</div>
+                  <div class="mach-value">{{ p.cost.electricHourly | number:'1.2-2' }}</div>
+                </div>
+                <div class="col-md-2">
+                  <div class="mach-label">Stitch / Min</div>
+                  <div class="mach-value">{{ p.cost.stitchPerMinute }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PARAMETERS -->
+          <div class="card mach-section-card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-sliders me-1"></i> Machine Parameters</span>
+              <span class="badge bg-secondary">{{ p.parameters?.length || 0 }}</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:70px;">ID</th>
+                    <th>Head to Head</th>
+                    <th>Frame Height</th>
+                    <th style="width:90px;">Status</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngIf="!p.parameters || p.parameters.length === 0">
+                    <td colspan="5" class="text-center text-muted py-3">No parameters set for this machine.</td>
+                  </tr>
+                  <tr *ngFor="let pr of p.parameters">
+                    <td>{{ pr.Id }}</td>
+                    <td>{{ pr.HeadToHead || '-' }}</td>
+                    <td>{{ pr.FrameHeight ?? '-' }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="pr.Active ? 'bg-success' : 'bg-secondary'">
+                        {{ pr.Active ? 'Active' : 'Inactive' }}
+                      </span>
+                    </td>
+                    <td>{{ pr.createdDateText || '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- AUDIT -->
+          <div class="card mach-section-card mb-3">
+            <div class="card-header"><i class="bi bi-clock-history me-1"></i> Audit</div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="mach-label">Created</div>
+                  <div class="mach-value">{{ p.header?.createdDateText || '-' }}</div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mach-label">Updated</div>
+                  <div class="mach-value">{{ p.header?.updatedDateText || '-' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </ng-container>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" (click)="closeProfile()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

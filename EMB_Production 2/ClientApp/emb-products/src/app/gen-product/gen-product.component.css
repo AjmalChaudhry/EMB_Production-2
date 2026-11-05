@@ -1,0 +1,189 @@
+/* =====================================================
+   ROOT VARIABLES
+===================================================== */
+:root {
+  --topbar-height: 60px;
+  --sidebar-width: 240px;
+  --dashboard-bg: #f5f6fa;
+  --card-bg: #ffffff;
+}
+
+/* =====================================================
+   DASHBOARD CONTENT
+===================================================== */
+.dashboard-content {
+  padding: 1rem;
+  background: var(--dashboard-bg);
+  min-height: calc(100vh - var(--topbar-height));
+  box-sizing: border-box;
+}
+
+/* =====================================================
+   DASHBOARD CARD
+===================================================== */
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--card-bg);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+/* =====================================================
+   CARD HEADER
+===================================================== */
+.dashboard-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  background: #f8f9fa;
+}
+
+  .dashboard-card-header h2 {
+    font-size: 1.25rem;
+    margin: 0;
+  }
+
+.toolbar-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+  .toolbar-buttons input {
+    width: 200px;
+  }
+
+/* =====================================================
+   CARD BODY (TABLE)
+===================================================== */
+.dashboard-card-body {
+  padding: 0;
+  overflow-x: auto;
+}
+
+.products-table-dashboard {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+}
+
+  .products-table-dashboard th,
+  .products-table-dashboard td {
+    padding: 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 0.9rem;
+  }
+
+  .products-table-dashboard th {
+    background: linear-gradient(to right, #1e3c72, #2a5298);
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  .products-table-dashboard tr:nth-child(even) td {
+    background: #fafafa;
+  }
+
+  .products-table-dashboard tr:hover td {
+    background: #eef3ff;
+  }
+
+/* =====================================================
+   CARD FOOTER (PAGINATION)
+===================================================== */
+.dashboard-card-footer {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #dee2e6;
+  background: #f8f9fa;
+  display: flex;
+  justify-content: center;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+@media (max-width: 992px) {
+  .dashboard-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .toolbar-buttons {
+    width: 100%;
+  }
+
+    .toolbar-buttons input {
+      flex: 1 1 auto;
+      min-width: 150px;
+    }
+
+  .products-table-dashboard {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .products-table-dashboard th,
+  .products-table-dashboard td {
+    padding: 0.4rem 0.3rem;
+    font-size: 0.75rem;
+  }
+
+  .toolbar-buttons button,
+  .toolbar-buttons input {
+    flex: 1 1 100%;
+  }
+}
+
+/* =====================================================
+   MODAL POSITIONING (FIXED TOPBAR + SIDEBAR)
+===================================================== */
+.modal-dialog {
+  margin-top: calc(var(--topbar-height) + 8px);
+}
+
+@media (min-width: 992px) {
+  .modal-dialog {
+    max-width: 900px;
+    margin-left: calc( var(--sidebar-width) + (100vw - var(--sidebar-width) - 900px) / 2 );
+    margin-right: auto;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .modal-dialog {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* =====================================================
+   MODAL SCROLL FIX (BOOTSTRAP SAFE)
+===================================================== */
+
+/* ❌ DO NOT make modal-content flex */
+/* ❌ DO NOT force max-height on modal-content */
+
+/* ✅ Scroll only the modal body */
+.modal-dialog-scrollable .modal-body {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+/* Default modal body padding preserved */
+.modal-body {
+  overflow-y: auto;
+}
+
+/* Footer always visible */
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  background: #ffffff;
+}

@@ -1,0 +1,133 @@
+/* Phase R.3 - filter bar + summary strip + profile drawer */
+.bom-filter-bar .form-label.small { font-weight: 600; color: #495057; font-size: 0.78rem; }
+.bom-filter-bar .form-select-sm { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.bom-summary-strip .badge { font-weight: 500; padding: 0.5rem 0.7rem; font-size: 0.78rem; }
+.bom-summary-strip .badge strong { font-weight: 700; }
+.bom-profile-modal { background: rgba(0,0,0,0.4); padding-top: 60px; overflow-y: auto; }
+.bom-profile-modal .modal-content { border-radius: 12px; overflow: hidden; }
+.bom-profile-modal .modal-body { background: #f4f6f9; }
+.bom-section-card { border: 1px solid #e9ecef; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+.bom-section-card .card-header { background: #f8f9fb; border-bottom: 1px solid #eef1f4; font-weight: 600; font-size: 0.86rem; }
+.bom-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.bom-value { font-size: 0.92rem; color: #212529; font-weight: 500; margin-top: 2px; }
+.bom-kpi-row .kpi-tile { border: 1px solid #e9ecef; border-left-width: 4px; border-radius: 8px; transition: transform .15s ease; }
+.bom-kpi-row .kpi-tile:hover { transform: translateY(-1px); }
+.bom-kpi-row .kpi-tile-primary { border-left-color: #0d6efd; }
+.bom-kpi-row .kpi-tile-success { border-left-color: #198754; }
+.bom-kpi-row .kpi-tile-info    { border-left-color: #0dcaf0; }
+.bom-kpi-row .kpi-tile-warning { border-left-color: #ffc107; }
+.bom-kpi-row .kpi-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.bom-kpi-row .kpi-value { font-size: 1.15rem; font-weight: 700; line-height: 1.2; color: #212529; }
+
+/* =========================
+   PAGE WRAP
+========================= */
+.page-wrap {
+  padding: 14px 16px;
+}
+
+/* =========================
+   TABLE
+========================= */
+.table {
+  font-size: 13.5px;
+}
+
+  .table td,
+  .table th {
+    vertical-align: middle;
+    padding: 0.55rem 0.6rem;
+  }
+
+  .table thead th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  /* Highlight important values */
+  .table td.text-primary {
+    font-weight: 600;
+  }
+
+/* =========================
+   CARD
+========================= */
+.card {
+  border-radius: 14px;
+  border: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  font-size: 13.5px;
+}
+
+/* =========================
+   BADGE
+========================= */
+.badge {
+  font-weight: 600;
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 8px;
+}
+
+/* =========================
+   MODAL BASE
+========================= */
+.modal .modal-header {
+  border-bottom: 0;
+}
+
+.modal .modal-footer {
+  border-top: 0;
+}
+
+/* =========================
+   BOM DETAIL MODAL FIX
+   (important for your issue)
+========================= */
+.bom-detail-modal .modal-dialog {
+  margin-top: 90px; /* push below topbar */
+  margin-left: 280px; /* push away from sidebar */
+  margin-right: 24px;
+  max-width: calc(100vw - 320px);
+}
+
+.bom-detail-modal .modal-content {
+  border-radius: 14px;
+}
+
+.bom-detail-modal .modal-body {
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+}
+
+/* =========================
+   RESPONSIVE FIX
+========================= */
+
+/* Tablet */
+@media (max-width: 991.98px) {
+  .bom-detail-modal .modal-dialog {
+    margin-top: 80px;
+    margin-left: 24px;
+    margin-right: 24px;
+    max-width: calc(100vw - 48px);
+  }
+}
+
+/* Mobile */
+@media (max-width: 575.98px) {
+  .bom-detail-modal .modal-dialog {
+    margin-top: 70px;
+    margin-left: 12px;
+    margin-right: 12px;
+    max-width: calc(100vw - 24px);
+  }
+
+  .bom-detail-modal .modal-body {
+    max-height: calc(100vh - 150px);
+  }
+}

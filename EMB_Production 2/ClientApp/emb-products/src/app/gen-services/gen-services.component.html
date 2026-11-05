@@ -1,0 +1,752 @@
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+
+  <!-- LEFT -->
+  <div class="d-flex align-items-center">
+    <i class="bi bi-gear-wide-connected text-primary me-2 fs-4"></i>
+    <h4 class="mb-0">Services</h4>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="d-flex align-items-center gap-2 flex-wrap">
+
+    <!-- ADD -->
+    <button class="btn btn-primary btn-sm d-flex align-items-center px-3"
+            (click)="openCreate()">
+      <i class="bi bi-plus-circle me-1"></i> Add
+    </button>
+
+    <!-- SEARCH -->
+    <div class="input-group input-group-sm" style="width: 200px;">
+      <input type="text"
+             class="form-control"
+             placeholder="Search..."
+             [(ngModel)]="searchText"
+             (keyup.enter)="onSearch()" />
+      <button class="btn btn-outline-secondary" (click)="onSearch()">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+
+    <!-- STATUS FILTER -->
+    <select class="form-select form-select-sm" style="width: 120px;"
+            [(ngModel)]="activeFilter" (change)="onSearch()">
+      <option value="">All</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    </select>
+
+    <!-- REFRESH -->
+    <button class="btn btn-outline-primary btn-sm"
+            (click)="loadList()" title="Refresh">
+      <i class="bi bi-arrow-clockwise"></i>
+    </button>
+
+    <!-- EXCEL -->
+    <button class="btn btn-outline-success btn-sm"
+            (click)="exportToCsv()" title="Excel">
+      <i class="bi bi-file-earmark-excel"></i>
+    </button>
+
+    <!-- PDF -->
+    <button class="btn btn-outline-danger btn-sm"
+            (click)="exportToPdf()" title="PDF">
+      <i class="bi bi-file-earmark-pdf"></i>
+    </button>
+
+    <!-- PRINT -->
+    <button class="btn btn-outline-dark btn-sm"
+            (click)="printTable()" title="Print">
+      <i class="bi bi-printer"></i>
+    </button>
+
+  </div>
+</div>
+
+
+
+
+<!-- Phase R.7 - Summary Strip -->
+<div class="svc-summary-strip d-flex flex-wrap gap-2 align-items-center mb-3">
+  <span class="badge bg-primary-subtle text-primary">
+    <i class="bi bi-list-ul me-1"></i> Total <strong>{{ summary.count }}</strong>
+  </span>
+  <span class="badge bg-success-subtle text-success">
+    <i class="bi bi-check2-circle me-1"></i> Active <strong>{{ summary.activeCount }}</strong>
+  </span>
+  <span class="badge bg-secondary-subtle text-secondary">
+    <i class="bi bi-slash-circle me-1"></i> Inactive <strong>{{ summary.inactiveCount }}</strong>
+  </span>
+  <span class="badge bg-info-subtle text-info">
+    <i class="bi bi-tag me-1"></i> Types <strong>{{ summary.distinctTypes }}</strong>
+  </span>
+  <span class="badge bg-info-subtle text-info">
+    <i class="bi bi-cpu me-1"></i> Machines <strong>{{ summary.distinctMachines }}</strong>
+  </span>
+  <span class="badge bg-info-subtle text-info">
+    <i class="bi bi-building me-1"></i> Branches <strong>{{ summary.distinctBranches }}</strong>
+  </span>
+  <span class="badge bg-warning-subtle text-warning">
+    Avg Rate <strong>{{ summary.avgRate | number:'1.2-2' }}</strong>
+  </span>
+  <span class="badge bg-dark-subtle text-dark">
+    Avg Min <strong>{{ summary.avgMin | number:'1.2-2' }}</strong>
+  </span>
+  <span class="badge bg-dark-subtle text-dark">
+    Avg Max <strong>{{ summary.avgMax | number:'1.2-2' }}</strong>
+  </span>
+  <span class="badge bg-light text-dark border" *ngFor="let b of summary.byBranch | slice:0:3">
+    {{ b.branch }}: <strong>{{ b.count }}</strong>
+  </span>
+</div>
+
+
+<!-- ======================================================
+     TABLE LIST
+====================================================== -->
+<!-- Sprint-3: bulk action strip. -->
+<div *ngIf="selectedIds.size > 0"
+     class="alert alert-info d-flex flex-wrap align-items-center gap-2 py-2 mb-2"
+     role="status">
+  <span class="me-2"><strong>{{ selectedIds.size }}</strong> selected</span>
+  <button class="btn btn-sm btn-success" (click)="bulkActivate()" [disabled]="bulkBusy">
+    <i class="bi bi-check-circle me-1"></i>Activate
+  </button>
+  <button class="btn btn-sm btn-secondary" (click)="bulkDeactivate()" [disabled]="bulkBusy">
+    <i class="bi bi-pause-circle me-1"></i>Deactivate
+  </button>
+  <button class="btn btn-sm btn-outline-danger" (click)="bulkDeleteRows()" [disabled]="bulkBusy">
+    <i class="bi bi-trash me-1"></i>Delete
+  </button>
+  <button class="btn btn-sm btn-light ms-auto" (click)="clearSelection()" [disabled]="bulkBusy">
+    Clear
+  </button>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-bordered table-hover table-sm align-middle">
+
+    <thead class="table-light">
+      <tr>
+        <th class="text-center" style="width:30px;">
+          <input type="checkbox" class="form-check-input"
+                 [checked]="allVisibleSelected()"
+                 (change)="toggleSelectAll()" />
+        </th>
+        <th>Service Name</th>
+        <th>Type</th>
+        <th>Rate</th>
+        <th>Machine</th>
+        <th>Branch</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      <tr *ngFor="let s of rows">
+        <td class="text-center">
+          <input type="checkbox" class="form-check-input"
+                 [checked]="isSelected(s.Id)"
+                 (change)="toggleSelect(s.Id)" />
+        </td>
+        <td>{{ s.ServiceName || '-' }}</td>
+        <td>{{ s.ServiceTypeName || '-' }}</td>
+        <td>{{ s.ServiceRateCharge || '-' }}</td>
+        <td>{{ getMachineName(s.MachineDevice) }}</td>
+        <td>{{ s.BranchName || '-' }}</td>
+
+        <td>
+          <span class="badge"
+                [ngClass]="s.Active ? 'bg-success' : 'bg-danger'">
+            {{ s.Active ? 'Active' : 'Inactive' }}
+          </span>
+        </td>
+
+        <td>
+          <button class="btn btn-info btn-sm me-1" (click)="openProfile(s.Id)" title="360 Profile">
+            <i class="bi bi-eye"></i>
+          </button>
+
+          <button class="btn btn-warning btn-sm me-1" (click)="openEdit(s.Id)">
+            <i class="bi bi-pencil"></i>
+          </button>
+
+          <button class="btn btn-danger btn-sm" (click)="openDelete(s.Id)">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+
+
+      <tr *ngIf="rows.length === 0">
+        <td colspan="7" class="text-center text-muted py-3">No records found</td>
+      </tr>
+
+    </tbody>
+
+  </table>
+</div>
+
+
+<
+<!-- ======================================================
+       PAGINATION  (NO NgbPagination)
+====================================================== -->
+<nav *ngIf="pages.length > 1">
+  <ul class="pagination pagination-sm justify-content-end">
+
+    <!-- Prev -->
+    <li class="page-item" [class.disabled]="page === 1">
+      <a class="page-link" (click)="goToPage(page - 1)">‹</a>
+    </li>
+
+    <!-- Page Numbers -->
+    <li class="page-item"
+        *ngFor="let p of pages"
+        [class.active]="page === p">
+      <a class="page-link" (click)="goToPage(p)">{{ p }}</a>
+    </li>
+
+    <!-- Next -->
+    <li class="page-item" [class.disabled]="page === pages.length">
+      <a class="page-link" (click)="goToPage(page + 1)">›</a>
+    </li>
+
+  </ul>
+</nav>
+
+
+
+<!-- ======================================================
+     CREATE / EDIT MODAL
+====================================================== -->
+<div class="modal fade" #formModal tabindex="-1">
+
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+
+    <div class="modal-content">
+
+      <div class="modal-header modal-header-custom">
+        <h5 class="modal-title">
+          {{ modalMode === 'create' ? 'Add Service' : 'Edit Service' }}
+        </h5>
+
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <form>
+
+          <div class="row g-3">
+
+            <!-- Service Type -->
+            <div class="col-md-6">
+              <label class="form-label">Service Type</label>
+              <select class="form-select form-select-sm"
+                      [(ngModel)]="formModel.ServiceTypeId"
+                      name="ServiceTypeId">
+                <option [ngValue]="null">Select</option>
+                <option *ngFor="let t of serviceTypeList" [ngValue]="t.id">
+                  {{ t.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Service Name -->
+            <div class="col-md-6">
+              <label class="form-label">Service Name</label>
+              <input type="text"
+                     class="form-control form-control-sm"
+                     [(ngModel)]="formModel.ServiceName"
+                     name="ServiceName" />
+            </div>
+
+            <!-- Rate -->
+            <div class="col-md-4">
+              <label class="form-label">Rate Charge</label>
+              <input type="number"
+                     class="form-control form-control-sm"
+                     [(ngModel)]="formModel.ServiceRateCharge"
+                     name="ServiceRateCharge" />
+            </div>
+
+            <!-- Machine -->
+            <div class="col-md-4">
+              <label class="form-label">Machine</label>
+              <select class="form-select form-select-sm"
+                      [(ngModel)]="formModel.MachineDevice"
+                      name="MachineDevice">
+                <option [ngValue]="null">Select</option>
+                <option *ngFor="let m of machineList" [ngValue]="m.id">
+                  {{ m.code || m.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Branch -->
+            <div class="col-md-4">
+              <label class="form-label">Branch</label>
+              <select class="form-select form-select-sm"
+                      [(ngModel)]="formModel.BranchId"
+                      name="BranchId">
+                <option [ngValue]="null">Select</option>
+                <option *ngFor="let b of branchList" [ngValue]="b.id">
+                  {{ b.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Max Range -->
+            <div class="col-md-6">
+              <label class="form-label">Max Range</label>
+              <input type="text"
+                     class="form-control form-control-sm"
+                     [(ngModel)]="formModel.MaxRange"
+                     name="MaxRange" />
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Max Charges</label>
+              <input type="number"
+                     class="form-control form-control-sm"
+                     [(ngModel)]="formModel.MaxCharges"
+                     name="MaxCharges" />
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Min Charges</label>
+              <input type="number"
+                     class="form-control form-control-sm"
+                     [(ngModel)]="formModel.MinCharges"
+                     name="MinCharges" />
+            </div>
+
+            <!-- Extra Fields -->
+            <div class="col-12">
+              <div class="row g-2">
+
+                <div class="col-md-4">
+                  <label class="form-label small">Field 1</label>
+                  <input type="number"
+                         class="form-control form-control-sm"
+                         [(ngModel)]="formModel.Field1"
+                         name="Field1" />
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Field 2</label>
+                  <input type="number"
+                         class="form-control form-control-sm"
+                         [(ngModel)]="formModel.Field2"
+                         name="Field2" />
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Status</label>
+                  <select class="form-select form-select-sm"
+                          [(ngModel)]="formModel.Active"
+                          name="Active">
+                    <option [ngValue]="true">Active</option>
+                    <option [ngValue]="false">Inactive</option>
+                  </select>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+        </form>
+
+      </div>
+
+      <!-- FOOTER -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">
+          Close
+        </button>
+
+        <button *ngIf="modalMode === 'create'"
+                type="button"
+                class="btn btn-primary"
+                [disabled]="isSaving"
+                (click)="saveCreate()">
+          {{ isSaving ? 'Saving...' : 'Save' }}
+        </button>
+
+        <button *ngIf="modalMode === 'edit'"
+                type="button"
+                class="btn btn-primary"
+                [disabled]="isSaving"
+                (click)="saveEdit()">
+          {{ isSaving ? 'Updating...' : 'Update' }}
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div class="modal fade" #detailModal tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <!-- HEADER -->
+      <div class="modal-header modal-header-custom">
+        <h5 class="modal-title">
+          <i class="bi bi-gear me-1"></i>
+          Service Details
+        </h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body" *ngIf="detailModel">
+
+        <div class="card mb-3">
+
+          <div class="card-body">
+
+            <div class="row mb-3">
+
+              <div class="col-md-5">
+                <strong>Service Name</strong><br>
+                {{ detailModel?.ServiceName || '-' }}
+              </div>
+
+              <div class="col-md-5">
+                <strong>Service Type</strong><br>
+                {{ detailModel?.ServiceTypeName || '-' }}
+              </div>
+              <div class="col-md-2">
+                <strong>Rate Charge</strong><br>
+                {{ detailModel?.ServiceRateCharge ?? '-' }}
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-5">
+                <strong>Machine</strong><br>
+                {{ getMachineName(detailModel?.MachineDevice) }}
+              </div>
+
+              <div class="col-md-5">
+                <strong>Branch</strong><br>
+                {{ detailModel?.BranchName || '-' }}
+              </div>
+
+              <div class="col-md-2">
+                <strong>Max Range</strong><br>
+                {{ detailModel?.MaxRange ?? '-' }}
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <strong>Max Charges</strong><br>
+                {{ detailModel?.MaxCharges ?? '-' }}
+              </div>
+
+              <div class="col-md-3">
+                <strong>Min Charges</strong><br>
+                {{ detailModel?.MinCharges ?? '-' }}
+              </div>
+
+              <div class="col-md-3">
+                <strong>Field 1</strong><br>
+                {{ detailModel?.Field1 ?? '-' }}
+              </div>
+
+              <div class="col-md-3">
+                <strong>Field 2</strong><br>
+                {{ detailModel?.Field2 ?? '-' }}
+              </div>
+
+            </div>
+
+
+            <div class="row mb-3">
+
+              <div class="col-md-4">
+                <strong>Status</strong><br>
+                <span class="badge bg-success" *ngIf="detailModel?.Active">
+                  Active
+                </span>
+
+                <span class="badge bg-secondary" *ngIf="!detailModel?.Active">
+                  Inactive
+                </span>
+              </div>
+
+              <div class="col-md-4">
+                <strong>Deleted</strong><br>
+                {{ detailModel?.Deleted ? 'Deleted' : 'Not Deleted' }}
+              </div>
+
+              <div class="col-md-4">
+                <strong>Record Timestamp</strong><br>
+                {{ formatDate(detailModel?.RecordTimeStamp) }}
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <div class="card-body">
+
+          <div class="row mb-2">
+
+            <div class="col-md-3">
+              <strong>Created By</strong><br>
+              {{ detailModel?.CreatedBy || '-' }}
+            </div>
+
+            <div class="col-md-3">
+              <strong>Created Date</strong><br>
+              {{ formatDate(detailModel?.CreatedDate) }}
+            </div>
+
+            <div class="col-md-3">
+              <strong>Updated By</strong><br>
+              {{ detailModel?.UpdatedBy || '-' }}
+            </div>
+
+            <div class="col-md-3">
+              <strong>Updated Date</strong><br>
+              {{ formatDate(detailModel?.UpdatedDate) }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ======================================================
+     DELETE MODAL
+====================================================== -->
+<div class="modal fade" #deleteModal tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Confirm Delete</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <p class="mb-0">Are you sure you want to delete this service?</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button class="btn btn-danger btn-sm" (click)="confirmDelete()">
+          Delete
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     Phase R.7 - 360 PROFILE DRAWER
+     ============================================================ -->
+<div class="modal svc-profile-modal" *ngIf="showProfile"
+     [class.show]="showProfile" [class.d-block]="showProfile"
+     (click)="closeProfile()" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-gear-wide-connected me-2"></i>
+          Service 360 Profile
+          <span *ngIf="profile?.header?.id" class="badge bg-light text-dark ms-2">#{{ profile.header.id }}</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeProfile()"></button>
+      </div>
+
+      <div class="modal-body">
+        <div *ngIf="profileLoading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <div class="mt-2 text-muted small">Loading profile…</div>
+        </div>
+
+        <ng-container *ngIf="!profileLoading && profile as p">
+
+          <div class="card svc-section-card mb-3">
+            <div class="card-header">Header</div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <div class="svc-label">Service Name</div>
+                  <div class="svc-value">{{ p.header?.serviceName || '-' }}</div>
+                </div>
+                <div class="col-md-3">
+                  <div class="svc-label">Service Type</div>
+                  <div class="svc-value">{{ p.header?.serviceTypeName || '-' }}</div>
+                </div>
+                <div class="col-md-3">
+                  <div class="svc-label">Machine</div>
+                  <div class="svc-value">{{ p.header?.machineCode || '-' }}</div>
+                </div>
+                <div class="col-md-3">
+                  <div class="svc-label">Branch</div>
+                  <div class="svc-value">{{ p.header?.branchName || '-' }}</div>
+                </div>
+
+                <div class="col-md-3">
+                  <div class="svc-label">Status</div>
+                  <div class="svc-value">
+                    <span class="badge" [ngClass]="p.header?.active ? 'bg-success' : 'bg-secondary'">
+                      {{ p.header?.active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="svc-label">Max Range</div>
+                  <div class="svc-value">{{ p.header?.maxRange || '-' }}</div>
+                </div>
+                <div class="col-md-3">
+                  <div class="svc-label">Created</div>
+                  <div class="svc-value">{{ p.header?.createdDateText || '-' }}</div>
+                </div>
+                <div class="col-md-3">
+                  <div class="svc-label">Updated</div>
+                  <div class="svc-value">{{ p.header?.updatedDateText || '-' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3 svc-kpi-row mb-3">
+            <div class="col-md-3">
+              <div class="card kpi-tile kpi-tile-primary p-3">
+                <div class="kpi-label">Rate Charge</div>
+                <div class="kpi-value">{{ p.kpis?.rateCharge ?? 0 }}</div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="card kpi-tile kpi-tile-info p-3">
+                <div class="kpi-label">Min</div>
+                <div class="kpi-value">{{ p.kpis?.minCharges | number:'1.2-2' }}</div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="card kpi-tile kpi-tile-warning p-3">
+                <div class="kpi-label">Max</div>
+                <div class="kpi-value">{{ p.kpis?.maxCharges | number:'1.2-2' }}</div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="card kpi-tile kpi-tile-success p-3">
+                <div class="kpi-label">Linked Rates</div>
+                <div class="kpi-value">{{ p.kpis?.linkedRates ?? 0 }}</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card kpi-tile kpi-tile-info p-3">
+                <div class="kpi-label">Type Siblings</div>
+                <div class="kpi-value">{{ p.kpis?.typeSiblings ?? 0 }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card svc-section-card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-cash-coin me-1"></i> Linked Service Rates</span>
+              <span class="badge bg-secondary">{{ p.rates?.length || 0 }}</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:70px;">ID</th>
+                    <th>Product</th>
+                    <th>Charge Factor</th>
+                    <th>Remarks</th>
+                    <th style="width:90px;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngIf="!p.rates || p.rates.length === 0">
+                    <td colspan="5" class="text-center text-muted py-3">No rates linked to this service.</td>
+                  </tr>
+                  <tr *ngFor="let r of p.rates">
+                    <td>{{ r.Id }}</td>
+                    <td>
+                      <span class="text-muted">{{ r.productCode || '-' }}</span>
+                      <div>{{ r.productName || '-' }}</div>
+                    </td>
+                    <td>{{ r.chargeFactor || '-' }}</td>
+                    <td>{{ r.Remarks || '-' }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="r.Active ? 'bg-success' : 'bg-secondary'">
+                        {{ r.Active ? 'Active' : 'Inactive' }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card svc-section-card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-stack me-1"></i> Other Services in Same Type</span>
+              <span class="badge bg-secondary">{{ p.siblings?.length || 0 }}</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:70px;">ID</th>
+                    <th>Service Name</th>
+                    <th>Rate</th>
+                    <th style="width:90px;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngIf="!p.siblings || p.siblings.length === 0">
+                    <td colspan="4" class="text-center text-muted py-3">No siblings in this type.</td>
+                  </tr>
+                  <tr *ngFor="let s of p.siblings">
+                    <td>{{ s.Id }}</td>
+                    <td>{{ s.Service_Name }}</td>
+                    <td>{{ s.Service_RateCharge ?? '-' }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="s.Active ? 'bg-success' : 'bg-secondary'">
+                        {{ s.Active ? 'Active' : 'Inactive' }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </ng-container>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" (click)="closeProfile()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+

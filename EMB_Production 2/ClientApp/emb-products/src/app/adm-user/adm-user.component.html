@@ -1,0 +1,807 @@
+<div class="container-fluid mt-3">
+  <!-- Header Bar -->
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+    <h4 class="fw-bold mb-2 mb-sm-0">
+      <i class="bi bi-people-fill me-2 text-primary"></i> Manage Users
+    </h4>
+
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-success btn-sm" (click)="openCreate()">
+        <i class="bi bi-plus-circle me-1"></i> Add User
+      </button>
+      <button class="btn btn-outline-secondary btn-sm" (click)="onSearch()">
+        <i class="bi bi-search me-1"></i> Search
+      </button>
+      <button class="btn btn-outline-secondary btn-sm" (click)="clearSearch()">
+        <i class="bi bi-x-circle me-1"></i> Clear
+      </button>
+      <button class="btn btn-primary btn-sm" (click)="printUsers()">Print</button>
+      <button class="btn btn-secondary btn-sm" (click)="exportUsersToExcel()">Excel</button>
+      <button class="btn btn-danger btn-sm" (click)="exportUsersToPDF()">PDF</button>
+    </div>
+  </div>
+
+  <!-- ============ PHASE R - FILTER BAR ============ -->
+  <div class="card shadow-sm mb-3 user-filter-bar">
+    <div class="card-body py-2">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label small fw-semibold mb-1">Search</label>
+          <input type="text"
+                 class="form-control form-control-sm"
+                 [(ngModel)]="searchText"
+                 (keyup.enter)="onFiltersChange()"
+                 placeholder="Name / username / email / mobile">
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label small fw-semibold mb-1">Role</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="filterRoleId"
+                  (change)="onFiltersChange()">
+            <option [ngValue]="null">All Roles</option>
+            <option *ngFor="let r of roles" [ngValue]="r.Id ?? r.id">
+              {{ r.Name ?? r.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label small fw-semibold mb-1">Branch</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="filterBranchId"
+                  (change)="onFiltersChange()">
+            <option [ngValue]="null">All Branches</option>
+            <option *ngFor="let b of branches" [ngValue]="b.Id ?? b.id">
+              {{ b.Name ?? b.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label small fw-semibold mb-1">Company</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="filterCompanyId"
+                  (change)="onFiltersChange()">
+            <option [ngValue]="null">All Companies</option>
+            <option *ngFor="let c of companies"
+                    [ngValue]="c.CompanyID ?? c.Id ?? c.id">
+              {{ c.CompanyName ?? c.Name ?? c.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label small fw-semibold mb-1">Designation</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="filterDesignationId"
+                  (change)="onFiltersChange()">
+            <option [ngValue]="null">All Designations</option>
+            <option *ngFor="let d of designations" [ngValue]="d.Id">
+              {{ d.Name }}<span *ngIf="d.Code" class="text-muted"> ({{ d.Code }})</span>
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-1">
+          <label class="form-label small fw-semibold mb-1">Status</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="filterActive"
+                  (change)="onFiltersChange()">
+            <option value="">All</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+
+        <div class="col-md-1">
+          <label class="form-label small fw-semibold mb-1">Dashboard</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="filterDashboard"
+                  (change)="onFiltersChange()">
+            <option value="">All</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+
+        <div class="col-md-1">
+          <button class="btn btn-sm btn-outline-secondary w-100"
+                  (click)="clearFilters()"
+                  title="Clear all filters">
+            <i class="bi bi-x-circle"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PHASE R - SUMMARY CHIPS ============ -->
+  <div class="d-flex flex-wrap gap-2 align-items-center mb-3 user-summary-strip">
+    <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-2">
+      <i class="bi bi-people me-1"></i>
+      Total <strong class="ms-1">{{ summary.count }}</strong>
+    </span>
+    <span class="badge bg-success-subtle text-success-emphasis border border-success px-3 py-2">
+      <i class="bi bi-check2-circle me-1"></i>
+      Active <strong class="ms-1">{{ summary.activeCount }}</strong>
+    </span>
+    <span class="badge bg-secondary-subtle text-secondary border border-secondary px-3 py-2">
+      <i class="bi bi-slash-circle me-1"></i>
+      Inactive <strong class="ms-1">{{ summary.inactiveCount }}</strong>
+    </span>
+    <span class="badge bg-info-subtle text-info-emphasis border border-info px-3 py-2">
+      <i class="bi bi-speedometer2 me-1"></i>
+      Dashboard <strong class="ms-1">{{ summary.dashboardCount }}</strong>
+    </span>
+    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-3 py-2"
+          [title]="'Users who have never signed in'">
+      <i class="bi bi-clock-history me-1"></i>
+      Never logged in <strong class="ms-1">{{ summary.neverLoggedInCount }}</strong>
+    </span>
+    <span class="badge bg-light text-dark border px-3 py-2"
+          [title]="'Distinct roles / branches in current filter'">
+      <i class="bi bi-diagram-3 me-1"></i>
+      Roles <strong class="ms-1">{{ summary.distinctRoles }}</strong>
+      <span class="text-muted mx-1">|</span>
+      <i class="bi bi-building me-1"></i>
+      Branches <strong class="ms-1">{{ summary.distinctBranches }}</strong>
+    </span>
+  </div>
+
+  <!-- Sprint-3: bulk action strip. -->
+  <div *ngIf="selectedIds.size > 0"
+       class="alert alert-info d-flex flex-wrap align-items-center gap-2 py-2 mb-2"
+       role="status">
+    <span class="me-2"><strong>{{ selectedIds.size }}</strong> selected</span>
+    <button class="btn btn-sm btn-success" (click)="bulkActivate()" [disabled]="bulkBusy">
+      <i class="bi bi-check-circle me-1"></i>Activate
+    </button>
+    <button class="btn btn-sm btn-secondary" (click)="bulkDeactivate()" [disabled]="bulkBusy">
+      <i class="bi bi-pause-circle me-1"></i>Deactivate
+    </button>
+    <button class="btn btn-sm btn-outline-danger" (click)="bulkDeleteRows()" [disabled]="bulkBusy">
+      <i class="bi bi-trash me-1"></i>Delete
+    </button>
+    <button class="btn btn-sm btn-light ms-auto" (click)="clearSelection()" [disabled]="bulkBusy">
+      Clear
+    </button>
+  </div>
+
+  <!-- Users Table -->
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered">
+      <thead class="table-dark">
+        <tr>
+          <th class="text-center" style="width:30px;">
+            <input type="checkbox" class="form-check-input"
+                   [checked]="allVisibleSelected()"
+                   (change)="toggleSelectAll()" />
+          </th>
+          <th>Photo</th>
+          <th>Name (Employee ID)</th>
+          <th>Contact</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Branch</th>
+          <th>Company</th>
+          <th>Status</th>
+          <th class="text-center" style="width: 160px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of users">
+          <td class="text-center align-middle">
+            <input type="checkbox" class="form-check-input"
+                   [checked]="isSelected(u.Id)"
+                   (change)="toggleSelect(u.Id)" />
+          </td>
+          <td class="text-center align-middle">
+            <!-- Show facial recognition image if available -->
+            <img [src]="getPhotoUrl(u.FacialRecognition)"
+                 alt="User Photo"
+                 class="img-thumbnail"
+                 width="50"
+                 height="50"
+                 (error)="onImageError($event)" />
+
+
+            <!-- Otherwise, show a default icon -->
+            <i *ngIf="!u?.FacialRecognition"
+               class="bi bi-person-circle fs-3 text-muted"
+               title="No photo available"></i>
+          </td>
+
+          <td>
+            {{ u.FullName || (u.FirstName + ' ' + u.LastName) }}
+            <span class="text-muted">({{ u.EmployeeId }})</span>
+          </td>
+          <td>{{ u.MobilePrimary }}</td>
+          <td>{{ u.EmailAddress }}</td>
+          <td>{{ u.RoleName }}</td>
+          <td>{{ u.BranchName }}</td>
+          <td>{{ u.CompanyName }}</td>
+          <td>
+            <div class="d-flex flex-column gap-1">
+              <span class="badge" [ngClass]="{ 'bg-success': u.Active, 'bg-secondary': !u.Active }">
+                {{ u.Active ? 'Active' : 'Inactive' }}
+              </span>
+              <span class="badge bg-info-subtle text-info-emphasis border border-info small"
+                    *ngIf="u.DashboardAccess"
+                    title="Has dashboard access">
+                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+              </span>
+            </div>
+          </td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-outline-info me-1"
+                    (click)="openProfile(u.Id)"
+                    title="360 Profile">
+              <i class="bi bi-person-vcard"></i>
+            </button>
+            <button class="btn btn-sm btn-info me-1"
+                    (click)="openDetail(u.Id)"
+                    title="View Details">
+              <i class="bi bi-eye"></i>
+            </button>
+            <button class="btn btn-sm btn-warning me-1" (click)="openEdit(u)" title="Edit User">
+              <i class="bi bi-pencil-square"></i>
+            </button>
+            <button class="btn btn-sm btn-danger" (click)="confirmDelete(u)" title="Delete User">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="users.length === 0">
+          <td colspan="9" class="text-center text-muted py-3">No users found.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <nav *ngIf="paginationArray.length > 1" class="mt-3">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" [class.disabled]="page === 1">
+          <a class="page-link" (click)="onPageChange(page - 1)">Prev</a>
+        </li>
+        <li class="page-item" *ngFor="let pg of paginationArray" [class.active]="pg === page">
+          <a class="page-link" (click)="onPageChange(pg)">{{ pg }}</a>
+        </li>
+        <li class="page-item" [class.disabled]="page === totalPages">
+          <a class="page-link" (click)="onPageChange(page + 1)">Next</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<!-- ================= USER DETAIL MODAL ================= -->
+<div class="modal fade" #userDetailModal id="userDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content premium-wrapper shadow-lg">
+
+      <!-- CORRECTED HEADER -->
+      <div class="user-detail-header d-flex justify-content-between align-items-center px-3">
+
+        <!-- LEFT: TITLE -->
+        <h4 class="text-white fw-bold m-0">
+          <i class="bi bi-person-lines-fill me-2"></i> User Details
+        </h4>
+
+        <!-- RIGHT: PHOTO -->
+        <img [src]="getPhotoUrl(selectedUser?.FacialRecognition)"
+             class="img-thumbnail user-detail-photo"
+             width="80"
+             height="80"
+             (error)="onImageError($event)" />
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body bg-white">
+
+        <!-- BASIC INFO -->
+        <div class="info-card shadow-sm mb-3">
+          <div class="row g-3">
+
+            <div class="col-md-4"><strong>Employee ID:</strong> {{ selectedUser?.EmployeeId || '-' }}</div>
+            <div class="col-md-4"><strong>Email:</strong> {{ selectedUser?.EmailAddress || '-' }}</div>
+            <div class="col-md-4"><strong>Mobile:</strong> {{ selectedUser?.MobilePrimary || '-' }}</div>
+            <hr>
+            <div class="col-md-4"><strong>Role:</strong> {{ selectedUser?.RoleName || '-' }}</div>
+            <div class="col-md-4"><strong>Branch:</strong> {{ selectedUser?.BranchName || '-' }}</div>
+            <div class="col-md-4"><strong>Company:</strong> {{ selectedUser?.CompanyName || '-' }}</div>
+            <hr>
+            <div class="col-md-4"><strong>Status:</strong> {{ selectedUser?.Active ? 'Active' : 'Inactive' }}</div>
+            <div class="col-md-4"><strong>Dashboard Access:</strong> {{ selectedUser?.DashboardAccess ? 'Yes' : 'No' }}</div>
+            <div class="col-md-4"><strong>Created By:</strong> {{ selectedUser?.CreatedByName || '-' }}</div>
+          </div>
+        </div>
+        <hr>
+        <!-- AUDIT INFO -->
+        <div class="info-card shadow-sm">
+          
+          <div class="row g-3">
+
+            <div class="col-md-6"><strong>Created Date:</strong> {{ selectedUser?.CreatedDateFormatted || '-' }}</div>
+            <div class="col-md-6"><strong>Updated By:</strong> {{ selectedUser?.UpdatedByName || '-' }}</div>
+            <hr>
+            <div class="col-md-6"><strong>Updated Date:</strong> {{ selectedUser?.UpdatedDateFormatted || '-' }}</div>
+            <div class="col-md-6"><strong>Last Login:</strong> {{ selectedUser?.LastLoginDateFormatted || '-' }}</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FOOTER -->
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-secondary px-4" (click)="closeDetail()">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Example modal form -->
+<div class="modal fade" id="userFormModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">{{ editingUser ? 'Edit User' : 'Create User' }}</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeFormModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="userForm" autocomplete="off">
+
+          <!-- First Row: Employee ID + User Name + First Name + Last Name -->
+          <div class="row mb-2">
+            <div class="col-md-3">
+              <label for="employeeId" class="form-label">Employee ID</label>
+              <input type="number" formControlName="employeeId" class="form-control" placeholder="Employee ID">
+            </div>
+            <div class="col-md-3">
+              <label for="userName" class="form-label">User Name</label>
+              <input id="userName" formControlName="userName" type="text" class="form-control" placeholder="User Name">
+            </div>
+            <div class="col-md-3">
+              <label for="firstName" class="form-label">First Name</label>
+              <input id="firstName" formControlName="firstName" type="text" class="form-control" placeholder="First Name">
+            </div>
+            <div class="col-md-3">
+              <label for="lastName" class="form-label">Last Name</label>
+              <input id="lastName" formControlName="lastName" type="text" class="form-control" placeholder="Last Name">
+            </div>
+          </div>
+
+          <!-- Second Row: Email, Mobile, Landline, Password -->
+          <div class="row mb-2">
+            <div class="col-md-4">
+              <label for="emailAddress" class="form-label">Email</label>
+              <input id="emailAddress" formControlName="emailAddress" type="email" class="form-control" placeholder="Email">
+            </div>
+            <div class="col-md-3">
+              <label for="mobilePrimary" class="form-label">Mobile</label>
+              <input id="mobilePrimary" formControlName="mobilePrimary" type="text" class="form-control" placeholder="Mobile">
+            </div>
+            <div class="col-md-3">
+              <label for="landline" class="form-label">Landline</label>
+              <input id="landline" formControlName="landline" type="text" class="form-control" placeholder="Landline">
+            </div>
+            <div class="col-md-2">
+              <label for="password" class="form-label">Password</label>
+              <input id="password" formControlName="password" type="password" class="form-control" placeholder="Password">
+            </div>
+          </div>
+
+          <!-- Options Checkboxes -->
+          <div class="row mb-2 align-items-center">
+            <label class="form-label col-12 col-md-2">Options</label>
+            <div class="col-10 d-flex gap-3">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" formControlName="active" id="active" />
+                <label for="active" class="form-check-label">Active</label>
+              </div>
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" formControlName="dashboardAccess" id="dashboardAccess" />
+                <label for="dashboardAccess" class="form-check-label">Dashboard Access</label>
+              </div>
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" formControlName="approvel" id="approvel" />
+                <label for="approval" class="form-check-label">Approvel</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Third Row: Branch, Role, Company -->
+          <div class="row mb-2">
+            <!-- Branch Dropdown -->
+            <div class="col-md-4">
+              <label for="branchId" class="form-label">Branch</label>
+              <select formControlName="branchId" class="form-select" required>
+                <option [ngValue]="null">-- Select Branch --</option>
+                <option *ngFor="let b of branches" [ngValue]="b.Id">
+                  {{ b.Name }} ({{ b.BranchId }})
+                </option>
+              </select>
+
+            </div>
+
+            <!-- Role Dropdown -->
+            <div class="col-md-4">
+              <label for="roleId" class="form-label">Role</label>
+              <select formControlName="roleId" class="form-select" required>
+                <option [ngValue]="null">-- Select Role --</option>
+                <option *ngFor="let r of roles" [ngValue]="r.Id">{{ r.Name }}</option>
+              </select>
+
+            </div>
+
+            <!-- Company Dropdown -->
+            <div class="col-md-4">
+              <label for="companyId" class="form-label">Company</label>
+              <select formControlName="companyId" class="form-select" required>
+                <option [ngValue]="null">-- Select Company --</option>
+                <option *ngFor="let c of companies" [ngValue]="c.Id">
+                  {{ c.Name }} ({{ c.Id }})
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Fourth Row: Designation (optional) -->
+          <div class="row mb-2">
+            <div class="col-md-4">
+              <label for="designationId" class="form-label">Designation</label>
+              <select formControlName="designationId" class="form-select">
+                <option [ngValue]="null">-- Not set --</option>
+                <option *ngFor="let d of designations" [ngValue]="d.Id">
+                  {{ d.Name }}<span *ngIf="d.Code"> ({{ d.Code }})</span>
+                </option>
+              </select>
+              <small class="text-muted">
+                Optional. Drives the HR view of who-does-what.
+              </small>
+            </div>
+          </div>
+
+
+          <!-- Facial Recognition Upload -->
+          <div class="row mb-2">
+            <div class="col-md-6">
+              <label for="facialRecognition" class="form-label">Facial Recognition Image</label>
+              <input id="facialRecognition" type="file" (change)="onFileChange($event)" class="form-control" />
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeFormModal()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveUser()">{{ editingUser ? 'Update' : 'Create' }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Delete Confirm Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Confirm Delete</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete
+        <strong>{{ deleteTarget?.FullName }}</strong>?
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-danger" (click)="deleteUser()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===================== PHASE R - 360 PROFILE DRAWER ===================== -->
+<div class="modal user-profile-modal"
+     *ngIf="showProfile"
+     [class.show]="showProfile"
+     [class.d-block]="showProfile"
+     style="background: rgba(0,0,0,0.5);"
+     (click)="closeProfile()">
+
+  <div class="modal-dialog modal-xl modal-dialog-scrollable"
+       (click)="$event.stopPropagation()">
+    <div class="modal-content">
+
+      <div class="modal-header bg-primary text-white py-2">
+        <h6 class="modal-title mb-0">
+          <i class="bi bi-person-vcard me-2"></i>
+          User 360 Profile
+          <span class="badge bg-light text-dark ms-2" *ngIf="profile?.header?.userName">
+            {{ profile.header.userName }}
+          </span>
+        </h6>
+        <button type="button" class="btn-close btn-close-white" (click)="closeProfile()"></button>
+      </div>
+
+      <!-- LOADING -->
+      <div class="modal-body text-center py-4" *ngIf="profileLoading">
+        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+        Loading profile...
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body" *ngIf="!profileLoading && profile?.header">
+
+        <!-- Section 1: Identity card -->
+        <div class="card mb-3 user-section-card">
+          <div class="card-body py-3">
+            <div class="row g-3">
+              <div class="col-md-3 text-center">
+                <div class="profile-avatar-wrap">
+                  <img *ngIf="profile.header.facialRecognition"
+                       [src]="getPhotoUrl(profile.header.facialRecognition)"
+                       class="profile-avatar-img"
+                       alt="User photo"
+                       (error)="onImageError($event)" />
+                  <i *ngIf="!profile.header.facialRecognition"
+                     class="bi bi-person-circle profile-avatar-fallback"></i>
+                </div>
+                <div class="mt-2 fw-semibold">
+                  {{ profile.header.fullName || profile.header.userName }}
+                </div>
+                <span class="badge mt-2"
+                      [ngClass]="profile.header.active
+                        ? 'bg-success-subtle text-success-emphasis border border-success'
+                        : 'bg-secondary-subtle text-secondary border border-secondary'">
+                  {{ profile.header.active ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+
+              <div class="col-md-9">
+                <div class="row g-2 small">
+                  <div class="col-md-4">
+                    <div class="user-label">Employee ID</div>
+                    <div class="user-value">{{ profile.header.employeeId || '-' }}</div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="user-label">Username</div>
+                    <div class="user-value">{{ profile.header.userName || '-' }}</div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="user-label">Role</div>
+                    <div class="user-value">
+                      <span class="badge bg-info-subtle text-info-emphasis border border-info">
+                        {{ profile.header.roleName }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="user-label">Branch</div>
+                    <div class="user-value">{{ profile.header.branchName }}</div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="user-label">Company</div>
+                    <div class="user-value">{{ profile.header.companyName }}</div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="user-label">Designation</div>
+                    <div class="user-value">
+                      <span class="badge bg-warning-subtle text-warning-emphasis border border-warning"
+                            *ngIf="profile.header.designationName && profile.header.designationName !== '-'">
+                        {{ profile.header.designationName }}
+                      </span>
+                      <span class="text-muted"
+                            *ngIf="!profile.header.designationName || profile.header.designationName === '-'">
+                        Not set
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="user-label">Approval</div>
+                    <div class="user-value">{{ profile.header.approvel || '-' }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Contact -->
+        <div class="card mb-3 user-section-card">
+          <div class="card-header py-2 fw-semibold">
+            <i class="bi bi-telephone me-1"></i> Contact
+          </div>
+          <div class="card-body py-3">
+            <div class="row g-2 small">
+              <div class="col-md-4">
+                <div class="user-label">Email</div>
+                <div class="user-value">{{ profile.header.emailAddress || '-' }}</div>
+              </div>
+              <div class="col-md-4">
+                <div class="user-label">Mobile (Primary)</div>
+                <div class="user-value">{{ profile.header.mobilePrimary || '-' }}</div>
+              </div>
+              <div class="col-md-4">
+                <div class="user-label">Mobile (Secondary)</div>
+                <div class="user-value">{{ profile.header.mobileSecondary || '-' }}</div>
+              </div>
+              <div class="col-md-4">
+                <div class="user-label">Landline</div>
+                <div class="user-value">
+                  {{ profile.header.landline || '-' }}
+                  <span class="text-muted" *ngIf="profile.header.landlineExt">
+                    ext. {{ profile.header.landlineExt }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Access + Activity -->
+        <div class="card mb-3 user-section-card">
+          <div class="card-header py-2 fw-semibold">
+            <i class="bi bi-shield-lock me-1"></i> Access &amp; Activity
+          </div>
+          <div class="card-body py-3">
+            <div class="row g-2 small">
+              <div class="col-md-3">
+                <div class="user-label">Dashboard Access</div>
+                <div class="user-value">
+                  <span class="badge"
+                        [ngClass]="profile.header.dashboardAccess
+                          ? 'bg-success-subtle text-success-emphasis border border-success'
+                          : 'bg-light text-muted border'">
+                    {{ profile.header.dashboardAccess ? 'Yes' : 'No' }}
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="user-label">Linked Salesman</div>
+                <div class="user-value">
+                  <span class="badge"
+                        [ngClass]="profile.header.isSalesmanLinked
+                          ? 'bg-warning-subtle text-warning-emphasis border border-warning'
+                          : 'bg-light text-muted border'">
+                    {{ profile.header.isSalesmanLinked ? (profile.header.salesmanCode || 'Yes') : 'No' }}
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="user-label">Last Login</div>
+                <div class="user-value">{{ profile.header.lastLoginText }}</div>
+              </div>
+              <div class="col-md-3">
+                <div class="user-label">Last Password Change</div>
+                <div class="user-value">{{ profile.header.lastPasswordChangeText }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: KPI tiles -->
+        <div class="row g-2 mb-3" *ngIf="profile?.kpis">
+          <div class="col-md-3">
+            <div class="card user-kpi-tile user-kpi-tile-primary">
+              <div class="card-body py-3">
+                <div class="user-label">Users Created</div>
+                <div class="user-kpi-value">{{ profile.kpis.createdCount || 0 }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card user-kpi-tile user-kpi-tile-info">
+              <div class="card-body py-3">
+                <div class="user-label">Branch Peers</div>
+                <div class="user-kpi-value">{{ profile.kpis.branchPeersCount || 0 }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card user-kpi-tile user-kpi-tile-warning">
+              <div class="card-body py-3">
+                <div class="user-label">Role Peers</div>
+                <div class="user-kpi-value">{{ profile.kpis.rolePeersCount || 0 }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card user-kpi-tile user-kpi-tile-success">
+              <div class="card-body py-3">
+                <div class="user-label">Same-Branch Same-Role</div>
+                <div class="user-kpi-value">{{ profile.kpis.siblingsCount || 0 }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 5: Siblings table -->
+        <div class="card mb-3 user-section-card" *ngIf="(profile?.siblings || []).length > 0">
+          <div class="card-header py-2 fw-semibold">
+            <i class="bi bi-people me-1"></i>
+            Peers in same Role + Branch
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm small mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Employee ID</th>
+                  <th>Username</th>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let s of profile.siblings">
+                  <td>{{ s.EmployeeId }}</td>
+                  <td>{{ s.UserName }}</td>
+                  <td>{{ s.FullName }}</td>
+                  <td>{{ s.EmailAddress }}</td>
+                  <td>
+                    <span class="badge"
+                          [ngClass]="s.Active
+                            ? 'bg-success-subtle text-success-emphasis border border-success'
+                            : 'bg-secondary-subtle text-secondary border border-secondary'">
+                      {{ s.Active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section 6: Audit -->
+        <div class="card user-section-card">
+          <div class="card-header py-2 fw-semibold">
+            <i class="bi bi-clock-history me-1"></i> Audit
+          </div>
+          <div class="card-body py-3">
+            <div class="row g-2 small">
+              <div class="col-md-3">
+                <div class="user-label">Created By</div>
+                <div class="user-value">
+                  {{ profile.header.createdByName || '-' }}
+                  <span class="text-muted" *ngIf="profile.header.createdBy">
+                    (EMP-{{ profile.header.createdBy }})
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="user-label">Created Date</div>
+                <div class="user-value">{{ profile.header.createdDateText }}</div>
+              </div>
+              <div class="col-md-3">
+                <div class="user-label">Updated By</div>
+                <div class="user-value">
+                  {{ profile.header.updatedByName || '-' }}
+                  <span class="text-muted" *ngIf="profile.header.updatedBy">
+                    (EMP-{{ profile.header.updatedBy }})
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="user-label">Updated Date</div>
+                <div class="user-value">{{ profile.header.updatedDateText }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer py-2">
+        <button class="btn btn-light btn-sm" (click)="closeProfile()">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>

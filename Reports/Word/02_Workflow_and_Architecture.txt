@@ -1,0 +1,202 @@
+COMPREHENSIVE WORKFLOW AND ARCHITECTURE DOCUMENT
+EMB Production 2
+
+Project: EMB Production 2
+Domain: Garment and embroidery manufacturing ERP
+Date: 16 June 2026
+Prepared for: Engineering onboarding and architectural review
+
+
+1. SYSTEM AT A GLANCE
+
+EMB Production 2 is a single-tenant manufacturing ERP for an embroidery and garment business. It models the full operational pipeline from design entry through to customer dispatch, with parallel branches for purchasing, raw material stock, and the service rate catalogue.
+
+Stack layers
+Layer	Technology
+Backend	ASP.NET MVC 5 on .NET Framework 4.7.2
+Object-Relational Mapper	Entity Framework 6 (Database-First, EDMX)
+Database	SQL Server, instance localhost\SQLEXPRESS03, database EMB_Production
+Frontend	Angular 20 standalone components, Bootstrap 5.3.8, Angular Material
+Build glue	Angular CLI writes its production output directly into the MVC project's Content/emb-products folder; HomeController.Angular serves the SPA shell
+Authentication	Forms Authentication, server-side session, cookies sent with withCredentials true
+
+
+2. REQUEST ROUTING
+
+App_Start/RouteConfig.cs registers four conventional routes after MapMvcAttributeRoutes, so attribute-routed endpoints always win:
+
+1. emb-products/api/{controller}/{action}/{id} - the generic API fallback
+2. emb-products/auth/{action} - the AuthController for login, logout, dashboard and check-auth
+3. Content/emb-products/{anything} - HomeController.Angular which serves the SPA shell for every deep link
+4. Default {controller}/{action}/{id} - also falls back to HomeController.Angular
+
+Every modern API controller declares a RoutePrefix in the shape emb-products/<area> and uses [Route("...")] on each action.
+
+Examples
+Prefix	Controller
+emb-products/products	Gen_ProductsController
+emb-products/gen-stocks	Gen_StocksController
+emb-products/dropdowns	DropdownsController
+emb-products/design-costing	DesignCostingController
+emb-products/service-rates	Gen_ServiceRatesController
+emb-products/dispatch	DispatchController
+emb-products/work-orders	WorkOrdersController
+
+HomeController.Angular reads ~/Content/emb-products/index.html from disk. If the file is missing it returns a plain-text "SPA not built" message, which is the canonical indicator that an Angular build step has been skipped.
+
+
+3. DATA LAYER
+
+The data layer uses Entity Framework 6 Database-First. Two generated DbContext instances point at the same database: EMB_ProductionEntities and EMB_ProductionEntities1. The active instance, available as BaseController.db, is EMB_ProductionEntities1. It is disposed in BaseController.Dispose. New controllers should inherit BaseController and use that instance. A third DbContext must not be introduced.
+
+Global.asax.cs sets JsonConvert.DefaultSettings to use camelCase serialization. Large-payload endpoints additionally use Infrastructure/JsonNetResult, a streaming JSON.NET JsonResult with MaxDepth set to 5, NullValueHandling set to Ignore, and ReferenceLoopHandling set to Ignore.
+
+
+4. BASECONTROLLER - THE CONTROLLER SPINE
+
+Almost every API controller inherits from Controllers/BaseController.cs. It supplies the following capabilities:
+
+Capability	Members
+Shared DbContext	db, disposed in Dispose
+Identity resolution	GetCurrentUserId, GetSafeCurrentUserId, GetCurrentEmployeeId, GetCurrentBranchId, GetCurrentRoleId
+Response envelopes	JsonSuccess(message, data) and JsonError(message, ex), both returning the shape { success, message, data }
+Date helpers	ParsePurchaseDate, which accepts ISO strings and the legacy /Date(...)/ payload
+Stock helpers	GetFreeCompanyStockBalance, GetCustomerReservedStockBalance, IsCustomerReservedStock, GetThreadStockBalance, ValidateFinishedStockBalance, ValidateQcApprovalForDispatch, CanPostDispatch
+Cost helpers	GetProductMaterialPerUnitCost, GetProductServicePerUnitCost, GetDesignBomMaterialPerUnitCost (new), GetRawItemLatestRate (new)
+
+Note: GetCurrentUserId deliberately falls back to the lowest-id active user when session or identity cannot be resolved, so audit fields CreatedBy and UpdatedBy always reference a valid row. When investigating "wrong user" bugs, consider whether this fallback is hiding a deeper authentication issue.
+
+
+5. DOMAIN CONVENTIONS (TO BE PRESERVED IN EVERY NEW ENDPOINT)
+
+Convention	Rule
+Soft delete	Always filter x.Deleted != true (not == false). Deleted is nullable, and unset rows must be included
+Posting and reversal lifecycle	Transactional entities (Dispatch, WorkOrders, QC_Inspection, DailyProduction, JobOrders) carry IsPosted, IsReversed, Active. Drafts have IsPosted not true. Active reservation requires IsPosted true and IsReversed not true
+Stock ledger semantics	Gen_Stocks rows are unified in/out ledger entries keyed by StockStage, ItemType (PRODUCT, FINISHED, raw), TransactionType (IN, OUT), ReferenceType (QC_INSPECTION, DISPATCH, etc.) and ReferenceId. Free-company versus customer-reserved finished stock is derived, never stored
+Branch scoping	Most queries filter by BranchId. Resolve via GetCurrentBranchId rather than reading session directly
+Audit fields	CreatedBy, UpdatedBy, CreatedDate, UpdatedDate exist on most tables. Populate via GetCurrentUserId or GetSafeCurrentUserId
+JSON casing	Angular DTOs expect camelCase. Newtonsoft.Json.JsonConvert.DefaultSettings enforces this globally. New endpoints should rely on the default casing
+
+
+6. PRODUCTION PIPELINE - THE SEVEN WORKFLOW STAGES
+
+Stage	Module	Backend entity	Key transition
+1	Job Order	Gen_JobOrders	Created from customer demand or internal trigger
+2	Work Order	WorkOrders, WorkOrderItems	Posting reserves raw material capacity
+3	Issue Materials	Gen_Store (raw ledger), Gen_ThreadUsage	OUT entries against work order
+4	Daily Production	Gen_DailyProduction	Quantity produced per shift, then sent to QC
+5	QC Inspection	QC_Inspection	Approve, Rework, or Reject. On Approve, creates a finished stock IN entry
+6	Finished Stock	Gen_Stocks where StockStage equals FINISHED and ItemType equals PRODUCT	Free-company or customer-reserved (derived)
+7	Dispatch	Dispatch, DispatchItems	OUT entries against finished stock. Supports Customer Demand or Direct Sale flows
+
+A parallel pipeline handles Purchase, Purchase Returns and Raw Stock, feeding stage 3.
+
+The dashboard Workflow Summary rolls up pending counts at each stage: wosAwaitingMaterialIssue, dpDrafts, dpAwaitingQcSend, qcPendingInspection, qcAwaitingRework, qcAwaitingReinspection, dispatchDrafts, and totalPending.
+
+
+7. POLYMORPHIC LEDGERS - RAW VERSUS FINISHED
+
+Table	Purpose	Discriminator columns
+Gen_Store	Raw material ledger	ItemId points at Gen_RawItems. TransactionType is IN or OUT. ReferenceType identifies the source (PURCHASE, MATERIAL_ISSUE, RETURN)
+Gen_Stocks	Finished and product ledger	ItemType (PRODUCT, FINISHED, etc.), ProdId or ItemId, StockStage (FINISHED, WIP), ReferenceType (QC_INSPECTION, DISPATCH)
+Gen_ThreadUsage	Thread-specific issuance	Scoped to thread items only
+
+These three are deliberately not unified. Raw and finished have different valuation lifecycles, and threading has its own colour and spool metadata.
+
+
+8. FRONTEND ARCHITECTURE
+
+Key characteristics
+- Standalone components, bootstrapped in src/main.ts via appConfig (src/app/app.config.ts). No NgModules.
+- Routing in src/app/app.routes.ts: a public LoginComponent and HomeComponent, everything else nested under LayoutComponent guarded by AuthGuard.
+- Auth via shared/services/auth.service.ts, which posts to /emb-products/auth/login, persists the user in localStorage under the key auth_user, and exposes the observable isLoggedIn$. Cookies are sent with withCredentials true.
+- API services live under src/app/services and src/app/shared/services. Feature-specific DTOs live under src/app/shared/models.
+- Reference-data caching via DropdownDataService, which caches lookups against /emb-products/dropdowns.
+- Exports and printing are centralised in shared/services/api-data.service.ts (xlsx, jspdf-autotable and the print window).
+
+Adding a new feature module
+1. Add a *.dto.ts under shared/models.
+2. Add an *.service.ts under services.
+3. Create a standalone component folder under src/app/<feature>.
+4. Add a route inside the LayoutComponent children in app.routes.ts.
+
+Performance pattern - lesson from this session
+Templates must never call a getter that returns a fresh array. That causes infinite change-detection loops. Instead, recompute in input handlers, expose the result as a plain property, and iterate with *ngFor plus trackBy. Concretely, replace
+
+  get visibleGroups() { return this.groups.filter(...); }
+
+with
+
+  visibleGroups = [];
+  private refreshVisibleGroups() { this.visibleGroups = this.groups.filter(...); }
+
+
+9. PRICING AND COSTING DATA FLOW
+
+This area gained significant fallback logic in the current session. Two helpers are now the single source of truth.
+
+9.1 DispatchItemsController.GetProductCostPrice
+Priority	Source	When it fires
+1	Gen_Stocks.Rate from QC finished stock	Normal flow once QC has posted a cost
+2	Last DispatchItem.CostPrice on the same branch	The product has been dispatched before
+3	DesignCosting.ProductCostPerUnit (NEW)	Costing has been saved on the design
+4	Gen_Products.Price divided by 1.10	Master price is set but no transaction history exists
+
+9.2 DispatchItemsController.GetCustomerBaseSalePrice
+Priority	Source	When it fires
+1	The same customer's last sale price for this product	Returning customer with sticky pricing
+2	Any customer's last sale price (same branch)	First sale to this customer but the product has sold before
+3	DesignCosting.SellingPricePerUnit (NEW)	Costing has been saved on the design
+4	Gen_Products.Price (master)	Master price set by the Products module
+5	Cost multiplied by 1.10	Original markup default
+
+9.3 Design costing per-unit composition
+The per-unit composition is now:
+- materialCostPerUnit equals ThreadCost divided by batchQty, plus GetProductMaterialPerUnitCost. If that returns zero, the fallback is GetDesignBomMaterialPerUnitCost.
+- productionCostPerUnit equals (MachineCost plus LaborCost plus ElectricityCost plus OtherCost) divided by batchQty.
+- serviceCostPerUnit equals GetProductServicePerUnitCost. If that returns zero in the browser, the frontend falls back to /service-rates/list.
+- productCostPerUnit equals material plus production plus service.
+- totalProductCost equals productCostPerUnit multiplied by batchQty.
+- sellingPricePerUnit equals productCostPerUnit multiplied by (1 plus marginPercent divided by 100).
+
+
+10. DEFENSIVE DESIGN PATTERNS (PROJECT-WIDE GUIDELINES)
+
+1. Multi-priority fallback chains for pricing and costing. No single missing data source should produce a visible zero.
+2. Frontend defensive math mirrors backend fallbacks so deploys do not strictly require an MVC rebuild for visible fixes.
+3. Soft-delete-aware filters everywhere (Deleted not true).
+4. Branch scoping by default, with design-level overrides only where the user explicitly chose otherwise.
+5. Audit non-null guarantee via the GetCurrentUserId fallback to the lowest active user id.
+6. Editable computed fields where the data source may be empty (for example Service / Unit). The operator can always override.
+
+
+11. BUILD AND RUN
+
+11.1 Backend
+- Open EMB_Production 2.sln in Visual Studio.
+- Restore NuGet packages (this project uses packages.config rather than PackageReference).
+- Build and run under IIS Express. The site binds to https://localhost:44310.
+
+11.2 Frontend development workflow
+From EMB_Production 2/ClientApp/emb-products run:
+
+  npm install
+  npm start                    Starts ng serve on http://localhost:4200
+  npm run build:dev            Development build
+  npm run build:prod           Production build (default)
+  npm run build:deploy         Clean, then production build, then robocopy into MVC Content/emb-products
+  npm test                     Karma plus Jasmine
+
+environment.ts points apiUrl at https://localhost:44310. proxy.conf.json only proxies /Gen_Products and is largely vestigial today.
+
+
+12. KNOWN SHARP EDGES
+
+- The project and solution names contain a space. Paths must always be quoted in scripts.
+- ClientApp/AspNetProject exists and is empty. It can be removed safely at a future cleanup.
+- Models/Model11.cs and Models/Model1.Context1.cs are siblings of the EDMX-generated files. The active context is EMB_ProductionEntities1. Regenerating the EDMX will overwrite these.
+- Web.config defines two connection strings (EMB_ProductionEntities and EMB_ProductionEntities1) that point at the same database. They must be kept in sync.
+- Several AuthController responses still use PascalCase property names (Id, UserName). The Angular side currently handles both casings, but new endpoints should rely on the default camelCase.
+
+
+END OF DOCUMENT

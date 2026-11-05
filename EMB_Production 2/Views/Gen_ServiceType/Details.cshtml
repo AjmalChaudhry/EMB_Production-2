@@ -1,0 +1,141 @@
+﻿@model EMB_Production.Models.Gen_ServiceType
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Service Type Details";
+    var currentFilter = Request.QueryString["search"] ?? "";
+    var activeFilter = Request.QueryString["activeFilter"] ?? "";
+    var branchFilter = Request.QueryString["branchFilter"] ?? "";
+}
+
+<style>
+    .detail-card {
+        background: #fff;
+        border-left: 5px solid #007bff;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        margin-top: 1rem;
+    }
+
+    .details-header {
+        font-size: 1.25rem;
+        font-weight: 600;
+        background: #007bff;
+        color: #fff;
+        padding: .75rem 1rem;
+        border-radius: 6px 6px 0 0;
+        margin: -1.5rem -1.5rem 1rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        font-size: .9rem;
+        color: #2c3e50;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        color: #34495e;
+        word-wrap: break-word;
+    }
+</style>
+
+<div class="detail-card">
+    <div class="details-header">Service Type Details</div>
+
+    <div class="toolbar-container d-flex align-items-center justify-content-end mb-3">
+        @using (Html.BeginForm("Index", "Gen_ServiceType", FormMethod.Get, new { @class = "d-flex align-items-center" }))
+        {
+            
+            <a href="@Url.Action("Index", "Gen_ServiceType")" class="btn btn-outline-secondary btn-sm me-2"><i class="bi bi-x-circle"></i></a>
+            <button type="button" onclick="location.reload()" class="btn btn-outline-secondary btn-sm me-2"><i class="bi bi-arrow-clockwise"></i></button>
+            <button type="button" onclick="window.print()" class="btn btn-outline-secondary btn-sm me-2"><i class="bi bi-printer"></i></button>
+            <a href="@Url.Action("ExportToExcel", "Gen_ServiceType", new { id = Model.Id })" class="btn btn-success btn-sm me-2"><i class="bi bi-file-earmark-spreadsheet"></i> Excel</a>
+            <a href="@Url.Action("ExportToPdf", "Gen_ServiceType", new { id = Model.Id })" class="btn btn-danger btn-sm"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+        }
+    </div>
+
+    <div class="bg-white p-4 rounded shadow-sm mb-4">
+        <div class="row gy-3">
+
+            <div class="col-md-4">
+                <div class="detail-label">Service Type</div>
+                <div class="detail-value">@Model.Service_Type</div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="detail-label">Description</div>
+                <div class="detail-value">@Model.Service_TypeDescription</div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="detail-label">Branch</div>
+                <div class="detail-value">@(Model.Branches != null ? Model.Branches.Name : $"(ID: {Model.BranchId})")</div>
+            </div>
+
+            <div class="col-12">
+                <h5 class="mt-4">Services</h5>
+                <div class="row row-cols-1 row-cols-md-4 g-3">
+                    @if (Model.Gen_TheServices != null && Model.Gen_TheServices.Any())
+                    {
+                        foreach (var svc in Model.Gen_TheServices)
+                        {
+                            <div class="col">
+                                <div class="card h-100 shadow-sm">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title mb-2">@svc.Service_Name</h6>
+                                        <p class="card-text mb-1"><strong>ID:</strong> @svc.Id</p>
+                                        <p class="card-text mb-1"><strong>Rate:</strong> @svc.Service_RateCharge</p>
+                                        <p class="card-text mb-1"><strong>Device:</strong> @svc.Machine_Device</p>
+                                        <p class="card-text mb-0"><strong>Branch ID:</strong> @svc.BranchId</p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="col">
+                            <p>No services available for this type.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="detail-label">Record Timestamp</div>
+                <div class="detail-value">@(Model.RecordTimeStamp.HasValue ? Model.RecordTimeStamp.Value.ToString("yyyy-MM-dd HH:mm:ss") : "(none)")</div>
+            </div>
+
+            @foreach (var prop in ViewData.ModelMetadata.Properties
+                     .Where(p => p.ShowForDisplay
+                              && p.PropertyName != nameof(Model.Service_Type)
+                              && p.PropertyName != nameof(Model.Service_TypeDescription)
+                              && p.PropertyName != nameof(Model.BranchId)
+                              && p.PropertyName != nameof(Model.Branches)
+                              && p.PropertyName != nameof(Model.Gen_TheServices)
+                              && p.PropertyName != nameof(Model.RecordTimeStamp)))
+            {
+                <div class="col-md-4">
+                    <div class="detail-label">@prop.GetDisplayName()</div>
+                    <div class="detail-value">
+                        @if (prop.Model is DateTime dt)
+                        {
+                            @dt.ToString("yyyy-MM-dd HH:mm")
+                        }
+                        else
+                        {
+                            @prop.Model
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center mb-4">
+        @Html.ActionLink("Back to List", "Index", new { search = currentFilter, activeFilter = activeFilter, branchFilter = branchFilter }, new { @class = "btn btn-outline-secondary me-3" })
+        @Html.ActionLink("Edit", "Index", new { showEdit = true, editId = Model.Id, search = currentFilter, activeFilter = activeFilter, branchFilter = branchFilter }, new { @class = "btn btn-primary" })
+    </div>
+</div>

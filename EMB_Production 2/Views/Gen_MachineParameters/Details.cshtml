@@ -1,0 +1,95 @@
+﻿@model EMB_Production.Models.Gen_MachineParameters
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Parameter Details";
+}
+
+<style>
+    .detail-card {
+        background: #fff;
+        border-left: 5px solid #007bff;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        margin-top: 1rem;
+    }
+
+    .details-header {
+        background: #007bff;
+        color: #fff;
+        padding: .75rem 1rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+        border-radius: 6px 6px 0 0;
+        margin: -1.5rem -1.5rem 1rem;
+    }
+
+    .toolbar-container {
+        margin-bottom: 1rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        font-size: .9rem;
+        color: #2c3e50;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        color: #34495e;
+        word-wrap: break-word;
+    }
+</style>
+
+<div class="detail-card">
+    <div class="details-header">Parameter Details</div>
+
+    <div class="toolbar-container d-flex justify-content-end">
+        <button type="button" onclick="location.reload()" class="btn btn-outline-secondary btn-sm me-2" title="Refresh">
+            <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        <button type="button" onclick="window.print()" class="btn btn-outline-secondary btn-sm me-2" title="Print">
+            <i class="bi bi-printer"></i>
+        </button>
+        <a href="@Url.Action("ExportToExcel","Gen_MachineParameters",   new{ id = Model.Id })" class="btn btn-success btn-sm me-2">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Excel
+        </a>
+        <a href="@Url.Action("ExportToPdf","Gen_MachineParameters",     new{ id = Model.Id })" class="btn btn-danger btn-sm">
+            <i class="bi bi-file-earmark-pdf"></i> PDF
+        </a>
+    </div>
+
+    <div class="row gy-4">
+        <!-- Machine ID -->
+        <div class="col-md-3">
+            <div class="detail-label">Machine ID</div>
+            <div class="detail-value">@Model.MachineId</div>
+        </div>
+
+        <!-- Machine Code -->
+        <div class="col-md-3">
+            <div class="detail-label">Machine Code</div>
+            <div class="detail-value">
+                @(Model.Gen_Machines != null ? Model.Gen_Machines.Code : "(none)")
+            </div>
+        </div>
+
+        @* now loop the rest of your metadata-driven properties, skipping MachineId & the nav prop *@
+        @foreach (var prop in ViewData.ModelMetadata.Properties
+                                   .Where(p => p.ShowForDisplay
+                                            && p.PropertyName != nameof(Model.MachineId)
+                                            && p.PropertyName != nameof(Model.Gen_Machines)))
+        {
+            <div class="col-md-3">
+                <div class="detail-label">@prop.GetDisplayName()</div>
+                <div class="detail-value">@prop.Model</div>
+            </div>
+        }
+    </div>
+
+    <div class="mt-4 d-flex justify-content-center">
+        @Html.ActionLink("Back to List", "Index", "Gen_MachineParameters", null, new { @class = "btn btn-outline-secondary me-3" })
+        @Html.ActionLink("Edit", "Edit", new { id = Model.Id }, new { @class = "btn btn-primary" })
+    </div>
+</div>

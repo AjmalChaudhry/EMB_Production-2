@@ -1,0 +1,637 @@
+<div class="container-fluid py-3">
+  <!-- ======= HEADER ROW ======= -->
+  <div class="row align-items-center mb-3">
+
+    <!-- LEFT: Title -->
+    <div class="col-md-4 d-flex align-items-center">
+      <h4 class="d-flex align-items-center mb-0">
+        <i class="bi bi-grid-3x3-gap me-2 text-primary"></i>
+        Categories Management
+      </h4>
+    </div>
+
+    <!-- RIGHT: Buttons + Search + Filter -->
+    <div class="col-md-8 d-flex justify-content-end align-items-center gap-2">
+
+      <!-- Add Category -->
+      <button class="btn btn-primary d-flex align-items-center" (click)="openCreate()">
+        <i class="bi bi-plus-circle me-2"></i>
+        Add Category
+      </button>
+
+      <!-- Search -->
+      <div class="input-group" style="max-width: 160px;">
+        <input type="text"
+               class="form-control"
+               placeholder="Search Name / Code / Description..."
+               [(ngModel)]="searchText">
+        <button class="btn btn-outline-secondary" (click)="onSearch()">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+
+      <!-- Status Filter -->
+      <select class="form-select" style="max-width: 80px;"
+              [(ngModel)]="activeFilter"
+              (change)="onActiveFilterChange()">
+        <option value="">All</option>
+        <option value="true">Active</option>
+        <option value="false">Inactive</option>
+      </select>
+
+
+      <!-- Refresh -->
+      <button class="btn btn-outline-secondary" (click)="refresh()">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+
+      <!-- Excel -->
+      <button class="btn btn-outline-success btn-sm" (click)="exportCategoriesToExcel()">
+        <i class="bi bi-file-earmark-excel"></i>
+      </button>
+
+      <!-- PDF -->
+      <button class="btn btn-outline-danger btn-sm" (click)="exportCategoriesToPDF()">
+        <i class="bi bi-file-earmark-pdf"></i>
+      </button>
+
+      <!-- Print -->
+      <button class="btn btn-outline-primary btn-sm" (click)="printCategories()">
+        <i class="bi bi-printer"></i>
+      </button>
+
+    </div>
+  </div>
+
+
+  <!-- Phase R.12 - Summary Strip -->
+  <div class="cat-summary-strip d-flex flex-wrap gap-2 align-items-center mb-3">
+    <span class="badge bg-primary-subtle text-primary">
+      <i class="bi bi-list-ul me-1"></i> Total <strong>{{ summary.count }}</strong>
+    </span>
+    <span class="badge bg-success-subtle text-success">
+      <i class="bi bi-check2-circle me-1"></i> Active <strong>{{ summary.activeCount }}</strong>
+    </span>
+    <span class="badge bg-secondary-subtle text-secondary">
+      <i class="bi bi-slash-circle me-1"></i> Inactive <strong>{{ summary.inactiveCount }}</strong>
+    </span>
+    <span class="badge bg-info-subtle text-info">
+      <i class="bi bi-bookmark me-1"></i> Brands <strong>{{ summary.distinctBrands }}</strong>
+    </span>
+    <span class="badge bg-info-subtle text-info">
+      <i class="bi bi-building me-1"></i> Branches <strong>{{ summary.distinctBranches }}</strong>
+    </span>
+    <span class="badge bg-warning-subtle text-warning">
+      Total Value <strong>{{ summary.totalValue | number:'1.0-0' }}</strong>
+    </span>
+    <span class="badge bg-dark-subtle text-dark">
+      Avg <strong>{{ summary.avgPrice | number:'1.2-2' }}</strong>
+    </span>
+    <span class="badge bg-dark-subtle text-dark">
+      Min <strong>{{ summary.minPrice | number:'1.2-2' }}</strong>
+    </span>
+    <span class="badge bg-dark-subtle text-dark">
+      Max <strong>{{ summary.maxPrice | number:'1.2-2' }}</strong>
+    </span>
+    <span class="badge bg-light text-dark border" *ngFor="let b of summary.byBrand | slice:0:3">
+      {{ b.brand }}: <strong>{{ b.count }}</strong>
+    </span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Code</th>
+          <th>Name</th>
+          <th>Brand</th>
+          <th>Branch</th>
+          <th>Qty</th>
+          <th>Length</th>
+          <th>Weight</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let c of categories">
+          <td>{{ c.code }}</td>
+          <td>{{ c.name }}</td>
+          <td>{{ c.brandName || '-' }}</td>
+          <td>{{ c.branchName || '-' }}</td>
+
+          <td>{{ c.quantity || '-' }}</td>
+          <td>{{ c.length || '-' }}</td>
+          <td>{{ c.weight || '-' }}</td>
+
+          <td>
+            {{ c.price != null ? (c.price | currency:'PKR') : '-' }}
+          </td>
+
+          <td>
+            <span class="badge bg-success" *ngIf="c.active">Active</span>
+            <span class="badge bg-danger" *ngIf="!c.active">Inactive</span>
+          </td>
+
+          <td class="text-center">
+            <button class="btn btn-sm btn-info me-1" (click)="openProfile(c.id)" title="360 Profile">
+              <i class="bi bi-eye"></i>
+            </button>
+            <button class="btn btn-sm btn-primary me-1" (click)="openEdit(c)">
+              <i class="bi bi-pencil-square"></i>
+            </button>
+            <button class="btn btn-sm btn-danger" (click)="confirmDelete(c)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="categories.length === 0">
+          <td colspan="10" class="text-center text-muted py-3">
+            No categories found.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+
+
+    <!-- Pagination -->
+    <nav *ngIf="paginationArray.length > 1" class="mt-3">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" [class.disabled]="page === 1">
+          <button class="page-link" (click)="onPageChange(page - 1)">Prev</button>
+        </li>
+        <li class="page-item"
+            *ngFor="let pg of paginationArray"
+            [class.active]="pg === page">
+          <button class="page-link" (click)="onPageChange(pg)">
+            {{ pg }}
+          </button>
+        </li>
+        <li class="page-item" [class.disabled]="page === totalPages">
+          <button class="page-link" (click)="onPageChange(page + 1)">Next</button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+
+  <!-- FORM MODAL -->
+  <div #categoryFormModal class="modal fade" id="categoryFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title">
+            {{ editingCategory ? 'Edit Category' : 'Add Category' }}
+          </h5>
+          <button type="button"
+                  class="btn-close btn-close-white"
+                  (click)="closeFormModal()">
+          </button>
+        </div>
+
+        <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
+          <div class="modal-body">
+            <div class="row g-3">
+
+              <div class="col-md-4">
+                <label class="form-label">Name <span class="text-danger">*</span></label>
+                <input class="form-control"
+                       formControlName="name"
+                       placeholder="Enter category name" />
+                <div class="text-danger small mt-1"
+                     *ngIf="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched">
+                  Name is required.
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Code</label>
+                <input type="text"
+                       class="form-control"
+                       formControlName="code"
+                       readonly
+                       placeholder="Auto-generated" />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Brand <span class="text-danger">*</span></label>
+                <select formControlName="brandId" class="form-select">
+                  <option [ngValue]="null">-- Select Brand --</option>
+                  <option *ngFor="let b of brands" [ngValue]="b.Id">
+                    {{ b.Name }} ({{ b.Code || '-' }})
+                  </option>
+                </select>
+                <div class="text-danger small mt-1"
+                     *ngIf="categoryForm.get('brandId')?.invalid && categoryForm.get('brandId')?.touched">
+                  Brand is required.
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Branch <span class="text-danger">*</span></label>
+                <select formControlName="branchId" class="form-select">
+                  <option [ngValue]="null">-- Select Branch --</option>
+                  <option *ngFor="let br of branches" [ngValue]="br.Id">
+                    {{ br.Name }}
+                  </option>
+                </select>
+                <div class="text-danger small mt-1"
+                     *ngIf="categoryForm.get('branchId')?.invalid && categoryForm.get('branchId')?.touched">
+                  Branch is required.
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Quantity</label>
+                <input type="text"
+                       class="form-control"
+                       formControlName="quantity"
+                       placeholder="e.g. 100 pcs" />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Length</label>
+                <input type="text"
+                       class="form-control"
+                       formControlName="length"
+                       placeholder="e.g. 50 m" />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Weight</label>
+                <input type="text"
+                       class="form-control"
+                       formControlName="weight"
+                       placeholder="e.g. 2.5 kg" />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Price</label>
+                <input type="number"
+                       class="form-control"
+                       formControlName="price"
+                       placeholder="Enter price" />
+              </div>
+
+              <div class="col-md-4 d-flex align-items-center">
+                <div class="form-check mt-4">
+                  <input id="active"
+                         class="form-check-input"
+                         type="checkbox"
+                         formControlName="active" />
+                  <label for="active" class="form-check-label">Active</label>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Description</label>
+                <textarea rows="2"
+                          class="form-control"
+                          formControlName="description"
+                          placeholder="Optional notes"></textarea>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button"
+                    class="btn btn-secondary"
+                    (click)="closeFormModal()">
+              Close
+            </button>
+
+            <button type="submit"
+                    class="btn btn-success"
+                    [disabled]="categoryForm.invalid || loading">
+              {{ loading ? 'Saving...' : 'Save' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL MODAL -->
+  <div class="modal fade" #categoryDetailModal tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title">Category Details</h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeDetail()"></button>
+        </div>
+
+        <div class="modal-body" *ngIf="selectedCategory as c">
+          <div class="row g-3">
+
+            <div class="col-md-4"><strong>ID:</strong> {{ c.Id || '-' }}</div>
+            <div class="col-md-4">
+              <strong>Deleted:</strong>
+              <span [class.text-danger]="c.Deleted" [class.text-success]="!c.Deleted">
+                {{ c.Deleted ? 'Yes' : 'No' }}
+              </span>
+            </div>
+            <div class="col-md-4">
+              <strong>Status:</strong>
+              <span [class.text-success]="c.Active" [class.text-danger]="!c.Active">
+                {{ c.Active ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+
+            <hr class="detail-hr" />
+
+            <div class="col-md-4"><strong>Name:</strong> {{ c.Name || '-' }}</div>
+            <div class="col-md-4"><strong>Code:</strong> {{ c.Code || '-' }}</div>
+            <div class="col-md-4"><strong>Brand:</strong> {{ c.BrandName || '-' }}</div>
+
+            <hr class="detail-hr" />
+
+            <div class="col-12"><strong>Description:</strong> {{ c.Description || '-' }}</div>
+
+            <hr class="detail-hr" />
+
+            <div class="col-md-4"><strong>Quantity:</strong> {{ c.Quantity || '-' }}</div>
+            <div class="col-md-4"><strong>Length:</strong> {{ c.Length || '-' }}</div>
+            <div class="col-md-4"><strong>Weight:</strong> {{ c.Weight || '-' }}</div>
+
+            <hr class="detail-hr" />
+
+            <div class="col-md-4">
+              <strong>Price:</strong> {{ c.Price ? (c.Price | currency:'PKR') : '-' }}
+            </div>
+            <div class="col-md-4"><strong>Branch:</strong> {{ c.BranchName || '-' }}</div>
+
+            <hr class="detail-hr" />
+
+            <div class="col-md-4"><strong>Created By (EmpID):</strong> {{ c.CreatedBy || '-' }}</div>
+            <div class="col-md-4"><strong>Created Date:</strong> {{ c.CreatedDateFormatted || '-' }}</div>
+            <div class="col-md-4"><strong>Updated By (EmpID):</strong> {{ c.UpdatedBy || '-' }}</div>
+
+            <hr class="detail-hr" />
+
+            <div class="col-md-4"><strong>Updated Date:</strong> {{ c.UpdatedDateFormatted || '-' }}</div>
+            <div class="col-md-4"><strong>Timestamp:</strong> {{ c.RecordTimeStamp || '-' }}</div>
+
+            <hr class="detail-hr" />
+
+            <div class="col-12 text-end mt-3">
+              <button class="btn btn-secondary btn-sm" (click)="closeDetail()">Close</button>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- DELETE MODAL -->
+  <div class="modal fade" id="deleteCategoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <!-- bigger modal -->
+      <div class="modal-content p-0 shadow-lg">
+
+        <!-- Header -->
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Delete Confirmation
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body text-center py-4">
+          <p class="fs-5 mb-3">Are you sure you want to delete this category?</p>
+          <p class="text-muted">This action cannot be undone.</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer d-flex justify-content-center gap-3">
+          <button class="btn btn-danger px-4" (click)="deleteCategory()">
+            <i class="bi bi-trash me-1"></i> Yes, Delete
+          </button>
+          <button class="btn btn-secondary px-4" data-bs-dismiss="modal">
+            Cancel
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Phase R.12 - 360 PROFILE DRAWER
+       ============================================================ -->
+  <div class="modal cat-profile-modal" *ngIf="showProfile"
+       [class.show]="showProfile" [class.d-block]="showProfile"
+       (click)="closeProfile()" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title">
+            <i class="bi bi-grid me-2"></i>
+            Category 360 Profile
+            <span *ngIf="profile?.header?.id" class="badge bg-light text-dark ms-2">#{{ profile.header.id }}</span>
+            <span *ngIf="profile?.header?.code" class="badge bg-primary ms-2">{{ profile.header.code }}</span>
+          </h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeProfile()"></button>
+        </div>
+
+        <div class="modal-body">
+          <div *ngIf="profileLoading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="mt-2 text-muted small">Loading profile…</div>
+          </div>
+
+          <ng-container *ngIf="!profileLoading && profile as p">
+
+            <div class="card cat-section-card mb-3">
+              <div class="card-header">Header</div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <div class="cat-label">Code</div>
+                    <div class="cat-value">{{ p.header?.code || '-' }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="cat-label">Name</div>
+                    <div class="cat-value">{{ p.header?.name || '-' }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="cat-label">Brand</div>
+                    <div class="cat-value">{{ p.header?.brandName || '-' }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="cat-label">Branch</div>
+                    <div class="cat-value">{{ p.header?.branchName || '-' }}</div>
+                  </div>
+
+                  <div class="col-md-2">
+                    <div class="cat-label">Quantity</div>
+                    <div class="cat-value">{{ p.header?.quantity || '-' }} <span class="text-muted small">{{ p.header?.quantityUnit }}</span></div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="cat-label">Length</div>
+                    <div class="cat-value">{{ p.header?.length || '-' }} <span class="text-muted small">{{ p.header?.lengthUnit }}</span></div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="cat-label">Weight</div>
+                    <div class="cat-value">{{ p.header?.weight || '-' }} <span class="text-muted small">{{ p.header?.weightUnit }}</span></div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="cat-label">Price</div>
+                    <div class="cat-value">{{ p.header?.price | number:'1.2-2' }} <span class="text-muted small">{{ p.header?.priceUnit }}</span></div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="cat-label">Status</div>
+                    <div class="cat-value">
+                      <span class="badge" [ngClass]="p.header?.active ? 'bg-success' : 'bg-secondary'">
+                        {{ p.header?.active ? 'Active' : 'Inactive' }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="cat-label">Created</div>
+                    <div class="cat-value">{{ p.header?.createdDateText || '-' }}</div>
+                  </div>
+
+                  <div class="col-md-12">
+                    <div class="cat-label">Description</div>
+                    <div class="cat-value">{{ p.header?.description || '-' }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-3 cat-kpi-row mb-3">
+              <div class="col-md-2">
+                <div class="card kpi-tile kpi-tile-primary p-3">
+                  <div class="kpi-label">Price</div>
+                  <div class="kpi-value">{{ p.kpis?.price | number:'1.2-2' }}</div>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="card kpi-tile kpi-tile-info p-3">
+                  <div class="kpi-label">Quantity</div>
+                  <div class="kpi-value">{{ p.kpis?.quantity || '-' }}</div>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="card kpi-tile kpi-tile-warning p-3">
+                  <div class="kpi-label">Length</div>
+                  <div class="kpi-value">{{ p.kpis?.length || '-' }}</div>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="card kpi-tile kpi-tile-success p-3">
+                  <div class="kpi-label">Weight</div>
+                  <div class="kpi-value">{{ p.kpis?.weight || '-' }}</div>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="card kpi-tile kpi-tile-info p-3">
+                  <div class="kpi-label">Brand Siblings</div>
+                  <div class="kpi-value">{{ p.kpis?.brandSiblings ?? 0 }}</div>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="card kpi-tile kpi-tile-primary p-3">
+                  <div class="kpi-label">Avg Brand Price</div>
+                  <div class="kpi-value">{{ p.kpis?.avgBrandPrice | number:'1.2-2' }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card cat-section-card mb-3">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bookmark me-1"></i> Other Categories of Same Brand</span>
+                <span class="badge bg-secondary">{{ p.brandSiblings?.length || 0 }}</span>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:70px;">ID</th>
+                      <th>Code</th>
+                      <th>Name</th>
+                      <th>Quantity</th>
+                      <th class="text-end">Price</th>
+                      <th style="width:90px;">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngIf="!p.brandSiblings || p.brandSiblings.length === 0">
+                      <td colspan="6" class="text-center text-muted py-3">No other categories for this brand.</td>
+                    </tr>
+                    <tr *ngFor="let s of p.brandSiblings">
+                      <td>{{ s.Id }}</td>
+                      <td>{{ s.Code || '-' }}</td>
+                      <td>{{ s.Name || '-' }}</td>
+                      <td>{{ s.Quantity || '-' }}</td>
+                      <td class="text-end">{{ s.Price | number:'1.2-2' }}</td>
+                      <td>
+                        <span class="badge" [ngClass]="s.Active ? 'bg-success' : 'bg-secondary'">
+                          {{ s.Active ? 'Active' : 'Inactive' }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card cat-section-card mb-3">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-building me-1"></i> Other Categories in Same Branch</span>
+                <span class="badge bg-secondary">{{ p.branchSiblings?.length || 0 }}</span>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:70px;">ID</th>
+                      <th>Code</th>
+                      <th>Name</th>
+                      <th>Brand</th>
+                      <th class="text-end">Price</th>
+                      <th style="width:90px;">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngIf="!p.branchSiblings || p.branchSiblings.length === 0">
+                      <td colspan="6" class="text-center text-muted py-3">No other categories in this branch.</td>
+                    </tr>
+                    <tr *ngFor="let s of p.branchSiblings">
+                      <td>{{ s.Id }}</td>
+                      <td>{{ s.Code || '-' }}</td>
+                      <td>{{ s.Name || '-' }}</td>
+                      <td>{{ s.BrandName || '-' }}</td>
+                      <td class="text-end">{{ s.Price | number:'1.2-2' }}</td>
+                      <td>
+                        <span class="badge" [ngClass]="s.Active ? 'bg-success' : 'bg-secondary'">
+                          {{ s.Active ? 'Active' : 'Inactive' }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </ng-container>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" (click)="closeProfile()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+

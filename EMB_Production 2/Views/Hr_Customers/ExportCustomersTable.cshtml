@@ -1,0 +1,65 @@
+﻿@model EMB_Production.ViewModels.CustomersPageViewModel
+
+@{
+    Layout = null;  // only render the table
+}
+
+<table class="table table-bordered table-sm">
+    <thead class="table-light">
+        <tr>
+            <th>ID</th>
+            <th>Cust. ID</th>
+            <th>Name</th>
+            <th>NTN Number</th>
+            <th>STRN Number</th>
+            <th>Address</th>
+            <th>City</th>
+            <th>Country</th>
+            <th>Email</th>
+            <th>Email2</th>
+            <th>Phone</th>
+            <th>Phone2</th>
+            <th>Mobile</th>
+            <th>Fax</th>
+            <th>Credit Limit</th>
+            <th>Invoice Period</th>
+            <th>Branch</th>
+            <th>Active</th>
+            <th>Deleted</th>
+            <th>Created By</th>
+            <th>Created Date</th>
+            <th>Updated By</th>
+            <th>Updated Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model.Customers)
+        {
+            <tr>
+                <td>@c.Id</td>
+                <td>@c.CustomerId</td>
+                <td>@c.Name</td>
+                <td>@c.NTN_Number</td>
+                <td>@c.STRN_Number</td>
+                <td>@c.Customer_Address</td>
+                <td>@c.Customer_City</td>
+                <td>@c.Customer_Country</td>
+                <td>@c.Customer_Email</td>
+                <td>@c.Customer_Email2</td>
+                <td>@c.Customer_Phone</td>
+                <td>@c.Customer_Phone2</td>
+                <td>@c.Customer_Mobile</td>
+                <td>@c.Customer_Fax</td>
+                <td>@(c.Customer_Credit_Limit_CAP?.ToString("F2") ?? "")</td>
+                <td>@c.Customer_Invoice_Period</td>
+                <td>@c.BranchName</td>
+                <td>@(c.Active ? "Yes" : "No")</td>
+                <td>@(c.Deleted ? "Yes" : "No")</td>
+                <td>@c.CreatedBy</td>
+                <td>@c.CreatedDate?.ToString("g")</td>
+                <td>@c.UpdatedBy</td>
+                <td>@c.UpdatedDate?.ToString("g")</td>
+            </tr>
+        }
+    </tbody>
+</table>

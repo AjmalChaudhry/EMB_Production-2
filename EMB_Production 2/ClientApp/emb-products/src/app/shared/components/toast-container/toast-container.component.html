@@ -1,0 +1,19 @@
+<!--
+  Global toast stack. Sits in the upper-right corner, below the
+  app topbar. Auto-mounted by app.component.html so toasts work
+  on both public and authenticated routes.
+-->
+<div class="app-toast-stack" *ngIf="toasts.length > 0" aria-live="polite" aria-atomic="false">
+  <div *ngFor="let t of toasts; trackBy: trackById"
+       class="app-toast shadow-sm"
+       [ngClass]="'app-toast--' + t.kind"
+       role="alert">
+    <i class="bi me-2 app-toast-icon" [ngClass]="iconFor(t.kind)"></i>
+    <div class="flex-grow-1 app-toast-msg">{{ t.message }}</div>
+    <button type="button"
+            class="btn-close ms-2"
+            [ngClass]="t.kind === 'error' || t.kind === 'warning' ? 'btn-close-white' : ''"
+            (click)="dismiss(t.id)"
+            aria-label="Close"></button>
+  </div>
+</div>

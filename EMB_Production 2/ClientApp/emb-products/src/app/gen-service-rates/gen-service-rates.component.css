@@ -1,0 +1,204 @@
+/* Phase R.9 - summary strip + profile drawer */
+.srate-summary-strip .badge { font-weight: 500; padding: 0.5rem 0.7rem; font-size: 0.78rem; }
+.srate-summary-strip .badge strong { font-weight: 700; }
+.srate-profile-modal { background: rgba(0,0,0,0.4); padding-top: 60px; overflow-y: auto; }
+.srate-profile-modal .modal-content { border-radius: 12px; overflow: hidden; }
+.srate-profile-modal .modal-body { background: #f4f6f9; }
+.srate-section-card { border: 1px solid #e9ecef; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+.srate-section-card .card-header { background: #f8f9fb; border-bottom: 1px solid #eef1f4; font-weight: 600; font-size: 0.86rem; }
+.srate-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.srate-value { font-size: 0.92rem; color: #212529; font-weight: 500; margin-top: 2px; }
+.srate-kpi-row .kpi-tile { border: 1px solid #e9ecef; border-left-width: 4px; border-radius: 8px; transition: transform .15s ease; }
+.srate-kpi-row .kpi-tile:hover { transform: translateY(-1px); }
+.srate-kpi-row .kpi-tile-primary { border-left-color: #0d6efd; }
+.srate-kpi-row .kpi-tile-success { border-left-color: #198754; }
+.srate-kpi-row .kpi-tile-info    { border-left-color: #0dcaf0; }
+.srate-kpi-row .kpi-tile-warning { border-left-color: #ffc107; }
+.srate-kpi-row .kpi-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.srate-kpi-row .kpi-value { font-size: 1.15rem; font-weight: 700; line-height: 1.2; color: #212529; }
+
+/* ============================================================
+   GENERAL PAGE LAYOUT
+============================================================ */
+h4 {
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Top bar */
+.d-flex .btn-sm i {
+  font-size: 14px;
+}
+
+/* Gap fixes */
+.gap-2 > * {
+  margin-left: 0 !important;
+}
+
+/* ============================================================
+   TABLE
+============================================================ */
+.table th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.table td {
+  vertical-align: middle;
+  font-size: 14px;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f5f7ff;
+}
+
+.table thead {
+  border-bottom: 2px solid #dee2e6;
+}
+
+/* Badge styling */
+.badge {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+
+/* ============================================================
+   TOP FILTER BAR
+============================================================ */
+.input-group-sm input,
+.input-group-sm button {
+  font-size: 13px;
+}
+
+.form-select-sm,
+.form-control-sm {
+  font-size: 13px !important;
+}
+
+/* Search box custom width */
+.input-group-sm {
+  border-radius: 4px;
+}
+
+/* Action icons */
+.btn-outline-success i,
+.btn-outline-danger i,
+.btn-outline-dark i {
+  font-size: 16px;
+}
+
+.btn-outline-success:hover,
+.btn-outline-danger:hover,
+.btn-outline-dark:hover {
+  opacity: 0.85;
+}
+
+
+/* ============================================================
+   FILTER CARD
+============================================================ */
+.card {
+  border-radius: 10px;
+  border: 1px solid #e4e4e4;
+}
+
+.card-header {
+  font-weight: 600;
+  border-bottom: 1px solid #e4e4e4;
+}
+
+.form-label.small {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+
+/* ============================================================
+   MODALS (FORM + DETAIL)
+============================================================ */
+.modal-content {
+  border-radius: 10px;
+  overflow: hidden;
+  border: none;
+}
+
+.modal-header {
+  padding: 12px 16px;
+}
+
+/* 🔵 Modal blue theme */
+.bg-modal {
+  background-color: #0d6efd !important;
+  color: white !important;
+}
+
+  .bg-modal .btn-close {
+    filter: invert(1);
+  }
+
+.modal-title {
+  font-weight: 600;
+}
+
+/* Inputs inside modals */
+.modal-body .form-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.modal-body input,
+.modal-body select {
+  font-size: 13px !important;
+}
+
+/* Card inside modals */
+.modal-body .card {
+  border-radius: 8px;
+  border: 1px solid #dcdcdc;
+  margin-bottom: 15px;
+}
+
+.modal-body .card-header {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  padding: 8px 12px;
+}
+
+
+/* ============================================================
+   DELETE MODAL
+============================================================ */
+.btn-close-white {
+  filter: invert(1);
+}
+
+.modal-header.bg-danger {
+  padding: 12px 16px;
+  font-weight: bold;
+}
+
+
+/* ============================================================
+   PAGINATION (if needed later)
+============================================================ */
+.pagination li a {
+  cursor: pointer;
+}
+/* Smaller fixed widths for compact layout */
+.search-width {
+  width: 170px;
+}
+
+.dropdown-width {
+  width: 130px;
+}
+
+/* Clean spacing in toolbar */
+.card.p-2 {
+  border-radius: 8px;
+}
+
+.modal-dialog {
+  margin-top: 80px;
+}

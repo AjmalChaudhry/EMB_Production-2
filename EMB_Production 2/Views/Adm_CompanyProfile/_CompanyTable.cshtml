@@ -1,0 +1,100 @@
+﻿@model EMB_Production.ViewModels.CompanyPageViewModel
+@using System
+
+@{
+    var companies = Model.Companies;
+}
+
+<div id="company-table-container">
+    <table class="table table-hover table-sm mb-0">
+        <thead class="table-secondary">
+            <tr>
+                <th class="logo-cell">Logo</th>
+                <th>Company Name</th>
+                <th>Email</th>
+                <th>Contact</th>
+                <th>Address</th>
+                <th>Active</th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in companies)
+            {   
+                <tr data-company-id="@c.CompanyID">
+                   <td class="align-middle logo-cell">
+                       @if (!String.IsNullOrEmpty(c.Logo))
+                        {
+                            <img src="@Url.Action("Logo", "Adm_CompanyProfile", new { fileName = c.Logo })"
+                            class="img-fluid"
+                            style="max-height:6rem; object-fit:contain;"
+                            alt="@c.CompanyName Logo" />
+                        }
+                   </td>                   
+                    <td class="align-middle">@c.CompanyName</td>
+                    <td class="align-middle">@c.Email</td>
+                    <td class="align-middle">@c.ContactNumber</td>
+                    <td class="align-middle">@c.Address</td>
+
+                    <td class="align-middle">
+                        <span class="badge @(c.Active ? "bg-success" : "bg-secondary")">
+                            @(c.Active ? "Active" : "Inactive")
+                        </span>
+                    </td>
+                    <td class="align-middle text-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <!-- EDIT -->
+                        <button type="button"
+                                class="btn btn-outline-primary btn-edit-ajax"
+                                data-url='@Url.Action("Index","Adm_CompanyProfile", new {
+                                                              showEdit     = true,
+                                                              editId       = c.CompanyID,
+                                                              search       = Model.Search,
+                                                              activeFilter = Model.ActiveFilter,
+                                                              parentFilter = Model.ParentFilter,
+                                                              page         = companies.PageNumber })'
+                                title="Edit @c.CompanyName">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+
+                        <!-- DELETE -->
+                        <button type="button"
+                                class="btn btn-outline-danger btn-delete-ajax"
+                                data-url='@Url.Action("DeleteFromIndex","Adm_CompanyProfile", new {
+                                                              id           = c.CompanyID,
+                                                              search       = Model.Search,
+                                                              activeFilter = Model.ActiveFilter,
+                                                              parentFilter = Model.ParentFilter,
+                                                              page         = companies.PageNumber })'
+                                title="@(c.UserCount > 0 ? "Cannot delete: users still assigned" : "Delete " + c.CompanyName)"
+                                @(c.UserCount > 0 ? "disabled" : "")>
+                            <i class="bi bi-trash"></i>
+                        </button>
+
+                        <!-- DETAILS -->
+                        <button type="button"
+                                class="btn-detail-ajax btn btn-outline-info btn-sm"
+                                data-detail-url='@Url.Action("DetailsFromIndex","Adm_CompanyProfile", new {
+                                                              id           = c.CompanyID,
+                                                              search       = Model.Search,
+                                                              activeFilter = Model.ActiveFilter,
+                                                              parentFilter = Model.ParentFilter,
+                                                              page         = companies.PageNumber })'
+                                title="Details for @c.CompanyName">
+                            <i class="bi bi-info-circle"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Styles {
+    <style>
+        .logo-cell {
+            width: 6rem;
+        }
+    </style>
+}

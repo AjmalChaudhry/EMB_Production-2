@@ -1,0 +1,398 @@
+<div class="page-wrap">
+
+  <!-- ================= HEADER ================= -->
+  <div class="row align-items-center mb-3">
+
+    <div class="col-md-4">
+      <h5 class="mb-0 d-flex align-items-center">
+        <i class="bi bi-box me-2 text-primary"></i>
+        Product Management
+      </h5>
+    </div>
+
+    <div class="col-md-8 d-flex justify-content-end align-items-center gap-2 flex-nowrap">
+
+      <button class="btn btn-sm btn-primary"
+              (click)="openCreate()"
+              [disabled]="loading">
+        <i class="bi bi-plus-circle"></i>Add
+      </button>
+
+      <div class="input-group input-group-sm" style="width:240px;">
+        <input class="form-control"
+               [(ngModel)]="search"
+               (keyup.enter)="onSearch()"
+               placeholder="Search product name / code">
+        <button class="btn btn-outline-secondary" (click)="onSearch()">
+          <i class="bi bi-search"></i>
+        </button>
+        <button class="btn btn-outline-secondary" (click)="clearSearch()">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      </div>
+
+      <button class="btn btn-sm btn-outline-success" (click)="exportExcel()">
+        <i class="bi bi-file-earmark-excel"></i>
+      </button>
+
+      <button class="btn btn-sm btn-outline-danger" (click)="exportPdf()">
+        <i class="bi bi-file-earmark-pdf"></i>
+      </button>
+
+      <button class="btn btn-sm btn-outline-secondary" (click)="printTable()">
+        <i class="bi bi-printer"></i>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ================= TABLE ================= -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+
+      <!-- LOADING -->
+      <div *ngIf="loading" class="text-center py-4">
+        <div class="spinner-border"></div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-responsive" *ngIf="!loading">
+        <table class="table table-hover table-sm align-middle">
+
+          <thead class="table-light">
+            <tr>
+              <th>Name</th>
+              <th>Code</th>
+              <th>Category</th>
+              <th>Branch</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let p of products; trackBy: trackById">
+
+              <td class="fw-semibold">{{ p.prodName }}</td>
+              <td>{{ p.prodCode || '-' }}</td>
+              <td>{{ p.categoryName }}</td>
+              <td>{{ p.branchName || '-' }}</td>
+
+              <td>
+                <span class="badge"
+                      [ngClass]="p.active ? 'bg-success' : 'bg-secondary'">
+                  {{ p.active ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+
+              <td class="text-end">
+                <button class="btn btn-sm btn-outline-info me-1"
+                        (click)="openDetails(p)">
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button class="btn btn-sm btn-outline-primary me-1"
+                        (click)="openEdit(p)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-sm btn-outline-danger"
+                        (click)="openDelete(p)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #dash>-</ng-template>
+
+      <!-- PAGINATION -->
+      <div class="d-flex justify-content-between align-items-center mt-3 small">
+
+        <div class="text-muted" *ngIf="products.length > 0">
+          Page {{ page }} of {{ totalPages }}
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-sm btn-outline-secondary"
+                  [disabled]="page === 1"
+                  (click)="changePage(page - 1)">
+            Prev
+          </button>
+
+          <button class="btn btn-sm btn-outline-secondary"
+                  [disabled]="page === totalPages"
+                  (click)="changePage(page + 1)">
+            Next
+          </button>
+
+          <select class="form-select form-select-sm"
+                  style="width:80px"
+                  [(ngModel)]="pageSize"
+                  (change)="changePage(1)">
+            <option [ngValue]="5">5</option>
+            <option [ngValue]="10">10</option>
+            <option [ngValue]="20">20</option>
+          </select>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= PRODUCT FORM MODAL ================= -->
+  <div class="modal fade" #productFormModal tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content shadow-lg rounded-4">
+
+        <!-- ================= HEADER ================= -->
+        <div class="modal-header bg-primary text-white rounded-top-4">
+          <h5 class="modal-title d-flex align-items-center mb-0">
+            <i class="bi bi-box-seam me-2"></i>
+            {{ editingProduct ? 'Edit Product' : 'Add Product' }}
+          </h5>
+          <button type="button"
+                  class="btn-close btn-close-white"
+                  (click)="closeModal('form')">
+          </button>
+        </div>
+
+        <!-- ================= FORM ================= -->
+        <form [formGroup]="form" (ngSubmit)="saveProduct()">
+
+          <div class="modal-body bg-light">
+
+            <!-- BASIC INFO -->
+            <div class="row g-3">
+
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Product Name *</label>
+                <input type="text"
+                       class="form-control form-control-sm"
+                       formControlName="prodName"
+                       placeholder="e.g. Polyester Cord 3mm">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Product Code</label>
+                <input type="text" class="form-control" [value]="'Auto-generated'" disabled>
+               
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Category *</label>
+                <select class="form-select form-select-sm"
+                        formControlName="catId">
+                  <option value="">-- Select Category --</option>
+                  <option *ngFor="let c of categories" [value]="c.id">
+                    {{ c.name }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Branch</label>
+                <select class="form-select form-select-sm"
+                        formControlName="branchId">
+                  <option value="">-- Optional --</option>
+                  <option *ngFor="let b of branches" [value]="b.id">
+                    {{ b.name }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label small fw-semibold">Description</label>
+                <textarea rows="2"
+                          class="form-control form-control-sm"
+                          formControlName="prodDescription"
+                          placeholder="Optional notes"></textarea>
+              </div>
+
+              <div class="col-12">
+                <div class="form-check mt-2">
+                  <input class="form-check-input"
+                         type="checkbox"
+                         formControlName="active"
+                         id="activeCheck">
+                  <label class="form-check-label fw-semibold"
+                         for="activeCheck">
+                    Active
+                  </label>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- FOOTER -->
+          <div class="modal-footer bg-white">
+            <button type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    (click)="closeModal('form')">
+              Cancel
+            </button>
+
+            <button type="submit"
+                    class="btn btn-primary btn-sm"
+                    [disabled]="form.invalid">
+              {{ editingProduct ? 'Update' : 'Save' }}
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Detail Modal -->
+  <div class="modal fade" #productDetailModal tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content shadow-lg">
+
+        <!-- Header -->
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title"><i class="bi bi-eye"></i> Product Details</h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeModal('detail')"></button>
+        </div>
+
+        <!-- ================= BODY ================= -->
+        <div class="modal-body bg-light">
+
+          <ng-container *ngIf="selectedProduct; else noDetails">
+
+            <!-- BASIC INFO -->
+            <div class="row g-3">
+              <div class="col-md-4">
+                <strong>ID:</strong><br>
+                {{ selectedProduct.id }}
+              </div>
+
+              <div class="col-md-4">
+                <strong>Product Name:</strong><br>
+                {{ selectedProduct.prodName }}
+              </div>
+
+              <div class="col-md-4">
+                <strong>Product Code:</strong><br>
+                {{ selectedProduct.prodCode || '-' }}
+              </div>
+            </div>
+
+            <hr class="detail-hr">
+
+            <!-- CATEGORY / BRANCH -->
+            <div class="row g-3">
+              <div class="col-md-4">
+                <strong>Category:</strong><br>
+                {{ selectedProduct.categoryName }}
+              </div>
+
+              <div class="col-md-4">
+                <strong>Branch:</strong><br>
+                {{ selectedProduct.branchName || 'All Branches' }}
+              </div>
+
+              <div class="col-md-4">
+                <strong>Status:</strong><br>
+                <span class="badge"
+                      [ngClass]="selectedProduct.active ? 'bg-success' : 'bg-secondary'">
+                  {{ selectedProduct.active ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+            </div>
+
+            <hr class="detail-hr">
+
+            <!-- DESCRIPTION -->
+            <div class="row g-3">
+              <div class="col-md-4">
+                <strong>Description:</strong><br>
+                <span class="text-muted">
+                  {{ selectedProduct.prodDescription || '—' }}
+                </span>
+              </div>
+              <div class="col-md-4">
+                <strong>Created By (Emp ID):</strong><br>
+                {{ selectedProduct.createdByEmployeeId ?? '-' }}
+              </div>
+
+              <div class="col-md-4">
+                <strong>Created Date:</strong><br>
+                {{ selectedProduct.createdDateText || '-' }}
+              </div>
+            </div>
+
+            <hr class="detail-hr">
+
+            <!-- AUDIT INFO -->
+            <div class="row g-3 small">
+
+              <div class="col-md-4">
+                <strong>Updated By (Emp ID):</strong><br>
+                {{ selectedProduct.updatedByEmployeeId ?? '-' }}
+              </div>
+
+              <div class="col-md-4">
+                <strong>Updated Date:</strong><br>
+                {{ selectedProduct.updatedDateText || '-' }}
+              </div>
+
+              <div class="col-md-4">
+                <strong>Record Timestamp:</strong>
+                {{selectedProduct.recordTimeStamp? (selectedProduct.recordTimeStamp | date:'dd-MMM-yyyy HH:mm'): '-'}}
+              </div>
+            </div>
+
+          </ng-container>
+
+          <!-- NO DATA -->
+          <ng-template #noDetails>
+            <p class="text-muted text-center mb-0">
+              No details available.
+            </p>
+          </ng-template>
+
+        </div>
+
+        <!-- ================= FOOTER ================= -->
+        <div class="modal-footer bg-white">
+          <button class="btn btn-outline-info btn-sm"
+                  (click)="closeModal('detail')">
+            Close
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Delete Modal -->
+  <div class="modal fade" #productDeleteModal tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title"><i class="bi bi-trash"></i> Confirm Delete</h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeModal('delete')"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-0">
+            Are you sure you want to delete <strong>{{ selectedProduct?.prodName }}</strong>?
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" (click)="closeModal('delete')">Cancel</button>
+          <button type="button" class="btn btn-danger" (click)="deleteProduct()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+

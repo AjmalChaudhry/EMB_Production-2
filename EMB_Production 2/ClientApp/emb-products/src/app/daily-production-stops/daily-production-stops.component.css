@@ -1,0 +1,15 @@
+.dpst-container {
+  padding: 12px;
+}
+
+.table td, .table th {
+  vertical-align: middle;
+}
+
+.card {
+  border-radius: 12px;
+}
+
+.progress {
+  background: rgba(0,0,0,.06);
+}

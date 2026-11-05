@@ -1,0 +1,135 @@
+﻿@model IEnumerable<EMB_Production.Models.DailyProduction>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Shift)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.StartTime)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.EndTime)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Stitches)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ActualProduction)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.RejectedPieces)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Remarks)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.UpdatedDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.RecordTimeStamp)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Deleted)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Adm_Users.UserName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Adm_Users1.UserName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Adm_Users2.UserName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Gen_Machines.Code)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.WorkOrderItems.Remarks)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Gen_Machines1.Code)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.WorkOrderItems1.Remarks)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Shift)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.StartTime)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.EndTime)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Stitches)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ActualProduction)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.RejectedPieces)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Remarks)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.CreatedDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.UpdatedDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.RecordTimeStamp)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Deleted)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Adm_Users.UserName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Adm_Users1.UserName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Adm_Users2.UserName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Gen_Machines.Code)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.WorkOrderItems.Remarks)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Gen_Machines1.Code)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.WorkOrderItems1.Remarks)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.Id }) |
+            @Html.ActionLink("Details", "Details", new { id=item.Id }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.Id })
+        </td>
+    </tr>
+}
+
+</table>

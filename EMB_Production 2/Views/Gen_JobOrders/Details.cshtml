@@ -1,0 +1,156 @@
+﻿@model EMB_Production.Models.Gen_JobOrders
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Job Order Details";
+}
+
+<style>
+    .toolbar-container {
+        background: #f5f7fa;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+
+    .detail-card {
+        background: #fff;
+        border-left: 5px solid #007bff;
+        border-radius: 6px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .details-header {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #fff;
+        background: #007bff;
+        padding: 0.75rem 1rem;
+        border-radius: 6px 6px 0 0;
+        margin: -1.5rem -1.5rem 1rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.9rem;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        color: #34495e;
+        word-wrap: break-word;
+        transition: background .2s;
+    }
+
+        .detail-value:hover {
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+</style>
+
+<div class="container-fluid py-3">      
+    <div class="detail-card">
+        <div class="details-header">Job Order #@Model.Id Details</div>
+        <div class="toolbar-container d-flex justify-content-end">
+            <button type="button" onclick="location.reload()" class="btn btn-outline-secondary btn-sm me-2">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button type="button" onclick="window.print()" class="btn btn-outline-secondary btn-sm me-2">
+                <i class="bi bi-printer"></i>
+            </button>
+            <a href="@Url.Action("ExportToExcel","Gen_JobOrders", new { id = Model.Id })"
+               class="btn btn-success btn-sm me-2">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Excel
+            </a>
+            <a href="@Url.Action("ExportToPdf","Gen_JobOrders", new { id = Model.Id })"
+               class="btn btn-danger btn-sm">
+                <i class="bi bi-file-earmark-pdf"></i> PDF
+            </a>
+        </div>
+        <div class="row gy-4">
+            <!-- Code -->
+            <div class="col-md-3">
+                <div class="detail-label">Code</div>
+                <div class="detail-value">@Model.Code</div>
+            </div>
+            <!-- Component lookup -->
+            <div class="col-md-3">
+                <div class="detail-label">Component</div>
+                <div class="detail-value">
+                    @(Model.Gen_Components != null
+                        ? Model.Gen_Components.Name
+                        : "(none)")
+                </div>
+            </div>
+            <!-- CompId if needed -->
+            <div class="col-md-3">
+                <div class="detail-label">Company ID</div>
+                <div class="detail-value">@Model.CompId</div>
+            </div>
+            <!-- ReqRepeats -->
+            <div class="col-md-3">
+                <div class="detail-label">Requested Repeats</div>
+                <div class="detail-value">@Model.ReqRepeats</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Requested Heads</div>
+                <div class="detail-value">@Model.ReqHead</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Panni</div>
+                <div class="detail-value">@Model.Panni</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Solving</div>
+                <div class="detail-value">@Model.Solving</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Branch</div>
+                <div class="detail-value">
+                    @(Model.Branches != null
+                        ? Model.Branches.Name
+                        : $"(ID: {Model.BranchId})")
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Active</div>
+                <div class="detail-value">@(Model.Active == true ? "Yes" : "No")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Deleted</div>
+                <div class="detail-value">@(Model.Deleted == true ? "Yes" : "No")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Created By</div>
+                <div class="detail-value">@Model.CreatedBy</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Created Date</div>
+                <div class="detail-value">
+                    @(Model.CreatedDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "(none)")
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Updated By</div>
+                <div class="detail-value">@Model.UpdatedBy</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Updated Date</div>
+                <div class="detail-value">
+                    @(Model.UpdatedDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "(none)")
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-center">
+            @Html.ActionLink("Back to List", "Index", null, new { @class = "btn btn-outline-secondary me-3" })
+            @Html.ActionLink("Edit", "Edit", new { id = Model.Id }, new { @class = "btn btn-primary" })
+        </div>
+    </div>
+</div>

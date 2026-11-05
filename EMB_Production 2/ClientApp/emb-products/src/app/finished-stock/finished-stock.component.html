@@ -1,0 +1,88 @@
+<div class="card shadow-sm">
+
+  <!-- ================= HEADER ================= -->
+  <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+    <h6 class="mb-0">
+      <i class="bi bi-box-seam me-1"></i>
+      Finished Products Stock
+    </h6>
+  </div>
+
+  <!-- ================= BODY ================= -->
+  <div class="card-body p-0">
+
+    <!-- LOADING -->
+    <div *ngIf="loading" class="text-center py-4">
+      <div class="spinner-border"></div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-responsive" *ngIf="!loading">
+      <table class="table table-sm table-hover align-middle mb-0">
+
+        <thead class="table-light">
+          <tr>
+            <th style="width:70px;">ID</th>
+            <th>Product</th>
+            <th>Branch</th>
+            <th class="text-end">Qty</th>
+            <th>Unit</th>
+            <th style="width:120px;">Reservation</th>
+            <th style="width:260px;">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <!-- ROWS -->
+          <tr *ngFor="let r of rows">
+            <td>{{ r.id }}</td>
+            <td>{{ r.productName }}</td>
+            <td>{{ r.branchName }}</td>
+            <td class="text-end">{{ r.qty }}</td>
+            <td>{{ r.unit }}</td>
+
+            <!-- RESERVATION STATUS -->
+            <td>
+              <span class="badge bg-warning" *ngIf="r.isReserved">
+                Reserved
+              </span>
+              <span class="badge bg-success" *ngIf="!r.isReserved">
+                Available
+              </span>
+            </td>
+
+            <!-- ACTIONS -->
+            <td>
+              <button class="btn btn-sm btn-warning me-1"
+                      (click)="reserve(r)"
+                      [disabled]="r.isReserved">
+                Reserve
+              </button>
+
+              <button class="btn btn-sm btn-secondary me-1"
+                      (click)="release(r)"
+                      [disabled]="!r.isReserved">
+                Release
+              </button>
+
+              <button class="btn btn-sm btn-danger"
+                      (click)="adjust(r)">
+                Adjust
+              </button>
+            </td>
+          </tr>
+
+          <!-- EMPTY STATE -->
+          <tr *ngIf="rows.length === 0">
+            <td colspan="7" class="text-center text-muted py-3">
+              No finished stock available.
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>

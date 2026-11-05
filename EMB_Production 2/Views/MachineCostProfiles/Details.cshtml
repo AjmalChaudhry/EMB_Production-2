@@ -1,0 +1,90 @@
+﻿@model EMB_Production.Models.MachineCostProfile
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>MachineCostProfile</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.HourlyRate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.HourlyRate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.PowerKW)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.PowerKW)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.StitchPerMinute)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.StitchPerMinute)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OperatorHourlyRate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OperatorHourlyRate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ElectricityUnitRate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ElectricityUnitRate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.EffectiveFrom)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.EffectiveFrom)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Active)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Active)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Deleted)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Deleted)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Gen_Machines.Code)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Gen_Machines.Code)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

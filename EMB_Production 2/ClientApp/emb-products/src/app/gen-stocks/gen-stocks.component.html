@@ -1,0 +1,909 @@
+<div class="row g-2">
+  <div class="page-header row align-items-center mb-3">
+    <div class="col-md-4">
+      <h4 class="d-flex align-items-center mb-0">
+        <i class="bi bi-box-seam me-2 text-primary"></i>
+        Finished Stock
+      </h4>
+      <div class="text-muted small">
+        Central finished stock: customer reserved, free company stock, and total stock
+      </div>
+    </div>
+
+    <div class="col-md-8 d-flex justify-content-end align-items-center gap-2 flex-wrap">
+      <div class="input-group input-group-sm" style="width: 260px;">
+        <input type="text"
+               class="form-control"
+               placeholder="Search product, branch, reference..."
+               [(ngModel)]="searchText"
+               (keyup.enter)="onSearch()" />
+        <button class="btn btn-outline-secondary" (click)="onSearch()">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+
+      <select class="form-select form-select-sm"
+              style="width: 170px;"
+              [(ngModel)]="branchId"
+              (change)="onBranchChange()">
+        <option [ngValue]="null">All Branches</option>
+        <option *ngFor="let b of branches" [ngValue]="b.id">{{ b.name }}</option>
+      </select>
+
+      <button class="btn btn-sm btn-outline-success" (click)="exportExcel()" title="Export Excel">
+        <i class="bi bi-file-earmark-excel"></i>
+      </button>
+
+      <button class="btn btn-sm btn-outline-danger" (click)="exportPdf()" title="Export PDF">
+        <i class="bi bi-file-earmark-pdf"></i>
+      </button>
+
+      <button class="btn btn-sm btn-outline-primary" (click)="exportToPrint()" title="Print page">
+        <i class="bi bi-printer"></i>
+      </button>
+
+      <button class="btn btn-sm btn-outline-secondary" (click)="refresh()" title="Reset filters">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ===================== FILTER BAR + STATUS STRIP (Phase P.0) ===================== -->
+  <div class="card border-0 shadow-sm mb-2 fs-filter-bar">
+    <div class="card-body py-2">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label small mb-1">Search</label>
+          <input type="text" class="form-control form-control-sm"
+                 [(ngModel)]="searchText"
+                 (keyup.enter)="onFiltersChange()"
+                 placeholder="Product, branch, reference">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small mb-1">Branch</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="branchId" (ngModelChange)="onFiltersChange()">
+            <option [ngValue]="null">All Branches</option>
+            <option *ngFor="let b of branches" [ngValue]="b.id">{{ b.name }}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small mb-1">Stock Status</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="stockStatusFilter" (ngModelChange)="onFiltersChange()">
+            <option value="">All</option>
+            <option value="Available">Available</option>
+            <option value="Negative">Negative</option>
+            <option value="Cost Missing">Cost Missing</option>
+            <option value="Empty">Empty</option>
+          </select>
+        </div>
+        <div class="col-md-3 d-flex gap-1">
+          <button class="btn btn-outline-secondary btn-sm w-100"
+                  (click)="clearFilters()" title="Clear filters">
+            <i class="bi bi-x-circle me-1"></i> Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-3 small fs-status-strip">
+    <span class="badge bg-light text-dark border">
+      <i class="bi bi-list-ul me-1"></i>
+      Items: <strong>{{ totalItems | number }}</strong>
+    </span>
+    <span *ngFor="let s of byStockStatus"
+          class="badge" [ngClass]="stockStatusPill(s.status).cssClass">
+      <i class="bi me-1" [ngClass]="stockStatusPill(s.status).icon"></i>
+      {{ s.status }}: <strong>{{ s.count }}</strong>
+    </span>
+    <span *ngFor="let b of byBranch"
+          class="badge bg-light text-dark border">
+      <i class="bi bi-geo-alt me-1"></i>
+      {{ b.branch }}: <strong>{{ b.count }}</strong>
+      <span class="text-muted ms-1">({{ b.qty | number }})</span>
+    </span>
+  </div>
+
+  <div class="row g-2 mb-3 stock-kpi-area" *ngIf="dashboard">
+
+    <div class="col-12">
+      <div class="kpi-section-title">Stock Quantity Summary</div>
+    </div>
+
+    <div class="col-xl-3 col-lg-3 col-md-6">
+      <div class="card kpi-card shadow-sm border-0 text-center">
+        <div class="card-body">
+          <i class="bi bi-person-check text-warning"></i>
+          <div class="kpi-label">Customer Reserved Stock</div>
+          <div class="kpi-value text-warning">{{ formatNumber(dashboard.customerReservedStock) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-lg-3 col-md-6">
+      <div class="card kpi-card shadow-sm border-0 text-center">
+        <div class="card-body">
+          <i class="bi bi-box2-heart text-success"></i>
+          <div class="kpi-label">Free Company Stock</div>
+          <div class="kpi-value text-success">{{ formatNumber(dashboard.freeCompanyStock) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-lg-3 col-md-6">
+      <div class="card kpi-card shadow-sm border-0 text-center">
+        <div class="card-body">
+          <i class="bi bi-box-seam text-primary"></i>
+          <div class="kpi-label">Total Finished Stock</div>
+          <div class="kpi-value text-primary">{{ formatNumber(dashboard.totalFinishedStock) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-lg-3 col-md-6">
+      <div class="card kpi-card shadow-sm border-0 text-center">
+        <div class="card-body">
+          <i class="bi bi-diagram-3 text-secondary"></i>
+          <div class="kpi-label">Products / Branches</div>
+          <div class="kpi-value text-dark">{{ dashboard.totalProducts }} / {{ dashboard.totalBranches }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 mt-2">
+      <div class="kpi-section-title">Inventory Valuation</div>
+    </div>
+
+    <div class="col-xl-4 col-lg-4 col-md-6">
+      <div class="card kpi-card shadow-sm border-0 text-center border-start border-4 border-primary">
+        <div class="card-body">
+          <i class="bi bi-cash-stack text-primary"></i>
+          <div class="kpi-label">Total Inventory Cost</div>
+          <div class="kpi-value text-primary">{{ formatCurrency(dashboard.totalInventoryCost || 0) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-4 col-md-6">
+      <div class="card kpi-card shadow-sm border-0 text-center border-start border-4 border-warning">
+        <div class="card-body">
+          <i class="bi bi-person-lock text-warning"></i>
+          <div class="kpi-label">Total Reserved Value</div>
+          <div class="kpi-value text-warning">{{ formatCurrency(dashboard.totalReservedValue || 0) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-4 col-md-6">
+      <div class="card kpi-card shadow-sm border-0 text-center border-start border-4 border-success">
+        <div class="card-body">
+          <i class="bi bi-wallet2 text-success"></i>
+          <div class="kpi-label">Free Stock Value</div>
+          <div class="kpi-value text-success">{{ formatCurrency(dashboard.freeStockValue || 0) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 mt-2">
+      <div class="kpi-section-title">Profit Analysis</div>
+    </div>
+
+    <div class="col-xl-4 col-lg-4 col-md-6">
+      <div class="card kpi-card shadow-sm border-0 text-center border-start border-4 border-info">
+        <div class="card-body">
+          <span class="rs-icon text-info"><strong>Rs</strong></span>
+          <div class="kpi-label">Expected Revenue</div>
+          <div class="kpi-value text-info">{{ formatCurrency(dashboard.totalExpectedRevenue || 0) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-4 col-md-6">
+      <div class="card kpi-card shadow-sm border-0 text-center border-start border-4"
+           [ngClass]="{
+           'border-success': isProfitPositive(),
+           'border-danger': isProfitNegative()
+         }">
+        <div class="card-body">
+          <i class="bi bi-graph-up-arrow"
+             [ngClass]="{
+             'text-success': isProfitPositive(),
+             'text-danger': isProfitNegative()
+           }"></i>
+          <div class="kpi-label">Estimated Profit</div>
+          <div class="kpi-value"
+               [ngClass]="{
+               'text-success': isProfitPositive(),
+               'text-danger': isProfitNegative()
+             }">
+            {{ formatCurrency(dashboard.totalEstimatedProfit || 0) }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-4 col-md-6">
+      <div class="card kpi-card shadow-sm border-0 text-center border-start border-4 border-dark">
+        <div class="card-body">
+          <i class="bi bi-percent text-dark"></i>
+          <div class="kpi-label">Profit Margin %</div>
+          <div class="kpi-value text-dark">{{ formatNumber(dashboard.overallProfitMarginPercent || 0) }}%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 mt-2">
+      <div class="kpi-section-title">Stock Movement Analytics</div>
+    </div>
+
+    <div class="col-xl-3 col-lg-3 col-md-6">
+      <div class="card kpi-card shadow-sm border-0 text-center">
+        <div class="card-body">
+          <i class="bi bi-check-circle text-primary"></i>
+          <div class="kpi-label">QC Postings</div>
+          <div class="kpi-value text-primary">{{ dashboard.totalQcPostCount || 0 }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-lg-3 col-md-6">
+      <div class="card kpi-card shadow-sm border-0 text-center">
+        <div class="card-body">
+          <i class="bi bi-truck text-success"></i>
+          <div class="kpi-label">Dispatch Entries</div>
+          <div class="kpi-value text-success">{{ dashboard.totalDispatchCount || 0 }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-lg-3 col-md-6">
+      <div class="card kpi-card shadow-sm border-0 text-center">
+        <div class="card-body">
+          <i class="bi bi-arrow-counterclockwise text-danger"></i>
+          <div class="kpi-label">Reverse Entries</div>
+          <div class="kpi-value text-danger">{{ dashboard.totalReverseCount || 0 }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-lg-3 col-md-6">
+      <div class="card kpi-card shadow-sm border-0 text-center">
+        <div class="card-body">
+          <i class="bi bi-clock-history text-secondary"></i>
+          <div class="kpi-label">Total Movements</div>
+          <div class="kpi-value text-secondary">{{ dashboard.totalMovementCount || 0 }}</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="table-responsive stock-table-wrapper">
+    <table class="table table-bordered table-hover table-sm align-middle mb-0">
+      <thead class="table-light sticky-top">
+        <tr>
+          <th style="width: 7%;">Type</th>
+          <th style="width: 20%;">Product</th>
+          <th style="width: 12%;">Branch</th>
+          <th class="text-end" style="width: 9%;">Reserved</th>
+          <th class="text-end" style="width: 9%;">Free Stock</th>
+          <th class="text-end" style="width: 9%;">Total Finished</th>
+          <th class="text-end" style="width: 9%;">Unit Cost</th>
+          <th class="text-end" style="width: 10%;">Total Cost</th>
+          <th style="width: 6%;">Unit</th>
+          <th style="width: 10%;">Status</th>
+          <th style="width: 12%;">Reference</th>
+          <th class="text-center" style="width: 6%;">View</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngIf="loading">
+          <td colspan="12" class="text-center text-muted py-3">
+            Loading finished stock records...
+          </td>
+        </tr>
+
+        <tr *ngFor="let row of rows" [ngClass]="rowTintClass(row)">
+          <td>
+            <span class="badge bg-light text-dark border">
+              {{ row.itemType || '-' }}
+            </span>
+          </td>
+
+          <td class="text-truncate" [title]="row.itemName || ''">
+            <div class="fw-semibold">{{ row.itemName || '-' }}</div>
+            <div class="text-muted small" *ngIf="row.transactionType">
+              {{ row.transactionType }}
+            </div>
+          </td>
+
+          <td class="text-truncate" [title]="row.branchName || ''">
+            {{ row.branchName || '-' }}
+          </td>
+
+          <td class="text-end fw-bold text-orange">
+            {{ formatNumber(row.customerReservedStock) }}
+          </td>
+
+          <td class="text-end text-success fw-semibold">
+            {{ formatNumber(row.freeCompanyStock) }}
+            <span *ngIf="isLowStock(row)" class="badge bg-danger ms-1">LOW</span>
+          </td>
+
+          <td class="text-end text-primary fw-bold">
+            {{ formatNumber(row.totalFinishedStock) }}
+          </td>
+
+          <td class="text-end">
+            {{ formatNumber(row.unitCost || 0) }}
+          </td>
+
+          <td class="text-end fw-bold text-primary">
+            {{ formatNumber(row.totalFinishedCost || row.totalCost || 0) }}
+          </td>
+
+          <td>{{ row.unit || 'PCS' }}</td>
+
+          <td>
+            <span class="badge" [ngClass]="stockStatusPill(row.stockStatus).cssClass">
+              <i class="bi me-1" [ngClass]="stockStatusPill(row.stockStatus).icon"></i>
+              {{ row.stockStatus || '-' }}
+            </span>
+          </td>
+
+          <td class="text-truncate" [title]="row.referenceNo || row.referenceType || ''">
+            <div>{{ row.referenceNo || '-' }}</div>
+            <div class="text-muted small" *ngIf="row.referenceType">
+              {{ row.referenceType }}
+            </div>
+          </td>
+
+          <td class="text-center">
+            <button class="btn btn-sm btn-outline-info px-2 me-1"
+                    (click)="openDetail(row)"
+                    title="View Detail">
+              <i class="bi bi-eye"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-primary px-2"
+                    (click)="openItemHistory(row)"
+                    title="Full ledger history">
+              <i class="bi bi-clock-history"></i>
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="!loading && rows.length === 0">
+          <td colspan="12" class="text-center text-muted py-3">
+            No finished stock records found.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <nav class="mt-3" *ngIf="paginationPages.length > 1">
+    <ul class="pagination pagination-sm justify-content-end mb-0">
+      <li class="page-item" [class.disabled]="page === 1">
+        <button class="page-link" (click)="changePage(page - 1)">«</button>
+      </li>
+
+      <li class="page-item"
+          *ngFor="let p of paginationPages"
+          [class.active]="p === page">
+        <button class="page-link" (click)="changePage(p)">
+          {{ p }}
+        </button>
+      </li>
+
+      <li class="page-item" [class.disabled]="page === totalPages">
+        <button class="page-link" (click)="changePage(page + 1)">»</button>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="stock-detail-overlay" *ngIf="selectedDetail">
+    <div class="card shadow border-0 stock-detail-card">
+
+      <!-- ================= HEADER ================= -->
+      <div class="card-header stock-detail-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stock-detail-icon">📦</div>
+
+          <div class="d-flex flex-column">
+            <span class="stock-detail-title">
+              Finished Stock Summary
+            </span>
+
+            <small class="stock-detail-subtitle">
+              Customer reserved, free company stock, inventory valuation and finished stock analytics
+            </small>
+          </div>
+        </div>
+
+        <button type="button"
+                class="btn-close btn-close-white stock-close-x"
+                aria-label="Close"
+                (click)="closeDetail()">
+        </button>
+      </div>
+
+      <!-- ================= BODY ================= -->
+      <div class="stock-detail-body-wrap">
+
+        <div class="card-body stock-detail-body">
+
+          <!-- ================= LOADING ================= -->
+          <div *ngIf="loadingDetail" class="text-center text-muted py-4">
+            Loading detail...
+          </div>
+
+          <!-- ================= DETAIL ================= -->
+          <ng-container *ngIf="!loadingDetail && selectedDetail">
+
+            <!-- ================= TOP SUMMARY ================= -->
+            <div class="stock-summary-strip mb-4">
+
+              <div class="stock-summary-box">
+                <div class="stock-summary-label">
+                  Customer Reserved
+                </div>
+
+                <div class="stock-summary-value text-warning">
+                  {{ formatNumber(selectedDetail.customerReservedStock) }}
+                </div>
+              </div>
+
+              <div class="stock-summary-box">
+                <div class="stock-summary-label">
+                  Free Company Stock
+                </div>
+
+                <div class="stock-summary-value text-success">
+                  {{ formatNumber(selectedDetail.freeCompanyStock) }}
+                </div>
+              </div>
+
+              <div class="stock-summary-box">
+                <div class="stock-summary-label">
+                  Total Finished Stock
+                </div>
+
+                <div class="stock-summary-value text-primary">
+                  {{ formatNumber(selectedDetail.totalFinishedStock) }}
+                </div>
+              </div>
+
+              <div class="stock-summary-box">
+                <div class="stock-summary-label">
+                  Unit Cost
+                </div>
+
+                <div class="stock-summary-value text-info">
+                  {{ formatCurrency(selectedDetail.unitCost) }}
+                </div>
+              </div>
+
+              <div class="stock-summary-box">
+                <div class="stock-summary-label">
+                  Total Inventory Cost
+                </div>
+
+                <div class="stock-summary-value text-dark fw-bold">
+                  {{ formatCurrency(selectedDetail.totalCost) }}
+                </div>
+              </div>
+
+            </div>
+
+            <!-- ================= BASIC INFO ================= -->
+            <div class="row g-3">
+
+              <div class="col-md-6">
+                <div class="detail-group">
+                  <div class="detail-label">Product</div>
+
+                  <div class="detail-value fw-semibold">
+                    {{ selectedDetail.itemName || '-' }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="detail-group">
+                  <div class="detail-label">Product Type</div>
+
+                  <div class="detail-value">
+                    {{ selectedDetail.itemType || '-' }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="detail-group">
+                  <div class="detail-label">Branch</div>
+
+                  <div class="detail-value">
+                    {{ selectedDetail.branchName || '-' }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="detail-group">
+                  <div class="detail-label">Warehouse</div>
+
+                  <div class="detail-value">
+                    {{ selectedDetail.warehouseName || '-' }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="detail-group">
+                  <div class="detail-label">Stock Stage</div>
+
+                  <div class="detail-value">
+                    <span class="badge stock-stage-badge">
+                      {{ selectedDetail.stockStage || '-' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="detail-group">
+                  <div class="detail-label">Status</div>
+
+                  <div class="detail-value">
+                    <span class="badge bg-success px-3 py-2">
+                      {{ selectedDetail.stockStatus || 'Available' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ================= QTY CARDS ================= -->
+
+              <div class="col-md-4 col-sm-6">
+                <div class="detail-group qty-box">
+                  <div class="detail-label">Opening Qty</div>
+
+                  <div class="detail-value">
+                    {{ formatNumber(selectedDetail.openingQty) }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4 col-sm-6">
+                <div class="detail-group qty-box">
+                  <div class="detail-label">Finished In</div>
+
+                  <div class="detail-value text-success">
+                    {{ formatNumber(selectedDetail.inQty) }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4 col-sm-6">
+                <div class="detail-group qty-box">
+                  <div class="detail-label">Dispatch Out</div>
+
+                  <div class="detail-value text-danger">
+                    {{ formatNumber(selectedDetail.outQty) }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4 col-sm-6">
+                <div class="detail-group qty-box">
+                  <div class="detail-label">Reserved Qty</div>
+
+                  <div class="detail-value text-warning fw-bold">
+                    {{ formatNumber(selectedDetail.customerReservedStock) }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4 col-sm-6">
+                <div class="detail-group qty-box balance-box">
+                  <div class="detail-label">Free Company Qty</div>
+
+                  <div class="detail-value fw-bold text-success">
+
+                    {{ formatNumber(selectedDetail.freeCompanyStock) }}
+
+                    <span *ngIf="isLowStock(selectedDetail)"
+                          class="badge bg-danger px-2 py-1 ms-1">
+                      LOW
+                    </span>
+
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4 col-sm-6">
+                <div class="detail-group qty-box balance-box">
+                  <div class="detail-label">Total Finished Qty</div>
+
+                  <div class="detail-value fw-bold text-primary">
+                    {{ formatNumber(selectedDetail.totalFinishedStock) }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- ================= VALUATION ================= -->
+
+              <div class="col-md-4 col-sm-6">
+                <div class="detail-group qty-box">
+                  <div class="detail-label">Unit Cost</div>
+
+                  <div class="detail-value text-info fw-semibold">
+                    {{ formatCurrency(selectedDetail.unitCost) }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4 col-sm-6">
+                <div class="detail-group qty-box">
+                  <div class="detail-label">Reserved Value</div>
+
+                  <div class="detail-value text-warning fw-bold">
+                    {{ formatCurrency(selectedDetail.reservedValue) }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4 col-sm-6">
+                <div class="detail-group qty-box">
+                  <div class="detail-label">Free Stock Value</div>
+
+                  <div class="detail-value text-success fw-bold">
+                    {{ formatCurrency(selectedDetail.freeStockValue) }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-12">
+                <div class="detail-group qty-box">
+                  <div class="detail-label">Total Inventory Value</div>
+
+                  <div class="detail-value text-primary fw-bold fs-5">
+                    {{ formatCurrency(selectedDetail.totalCost) }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- ================= UNIT & MOVEMENT META ================= -->
+
+              <div class="col-md-4 col-sm-6">
+                <div class="detail-group">
+                  <div class="detail-label">Unit</div>
+
+                  <div class="detail-value">
+                    {{ selectedDetail.unit || 'PCS' }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4 col-sm-6">
+                <div class="detail-group">
+                  <div class="detail-label">Total Movements</div>
+
+                  <div class="detail-value">
+                    {{ selectedDetail.movementCount || 0 }}
+                    <small class="text-muted">
+                      (QC: {{ selectedDetail.qcPostCount || 0 }} · Dispatch: {{ selectedDetail.dispatchCount || 0 }})
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4 col-sm-6"
+                   *ngIf="selectedDetail.pendingDispatchQty && selectedDetail.pendingDispatchQty > 0">
+                <div class="detail-group">
+                  <div class="detail-label">Pending Drafts</div>
+
+                  <div class="detail-value text-warning fw-semibold">
+                    {{ formatNumber(selectedDetail.pendingDispatchQty) }}
+                    <small class="text-muted">
+                      ({{ selectedDetail.pendingDispatchCount || 0 }} dispatch{{ selectedDetail.pendingDispatchCount === 1 ? '' : 'es' }})
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="detail-group">
+                  <div class="detail-label">First Recorded</div>
+
+                  <div class="detail-value">
+                    {{ selectedDetail.firstMovementDate || selectedDetail.createdDate || '-' }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="detail-group">
+                  <div class="detail-label">Last Movement</div>
+
+                  <div class="detail-value">
+                    {{ selectedDetail.lastMovementDate || selectedDetail.recordTimeStamp || '-' }}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- ================= CUSTOMER RESERVATIONS ================= -->
+
+            <div class="mt-4"
+                 *ngIf="selectedDetail.customerReservations && selectedDetail.customerReservations.length > 0">
+
+              <div class="detail-label mb-2">Customer Reservations</div>
+
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                  <thead class="table-light small text-uppercase">
+                    <tr>
+                      <th>Customer</th>
+                      <th>Job Orders</th>
+                      <th class="text-end">Reserved</th>
+                      <th class="text-end">Dispatched</th>
+                      <th class="text-end">Remaining</th>
+                    </tr>
+                  </thead>
+                  <tbody class="small">
+                    <tr *ngFor="let r of selectedDetail.customerReservations">
+                      <td class="fw-semibold">
+                        <span *ngIf="r.customerCode">{{ r.customerCode }} — </span>
+                        {{ r.customerName || '-' }}
+                      </td>
+                      <td class="text-muted">{{ r.jobOrders || '-' }}</td>
+                      <td class="text-end text-warning fw-semibold">{{ formatNumber(r.reservedQty) }}</td>
+                      <td class="text-end text-danger">{{ formatNumber(r.dispatchedQty) }}</td>
+                      <td class="text-end text-success fw-bold">{{ formatNumber(r.remainingQty) }}</td>
+                    </tr>
+                  </tbody>
+                  <tfoot class="table-light small fw-semibold">
+                    <tr>
+                      <td colspan="2" class="text-end">Totals</td>
+                      <td class="text-end text-warning">
+                        {{ formatNumber(getReservationsSum('reservedQty')) }}
+                      </td>
+                      <td class="text-end text-danger">
+                        {{ formatNumber(getReservationsSum('dispatchedQty')) }}
+                      </td>
+                      <td class="text-end text-success">
+                        {{ formatNumber(getReservationsSum('remainingQty')) }}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <div class="mt-4 text-muted small"
+                 *ngIf="!selectedDetail.customerReservations || selectedDetail.customerReservations.length === 0">
+              <em>No active customer reservations for this product.</em>
+            </div>
+
+          </ng-container>
+
+        </div>
+
+      </div>
+
+      <!-- ================= FOOTER ================= -->
+      <div class="card-footer stock-detail-footer d-flex justify-content-end">
+
+        <button type="button"
+                class="btn btn-sm btn-outline-light stock-close-btn"
+                (click)="closeDetail()">
+
+          Close
+
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===================== Phase P.1 - PER-ITEM HISTORY MODAL ===================== -->
+  <div *ngIf="historyOpen" class="modal show d-block fs-history-modal" tabindex="-1"
+       (click)="closeItemHistory()">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white py-2">
+          <h5 class="modal-title">
+            <i class="bi bi-clock-history me-2"></i>
+            Ledger:
+            <span *ngIf="historyItem">{{ historyItem.itemName }} &mdash; {{ historyItem.branchName }}</span>
+          </h5>
+          <button class="btn-close btn-close-white" (click)="closeItemHistory()"></button>
+        </div>
+
+        <div class="modal-body p-3">
+          <div *ngIf="historyLoading" class="text-center py-4">
+            <div class="spinner-border text-primary"></div>
+            <div class="text-muted small mt-2">Loading history...</div>
+          </div>
+
+          <ng-container *ngIf="!historyLoading">
+            <div class="d-flex flex-wrap align-items-center gap-3 small mb-3">
+              <span>Aggregate &mdash;
+                <span class="text-success">In: <strong>{{ historyMeta.totalIn | number }}</strong></span>
+                <span class="text-muted mx-2">|</span>
+                <span class="text-danger">Out: <strong>{{ historyMeta.totalOut | number }}</strong></span>
+                <span class="text-muted mx-2">|</span>
+                <span>Balance: <strong>{{ historyMeta.balance | number }}</strong> {{ historyMeta.unit }}</span>
+              </span>
+              <span class="text-muted ms-auto">
+                ({{ historyMeta.rowCount }} transactions)
+              </span>
+            </div>
+
+            <div class="table-responsive" *ngIf="historyRows.length; else noHist">
+              <table class="table table-sm align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th style="width:110px;">Date</th>
+                    <th style="width:80px;">Type</th>
+                    <th>Reference</th>
+                    <th>Stage</th>
+                    <th class="text-end text-success">In</th>
+                    <th class="text-end text-danger">Out</th>
+                    <th class="text-end">Balance</th>
+                    <th class="text-end">Rate</th>
+                    <th class="text-end">Amount</th>
+                    <th>Branch</th>
+                    <th>Remarks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let r of historyRows">
+                    <td>{{ r.dateText }}</td>
+                    <td>
+                      <span class="badge"
+                            [ngClass]="(r.transactionType || '').toUpperCase() === 'IN'
+                                        ? 'bg-success-subtle text-success-emphasis border border-success'
+                                        : 'bg-danger-subtle text-danger-emphasis border border-danger'">
+                        {{ r.transactionType || '-' }}
+                      </span>
+                    </td>
+                    <td class="text-muted small">
+                      {{ r.referenceType }}<span *ngIf="r.referenceNo"> &middot; {{ r.referenceNo }}</span>
+                    </td>
+                    <td>{{ r.stockStage || '-' }}</td>
+                    <td class="text-end text-success">{{ r.inQty | number }}</td>
+                    <td class="text-end text-danger">{{ r.outQty | number }}</td>
+                    <td class="text-end fw-semibold">{{ r.balance | number }}</td>
+                    <td class="text-end">{{ r.rate | number:'1.0-2' }}</td>
+                    <td class="text-end">{{ r.amount | number:'1.0-0' }}</td>
+                    <td class="text-muted small">{{ r.branchName }}</td>
+                    <td class="text-muted small">{{ r.remarks }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ng-template #noHist>
+              <div class="text-center text-muted py-4">
+                <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                No transactions found for this product.
+              </div>
+            </ng-template>
+          </ng-container>
+        </div>
+
+        <div class="modal-footer py-2">
+          <button class="btn btn-outline-secondary btn-sm" (click)="closeItemHistory()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="historyOpen" class="modal-backdrop show"></div>
+</div>

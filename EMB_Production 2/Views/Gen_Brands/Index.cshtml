@@ -1,0 +1,291 @@
+﻿@model EMB_Production.ViewModels.BrandsPageViewModel
+@using PagedList.Mvc
+@using PagedList
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Brands";
+    var currentFilter = Model.SearchString ?? "";
+    var activeFilter = Model.ActiveFilter ?? "";
+    bool showCreate = Model.ShowCreate;
+    bool showEdit = Model.ShowEdit;
+    int? editId = Model.EditId;
+}
+
+<style>
+    .toolbar {
+        background: #eef4fc;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .inline-card {
+        background: #fff;
+        border-left: 5px solid #007bff;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .data-table thead {
+        background: #003865;
+        color: #fff;
+    }
+
+    .data-table tbody tr:hover {
+        background: #f1f9ff;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- TOP BAR -->
+    <div class="toolbar d-flex flex-wrap align-items-center justify-content-between">
+        <h2 class="text-primary mb-0">Brands</h2>
+        <div class="d-flex align-items-center flex-wrap">
+
+            @* Create/Edit toggle *@
+            @if (showEdit)
+            {
+                @Html.ActionLink("Modify", "Index", new { showEdit = false, searchString = currentFilter, activeFilter },
+                  new { @class = "btn btn-warning btn-sm me-3" })
+            }
+            else
+            {
+                @Html.ActionLink(showCreate ? "Close" : "Add New",
+                  "Index", new { showCreate = !showCreate, searchString = currentFilter, activeFilter },
+                  new { @class = "btn " + (showCreate ? "btn-secondary" : "btn-success") + " btn-sm me-3" })
+            }
+
+            @* Search *@
+            @using (Html.BeginForm("Index", "Gen_Brands", FormMethod.Get, new { @class = "d-flex me-2" }))
+            {
+                <input type="text" name="searchString" value="@currentFilter"
+                       class="form-control form-control-sm me-1" placeholder="Search…" />
+                <button type="submit" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-search"></i>
+                </button>
+            }
+
+            @* Utility buttons *@
+            <button class="btn btn-outline-secondary btn-sm me-2" onclick="location.reload();">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm me-2" onclick="window.print();">
+                <i class="bi bi-printer"></i>
+            </button>
+            <a href="@Url.Action("ExportToExcel", new { searchString = currentFilter, activeFilter })"
+               class="btn btn-outline-success btn-sm me-2"
+               title="Export to Excel">
+                <i class="bi bi-file-earmark-spreadsheet text-success"></i>
+            </a>
+            <a href="@Url.Action("ExportToPdf", new { searchString = currentFilter, activeFilter })"
+               class="btn btn-outline-danger btn-sm"
+               title="Export to PDF">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- INLINE CREATE -->
+    @if (showCreate)
+    {
+        <div class="inline-card">
+            @using (Html.BeginForm("CreateFromIndex", "Gen_Brands", FormMethod.Post, new { @class = "row g-2 align-items-end" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="col-md-1">
+                    @Html.LabelFor(m => m.NewBrand.Code, new { @class = "form-label small" })
+                    @Html.TextBoxFor(m => m.NewBrand.Code, new { @class = "form-control form-control-sm" })
+                    @Html.ValidationMessageFor(m => m.NewBrand.Code, "", new { @class = "text-danger small" })
+                </div>
+
+                <div class="col-md-2">
+                    @Html.LabelFor(m => m.NewBrand.BrandName, new { @class = "form-label small" })
+                    @Html.TextBoxFor(m => m.NewBrand.BrandName, new { @class = "form-control form-control-sm" })
+                    @Html.ValidationMessageFor(m => m.NewBrand.BrandName, "", new { @class = "text-danger small" })
+                </div>
+
+                <div class="col-md-3">
+                    @Html.LabelFor(m => m.NewBrand.Description, new { @class = "form-label small" })
+                    @Html.TextBoxFor(m => m.NewBrand.Description, new { @class = "form-control form-control-sm" })
+                </div>
+
+                <div class="col-md-2">
+                    @Html.LabelFor(m => m.NewBrand.BranchId, new { @class = "form-label small" })
+                    @Html.DropDownListFor(m => m.NewBrand.BranchId, Model.BranchList, "– Branch –",
+                      new { @class = "form-select form-select-sm" })
+                </div>
+
+                <div class="col-md-1 form-check form-switch text-center">
+                    <label class="form-switch-label small">Active</label>
+                    @Html.CheckBox(
+                                    "NewBrand.Active",
+                                    Model.NewBrand.Active.GetValueOrDefault(false),
+                                    new { @class = "form-check-input", id = "NewBrand_Active" })
+                </div>
+                <div class="col-md-1 form-check form-switch text-center">
+                    <label class="form-switch-label small">Deleted</label>
+                    @Html.CheckBox(
+                                   "NewBrand.Deleted",
+                                   Model.NewBrand.Deleted.GetValueOrDefault(false),
+                                   new { @class = "form-check-input", id = "NewBrand_Deleted" })
+                </div>
+
+                <div class="col text-end">
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-save me-1"></i> Save
+                    </button>
+                    @Html.ActionLink("Cancel", "Index", new { showCreate = false, searchString = currentFilter, activeFilter },
+                      new { @class = "btn btn-danger btn-sm ms-2" })
+                </div>
+            }
+        </div>
+    }
+
+    <!-- INLINE EDIT -->
+    @if (showEdit && Model.EditBrand != null)
+    {
+        <div class="inline-card">
+            @using (Html.BeginForm("EditFromIndex", "Gen_Brands", FormMethod.Post, new { @class = "row g-2 align-items-end" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.EditBrand.Id)
+
+                <div class="col-md-1">
+                    @Html.LabelFor(m => m.EditBrand.Code, new { @class = "form-label small" })
+                    @Html.TextBoxFor(m => m.EditBrand.Code, new { @class = "form-control form-control-sm" })
+                </div>
+
+                <div class="col-md-2">
+                    @Html.LabelFor(m => m.EditBrand.BrandName, new { @class = "form-label small" })
+                    @Html.TextBoxFor(m => m.EditBrand.BrandName, new { @class = "form-control form-control-sm" })
+                </div>
+
+                <div class="col-md-3">
+                    @Html.LabelFor(m => m.EditBrand.Description, new { @class = "form-label small" })
+                    @Html.TextBoxFor(m => m.EditBrand.Description, new { @class = "form-control form-control-sm" })
+                </div>
+
+                <div class="col-md-2">
+                    @Html.LabelFor(m => m.EditBrand.BranchId, new { @class = "form-label small" })
+                    @Html.DropDownListFor(m => m.EditBrand.BranchId, Model.BranchList, "– Branch –",
+                      new { @class = "form-select form-select-sm" })
+                </div>
+
+                <div class="col-md-1 form-check form-switch text-center">
+                    <label class="form-switch-label small">Active</label>
+                       @Html.CheckBox(
+                                 "EditBrand.Active",
+                                 Model.EditBrand.Active.GetValueOrDefault(false),
+                                 new { @class = "form-check-input", id = "EditBrand_Active" })
+                </div>
+                <div class="col-md-1 form-check form-switch text-center">
+                    <label class="form-switch-label small">Deleted</label>
+                    @Html.CheckBox(
+                                "EditBrand.Deleted",
+                                Model.EditBrand.Deleted.GetValueOrDefault(false),
+                                new { @class = "form-check-input", id = "EditBrand_Deleted" })
+                </div>
+
+                <div class="col text-end">
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-save me-1"></i> Save
+                    </button>
+                    @Html.ActionLink("Cancel", "Index", new { showEdit = false, searchString = currentFilter, activeFilter },
+                      new { @class = "btn btn-danger btn-sm ms-2" })
+                </div>
+            }
+        </div>
+    }
+
+    <!-- DATA GRID -->
+    <div class="table-responsive data-table shadow-sm rounded">
+        <table class="table table-striped mb-0">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Brand Name</th>
+                    <th>Description</th>
+                    <th>Branch</th>
+                    <th>Active</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+               @foreach (var b in Model.Brands)
+                {
+                    <tr>
+                        <td>@b.Code</td>
+                        <td>@b.BrandName</td>
+                        <td>@b.Description</td>
+                        <td>@(b.Branches?.Name ?? "—")</td>
+                        <td>
+                            <span class="badge @(b.Active == true ? "bg-success" : "bg-secondary")">
+                                @(b.Active == true ? "Yes" : "No")
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <a href="@Url.Action(
+                                    "Index",
+                                    "Gen_Brands",
+                                    new { showEdit = true, editId = b.Id, searchString = currentFilter, activeFilter })
+                                    "class="btn btn-outline-primary btn-sm me-1"
+                                title="Edit"><i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="@Url.Action("Details","Gen_Brands", new { id = b.Id })"
+                               class="btn btn-outline-info btn-sm me-1"
+                               title="Details">
+                                <i class="bi bi-info-circle"></i>
+                            </a>
+                            <a href="@Url.Action("Delete","Gen_Brands", new { id = b.Id })"
+                               class="btn btn-outline-danger btn-sm"
+                               title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="d-flex justify-content-center mt-3">
+        @Html.PagedListPager(
+          Model.Brands,
+          page => Url.Action("Index", new { page, searchString = currentFilter, activeFilter }),
+          new PagedListRenderOptions
+              {
+            UlElementClasses = new[] { "pagination" },
+            LiElementClasses = new[] { "page-item" },
+            DisplayLinkToFirstPage = PagedListDisplayMode.Always,
+            DisplayLinkToLastPage = PagedListDisplayMode.Always,
+            DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+            DisplayLinkToNextPage = PagedListDisplayMode.Always
+          }
+        )
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('.form-control, .form-select').on('focus', function () {
+                $(this).addClass('border-primary shadow-sm');
+            }).on('blur', function () {
+                $(this).removeClass('border-primary shadow-sm');
+            });
+            $('table.data-table tbody tr').hover(
+                function () { $(this).addClass('table-active'); },
+                function () { $(this).removeClass('table-active'); }
+            );
+        });
+    </script>
+}

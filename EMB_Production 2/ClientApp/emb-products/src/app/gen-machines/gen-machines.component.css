@@ -1,0 +1,98 @@
+.search-group input {
+  min-width: 200px;
+}
+
+/* Phase R.4 - summary strip + profile drawer */
+.mach-summary-strip .badge { font-weight: 500; padding: 0.5rem 0.7rem; font-size: 0.78rem; }
+.mach-summary-strip .badge strong { font-weight: 700; }
+.mach-profile-modal { background: rgba(0,0,0,0.4); padding-top: 60px; overflow-y: auto; }
+.mach-profile-modal .modal-content { border-radius: 12px; overflow: hidden; }
+.mach-profile-modal .modal-body { background: #f4f6f9; }
+.mach-section-card { border: 1px solid #e9ecef; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+.mach-section-card .card-header { background: #f8f9fb; border-bottom: 1px solid #eef1f4; font-weight: 600; font-size: 0.86rem; }
+.mach-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.mach-value { font-size: 0.92rem; color: #212529; font-weight: 500; margin-top: 2px; }
+.mach-kpi-row .kpi-tile { border: 1px solid #e9ecef; border-left-width: 4px; border-radius: 8px; transition: transform .15s ease; }
+.mach-kpi-row .kpi-tile:hover { transform: translateY(-1px); }
+.mach-kpi-row .kpi-tile-primary { border-left-color: #0d6efd; }
+.mach-kpi-row .kpi-tile-success { border-left-color: #198754; }
+.mach-kpi-row .kpi-tile-info    { border-left-color: #0dcaf0; }
+.mach-kpi-row .kpi-tile-warning { border-left-color: #ffc107; }
+.mach-kpi-row .kpi-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6c757d; font-weight: 600; }
+.mach-kpi-row .kpi-value { font-size: 1.15rem; font-weight: 700; line-height: 1.2; color: #212529; }
+
+.status-filter {
+  min-width: 120px;
+}
+
+.table th, .table td {
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.bg-modal {
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.btn-close {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.modal-body .row {
+  font-size: 14px;
+}
+
+.modal-body strong {
+  color: #333;
+}
+
+.badge {
+  font-size: 11px;
+  padding: 5px 8px;
+}
+
+.pagination .page-link {
+  cursor: pointer;
+}
+
+.card {
+  border: 1px solid #e3e3e3;
+}
+
+.card-body {
+  padding: 1rem 1.2rem;
+}
+
+/* EXPORT BUTTON GROUP */
+.export-btns button {
+  font-size: 13px;
+  padding: 3px 10px;
+}
+.toolbar-field {
+  min-width: 120px;
+}
+
+.toolbar-label {
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  color: #555;
+}
+.bg-modal {
+  background-color: #0d6efd !important;
+  color: white !important;
+}
+
+.modal-title {
+  color: white !important;
+}
+
+.btn-close {
+  filter: brightness(0) invert(1);
+}
+
+.modal-dialog {
+  margin-top: 80px;
+}

@@ -1,0 +1,98 @@
+﻿@model EMB_Production.ViewModels.BranchesPageViewModel
+@using System.Web.Mvc
+
+@{
+    var isCreate = Model.ShowCreate && !Model.ShowEdit;
+    var prefix = isCreate ? "NewBranch" : "EditBranch";
+    int? selectedBranchId = isCreate? Model.NewBranch?.BranchId: Model.EditBranch?.BranchId;
+    var selectedValue = selectedBranchId.HasValue? selectedBranchId.Value.ToString(): "";
+
+    var formId = isCreate ? "branch-create-form" : "branch-edit-form";
+    var action = isCreate ? "CreateFromIndex" : "EditFromIndex";
+    var u = isCreate ? Model.NewBranch : Model.EditBranch;
+
+    bool activeVal = u?.IsActive ?? false;
+    bool deletedVal = u?.Deleted ?? false;
+}
+
+<div class="inline-card p-3 border rounded shadow-sm mb-3">
+    @using (Html.BeginForm(action, "Branches", FormMethod.Post, new { id = formId }))
+    {
+        @Html.AntiForgeryToken()
+        @* Preserve filters and paging *@
+        @Html.HiddenFor(m => m.Search)
+        @Html.HiddenFor(m => m.ActiveFilter)
+        @Html.HiddenFor(m => m.CompanyFilter)
+        @Html.Hidden("page", Model.Branches?.PageNumber ?? 1)
+
+        @* Include Id when editing *@
+        if (!isCreate)
+        {
+            @Html.HiddenFor(m => m.EditBranch.Id)
+        }
+
+        <div class="row g-2">
+            <div class="col-md-2">
+                <label class="form-label small">Name</label>
+                @Html.TextBox($"{prefix}.Name", u?.Name, new { @class = "form-control form-control-sm" })
+                @Html.ValidationMessage($"{prefix}.Name", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small" for="@($"{prefix}_BranchId")">Branch Code</label>
+                @Html.TextBox($"{prefix}.BranchId",selectedBranchId.HasValue ? selectedBranchId.Value.ToString() : "",
+                    new {@class = "form-control form-control-sm",id = $"{prefix}_BranchId",type = "number",step = "1",
+                        min = "0",inputmode = "numeric",placeholder = "e.g. 101"})
+                @Html.ValidationMessage($"{prefix}.BranchId", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Location</label>
+                @Html.TextBox($"{prefix}.Location", u?.Location, new { @class = "form-control form-control-sm", type = "adress" })
+                @Html.ValidationMessage($"{prefix}.Location", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Contact</label>
+                @Html.TextBox($"{prefix}.Contect", u?.Contect, new { @class = "form-control form-control-sm" })
+                @Html.ValidationMessage($"{prefix}.Contect", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Company</label>
+                @Html.DropDownList($"{prefix}.CompanyId", Model.CompanyList, "-- Company --", new { @class = "form-select form-select-sm" })
+                @Html.ValidationMessage($"{prefix}.CompanyId", "", new { @class = "text-danger small" })
+            </div>
+            
+                @* use gx-0 for zero gap *@
+                <div class="col-md-1 px-1">
+                    <div class="d-flex flex-column gap-2">
+                        <div class="form-check form-switch">
+                            @Html.CheckBox($"{prefix}.IsActive", activeVal, new { @class = "form-check-input", id = $"{prefix}_IsActive" })
+                            <label class="form-check-label small" for="@($"{prefix}_IsActive")">IsActive</label>
+                        </div>
+
+                        <div class="form-check form-switch">
+                            @Html.CheckBox($"{prefix}.Deleted", deletedVal, new { @class = "form-check-input", id = $"{prefix}_Deleted" })
+                            <label class="form-check-label small" for="@($"{prefix}_Deleted")">Deleted</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-auto px-1">
+                    <div class="d-flex flex-column gap-1">
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <i class="bi bi-save me-1"></i> @(isCreate ? "Add" : "Save")
+                        </button>
+                        <a class="btn btn-danger btn-sm cancel-btn"
+                           href="@Url.Action("Index","Branches", new {search = Model.Search,activeFilter = Model.ActiveFilter,
+                                    companyFilter = Model.CompanyFilter,page = Model.Branches?.PageNumber ?? 1})"
+                           data-ajax="true" data-ajax-method="GET"
+                           data-ajax-update="#branchesWrapper" data-ajax-mode="replace">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </a>
+                    </div>
+                </div>            
+        </div>
+    }
+</div>

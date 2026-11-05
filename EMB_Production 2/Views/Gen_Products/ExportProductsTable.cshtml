@@ -1,0 +1,59 @@
+﻿@model EMB_Production.ViewModels.ProductsPageViewModel
+
+@{
+    Layout = null;
+}
+
+<div class="table-responsive shadow-sm rounded">
+    <table class="table table-striped table-bordered table-sm mb-0">
+        <thead class="table-dark text-white">
+            <tr>
+                <th>Category</th>
+                <th>Product Name</th>
+                <th>Code</th>
+                <th>Description</th>
+                <th class="text-center">Qty</th>
+                <th class="text-center">Length</th>
+                <th class="text-center">Weight</th>
+                <th class="text-center">Date In</th>
+                <th class="text-center">Date Out</th>
+                <th class="text-end">Price</th>
+                <th>Branch</th>
+                <th class="text-center">Active</th>
+                <th class="text-center">Deleted</th>
+                <th class="text-center">Created By</th>
+                <th class="text-center">Created Date</th>
+                <th class="text-center">Updated By</th>
+                <th class="text-center">Updated Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model.Products)
+            {
+                <tr>
+                    <td>@r.CategoryName</td>
+                    <td>@r.Prod_Name</td>
+                    <td>@r.Prod_Code</td>
+                    <td class="text-wrap">@r.Prod_Description</td>
+                    <td class="text-center">@r.Prod_Qty</td>
+                    <td class="text-center">@r.Prod_Length</td>
+                    <td class="text-center">@r.Prod_Weight</td>
+                    <td class="text-center">@r.Prod_DateIn?.ToString("yyyy-MM-dd")</td>
+                    <td class="text-center">@r.Prod_DateOut?.ToString("yyyy-MM-dd")</td>
+                    <td class="text-end">@r.Price?.ToString("F2")</td>
+                    <td>@r.BranchName</td>
+                    <td class="text-center">
+                        @(r.Active ? "Yes" : "No")
+                    </td>
+                    <td class="text-center">
+                        @(r.Deleted ? "Yes" : "No")
+                    </td>
+                    <td class="text-center">@r.CreatedBy</td>
+                    <td class="text-center">@r.CreatedDate?.ToString("g")</td>
+                    <td class="text-center">@r.UpdatedBy</td>
+                    <td class="text-center">@r.UpdatedDate?.ToString("g")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

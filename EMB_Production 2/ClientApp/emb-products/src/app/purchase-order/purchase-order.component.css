@@ -1,0 +1,52 @@
+:root {
+  --sidebar-width: 260px;
+  --topbar-height: 72px;
+}
+.page-wrap { padding: 10px 6px; }
+
+/* Sprint-2: workflow stepper. 6-stage indicator at the top of the
+   detail modal. Shared visual language with the JO / WO / Plan / PR modules. */
+.po-stepper-card { border-color: #e3e7ec; background: #fafbfc; }
+.po-stepper { min-height: 56px; }
+.po-stepper-step { min-width: 60px; }
+.po-stepper-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border-width: 2px !important;
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+.po-stepper-line {
+  height: 3px;
+  border-radius: 2px;
+  margin-bottom: 22px;
+}
+
+/* Sprint-2: audit timeline list — newest-first state-change history. */
+.po-audit-timeline li { border-bottom: 1px dashed #eef0f2; }
+.po-audit-timeline li:last-child { border-bottom: none; }
+.po-audit-pill {
+  min-width: 130px;
+  text-align: left;
+  font-size: 0.72rem;
+  padding: 0.35rem 0.55rem;
+}
+
+.po-filter-bar .form-label.small {
+  font-weight: 600; color: #495057; font-size: 0.78rem;
+}
+.po-summary-strip .badge {
+  font-weight: 500; padding: 0.5rem 0.7rem; font-size: 0.78rem;
+}
+.po-summary-strip .badge strong { font-weight: 700; }
+
+.po-list-table { font-size: 0.88rem; }
+.po-list-table th, .po-list-table td {
+  padding: 0.55rem 0.6rem !important; vertical-align: middle;
+}
+
+.page-wrap .modal { top: var(--topbar-height); }
+@media (min-width: 992px) {
+  .page-wrap .modal { left: var(--sidebar-width); }
+}
+.page-wrap .modal-header { position: sticky; top: 0; z-index: 1056; }

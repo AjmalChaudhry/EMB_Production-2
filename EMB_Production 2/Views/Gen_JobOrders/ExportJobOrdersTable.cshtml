@@ -1,0 +1,47 @@
+﻿@model EMB_Production.ViewModels.JobOrdersPageViewModel
+
+@{
+    Layout = null;
+}
+
+<table class="table table-bordered table-sm">
+    <thead class="table-light">
+        <tr>
+            <th>ID</th>
+            <th>Order Code</th>
+            <th>Component</th>
+            <th>Req Repeats</th>
+            <th>Req Head</th>
+            <th>Panni</th>
+            <th>Solving</th>
+            <th>Branch</th>
+            <th>Active</th>
+            <th>Deleted</th>
+            <th>Created By</th>
+            <th>Created Date</th>
+            <th>Updated By</th>
+            <th>Updated Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var row in Model.Orders)
+        {
+            <tr>
+                <td>@row.Id</td>
+                <td>@row.Code</td>
+                <td>@row.ComponentCode</td>
+                <td>@row.ReqRepeats</td>
+                <td>@row.ReqHead</td>
+                <td>@row.Panni</td>
+                <td>@row.Solving</td>
+                <td>@row.BranchName</td>
+                <td>@(row.Active ? "Yes" : "No")</td>
+                <td>@(row.Deleted ? "Yes" : "No")</td>
+                <td>@row.CreatedBy</td>
+                <td>@row.CreatedDate?.ToString("g")</td>
+                <td>@row.UpdatedBy</td>
+                <td>@row.UpdatedDate?.ToString("g")</td>
+            </tr>
+        }
+    </tbody>
+</table>

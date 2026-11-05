@@ -1,0 +1,165 @@
+﻿@model EMB_Production.ViewModels.UsersPageViewModel
+@using System.Web.Mvc
+
+@{    
+    var isCreate = Model.ShowCreate;
+    var prefix = isCreate ? nameof(Model.NewUser) : nameof(Model.EditUser);
+    var formId = isCreate ? "user-create-form" : "user-edit-form";
+    var action = isCreate ? "CreateFromIndex" : "EditFromIndex";
+    
+    var u = isCreate ? Model.NewUser : Model.EditUser;
+    
+    bool activeVal = u?.Active ?? false;
+    bool deletedVal = u?.Deleted ?? false;
+    bool dashboardAccessVal = u?.DashboardAccess ?? false;
+    bool salesmanLinkedVal = u?.IsSalesmanLinked ?? false;
+}
+
+<div class="inline-card p-3 border rounded shadow-sm mb-3">
+    @using (Html.BeginForm(action, "Adm_Users", FormMethod.Post, new { id = formId }))
+    {
+        @Html.AntiForgeryToken()
+
+        @* preserve state *@
+        @Html.HiddenFor(m => m.Search)
+        @Html.HiddenFor(m => m.ActiveFilter)
+        @Html.Hidden("page", Model.Users?.PageNumber ?? 1)
+
+        @* include Id when editing *@
+        if (!isCreate)
+        {
+            @Html.HiddenFor(m => m.EditUser.Id)
+        }
+
+        <div class="row g-2">
+
+            <div class="col-md-1">
+                <label class="form-label small">Employee ID</label>
+                @Html.TextBox($"{prefix}.EmployeeId", u?.EmployeeId, new { @class = "form-control form-control-sm", type = "number" })
+                @Html.ValidationMessage($"{prefix}.EmployeeId", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small">Username</label>
+                @Html.TextBox($"{prefix}.UserName", u?.UserName, new { @class = "form-control form-control-sm" })
+                @Html.ValidationMessage($"{prefix}.UserName", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small">First Name</label>
+                @Html.TextBox($"{prefix}.FirstName", u?.FirstName, new { @class = "form-control form-control-sm" })
+                @Html.ValidationMessage($"{prefix}.FirstName", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small">Last Name</label>
+                @Html.TextBox($"{prefix}.LastName", u?.LastName, new { @class = "form-control form-control-sm" })
+                @Html.ValidationMessage($"{prefix}.LastName", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Email</label>
+                @Html.TextBox($"{prefix}.EmailAddress", u?.EmailAddress, new { @class = "form-control form-control-sm", type = "email" })
+                @Html.ValidationMessage($"{prefix}.EmailAddress", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small">Mobile</label>
+                @Html.TextBox($"{prefix}.MobilePrimary", u?.MobilePrimary, new { @class = "form-control form-control-sm" })
+                @Html.ValidationMessage($"{prefix}.MobilePrimary", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small">Landline</label>
+                @Html.TextBox($"{prefix}.Landline", u?.Landline, new { @class = "form-control form-control-sm" })
+                @Html.ValidationMessage($"{prefix}.Landline", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small">Ext</label>
+                @Html.TextBox($"{prefix}.LandlineExt", u?.LandlineExt, new { @class = "form-control form-control-sm" })
+                @Html.ValidationMessage($"{prefix}.LandlineExt", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small">Alt. Mobile</label>
+                @Html.TextBox($"{prefix}.MobileSecondary", u?.MobileSecondary, new { @class = "form-control form-control-sm" })
+                @Html.ValidationMessage($"{prefix}.MobileSecondary", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small">Password</label>
+                @Html.Password($"{prefix}.Password", u?.Password, new { @class = "form-control form-control-sm" })
+                @Html.ValidationMessage($"{prefix}.Password", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small">Role</label>
+                @Html.DropDownList($"{prefix}.RoleId", Model.RoleList, "-- Role --", new { @class = "form-select form-select-sm" })
+                @Html.ValidationMessage($"{prefix}.RoleId", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small">Branch</label>
+                @Html.DropDownList($"{prefix}.BranchId", Model.BranchList, "-- Branch --", new { @class = "form-select form-select-sm" })
+                @Html.ValidationMessage($"{prefix}.BranchId", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small">Company</label>
+                @Html.DropDownList($"{prefix}.CompanyId", Model.CompanyList, "-- Company --", new { @class = "form-select form-select-sm" })
+                @Html.ValidationMessage($"{prefix}.CompanyId", "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small">Designation</label>
+                @Html.TextBox($"{prefix}.DesignationId", u?.DesignationId, new { @class = "form-control form-control-sm", type = "number" })
+                @Html.ValidationMessage($"{prefix}.DesignationId", "", new { @class = "text-danger small" })
+            </div>
+
+            @* Approvel is a string in your model, so use a textbox (not a checkbox) *@
+            <div class="col-md-1">
+                <label class="form-label small">Approvel</label>
+                @Html.TextBox($"{prefix}.Approvel", u?.Approvel, new { @class = "form-control form-control-sm" })
+                @Html.ValidationMessage($"{prefix}.Approvel", "", new { @class = "text-danger small" })
+            </div>
+            <div class="row g-2 align-items-center">
+                <div class="col-1">
+                    <div class="form-check form-switch form-check-inline">
+                        @Html.CheckBox($"{prefix}.Active", activeVal, new { @class = "form-check-input", id = $"{prefix}_Active" })
+                        <label class="form-check-label small" for="@($"{prefix}_Active")">Active</label>
+                    </div>
+                </div>
+                <div class="col-1">
+                    <div class="form-check form-switch form-check-inline">
+                        @Html.CheckBox($"{prefix}.Deleted", deletedVal, new { @class = "form-check-input", id = $"{prefix}_Deleted" })
+                        <label class="form-check-label small" for="@($"{prefix}_Deleted")">Deleted</label>
+                    </div>
+                </div>
+                <div class="col-1">
+
+                    <div class="form-check form-switch form-check-inline">
+                        @Html.CheckBox($"{prefix}.DashboardAccess", dashboardAccessVal, new { @class = "form-check-input", id = $"{prefix}_DashboardAccess" })
+                        <label class="form-check-label small" for="@($"{prefix}_DashboardAccess")">Dashboard</label>
+                    </div>
+                </div>
+                <div class="col-1">
+
+                    <div class="form-check form-switch form-check-inline">
+                        @Html.CheckBox($"{prefix}.IsSalesmanLinked", salesmanLinkedVal, new { @class = "form-check-input", id = $"{prefix}_IsSalesmanLinked" })
+                        <label class="form-check-label small" for="@($"{prefix}_IsSalesmanLinked")">Salesman</label>
+                    </div>
+                </div>
+
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-save me-1"></i> @(isCreate ? "Add" : "Save")
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm cancel-btn">
+                        <i class="bi bi-x-circle me-1"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+     }
+</div>

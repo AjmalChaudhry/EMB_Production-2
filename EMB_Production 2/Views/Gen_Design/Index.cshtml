@@ -1,0 +1,282 @@
+﻿@model EMB_Production.ViewModels.DesignPageViewModel
+@using PagedList.Mvc
+@{
+    ViewBag.Title = "Designs";
+    var cf = Model.Search;
+    var af = Model.ActiveFilter;
+    string currentFilter = Model.Search ?? "";
+    string activeFilter = Model.ActiveFilter ?? "";
+    bool showCreate = Model.ShowCreate;
+    bool showEdit = Model.ShowEdit;
+    int? editId = Model.EditId;
+}
+
+<div class="container-fluid py-4">
+    <!-- TOOLBAR -->
+    <div class="d-flex align-items-center mb-3 bg-info text-white p-3 rounded">
+        <h2 class="mb-0 me-auto">Designs</h2>
+        @if (showEdit)
+        {
+            <a class="btn btn-warning btn-sm me-3"
+               href="@Url.Action("Index", "Gen_Design", new { showEdit = false, search = currentFilter, activeFilter })">
+                <i class="bi bi-pencil-fill me-1"></i> Modify
+            </a>
+        }
+        else
+        {
+            <a class="btn @(showCreate ? "btn-secondary" : "btn-success") btn-sm me-3"
+               href="@Url.Action("Index", "Gen_Design", new { showCreate = !showCreate, search = currentFilter, activeFilter })">
+                <i class="bi @(showCreate ? "bi-x-lg" : "bi-plus-lg") me-1"></i>
+                @(showCreate ? "Close" : "Add New")
+            </a>
+        }
+
+        @using (Html.BeginForm("Index", "Gen_Design", FormMethod.Get, new { @class = "d-flex align-items-center" }))
+        {
+            <input type="text" name="search" value="@currentFilter"
+                   class="form-control form-control-sm me-2" style="width:160px;"
+                   placeholder="Search…" />
+            <select name="activeFilter" class="form-select form-select-sm me-2" style="width:120px;">
+                <option value="">All</option>
+                <option value="Yes" @(activeFilter == "Yes" ? "selected" : "")>Active</option>
+                <option value="No" @(activeFilter == "No" ? "selected" : "")>Inactive</option>
+            </select>
+            <button type="submit" class="btn btn-outline-light btn-sm me-2">
+                <i class="bi bi-search"></i>
+            </button>
+            <button type="button" onclick="location.href='@Url.Action("Index", "Gen_Design")'" class="btn btn-outline-light btn-sm me-2">
+                <i class="bi bi-x-circle"></i>
+            </button>
+            <button type="button" onclick="location.reload()" class="btn btn-outline-light btn-sm me-2">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button type="button" onclick="window.print()" class="btn btn-outline-light btn-sm me-2">
+                <i class="bi bi-printer"></i>
+            </button>
+            <a href="@Url.Action("ExportToExcel","Gen_Design", new { search=currentFilter, activeFilter })"
+               class="btn btn-light btn-sm me-2" title="Export to Excel">
+                <i class="bi bi-file-earmark-spreadsheet text-success"></i>
+            </a>
+            <a href="@Url.Action("ExportToPdf","Gen_Design", new { search=currentFilter, activeFilter })"
+               class="btn btn-light btn-sm" title="Export to PDF">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        }
+    </div>
+
+    <!-- INLINE CREATE -->
+    @if (showCreate)
+    {
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                @using (Html.BeginForm("CreateFromIndex", "Gen_Design", FormMethod.Post, new
+                {
+                    @class = "d-flex flex-nowrap overflow-auto align-items-center gap-3"
+                }))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <div class="d-flex flex-column text-center">
+                        @Html.LabelFor(m => m.NewDesign.DCode)
+                        @Html.TextBoxFor(m => m.NewDesign.DCode, new { @class = "form-control form-control-sm" })
+                    </div>
+
+                    <div class="d-flex flex-column text-center">
+                        @Html.LabelFor(m => m.NewDesign.DNo)
+                        @Html.TextBoxFor(m => m.NewDesign.DNo, new { @class = "form-control form-control-sm" })
+                    </div>
+
+                    <div class="d-flex flex-column text-center">
+                        @Html.LabelFor(m => m.NewDesign.CollectionName)
+                        @Html.TextBoxFor(m => m.NewDesign.CollectionName, new { @class = "form-control form-control-sm" })
+                    </div>
+
+                    <div class="d-flex flex-column text-center">
+                        @Html.LabelFor(m => m.NewDesign.CostumerId)
+                        @Html.TextBoxFor(m => m.NewDesign.CostumerId, new { @class = "form-control form-control-sm" })
+                    </div>
+
+                    <div class="d-flex flex-column text-center">
+                        @Html.LabelFor(m => m.NewDesign.BranchId)
+                        @Html.DropDownListFor(m => m.NewDesign.BranchId, Model.BranchList, "-- select --", new { @class = "form-select form-select-sm" })
+                    </div>
+
+                    <div class="d-flex flex-column align-items-center">
+                        @Html.Label("Active")
+                        <div class="form-check form-switch mt-1">
+                            @Html.CheckBox("NewDesign.Active", Model.NewDesign.Active.GetValueOrDefault(false),
+                                           new { @class = "form-check-input" })
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column align-items-center">
+                        @Html.Label("Deleted")
+                        <div class="form-check form-switch mt-1">
+                            @Html.CheckBox("NewDesign.Deleted", Model.NewDesign.Deleted.GetValueOrDefault(false),
+                                           new { @class = "form-check-input" })
+                        </div>
+                    </div>
+
+                    <div class="col text-end">
+                        <button type="submit" class="btn btn-sm btn-success">
+                            <i class="bi bi-save"></i> Save
+                        </button>
+                        <a href="@Url.Action("Index",new{ showCreate=false, search=cf, activeFilter=af })"
+                           class="btn btn-sm btn-danger">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                }
+            </div>
+
+        </div>
+    }
+
+    <!-- INLINE EDIT -->
+   @if (showEdit && editId.HasValue)
+    {
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+               @using (Html.BeginForm(
+                        "EditFromIndex",
+                        "Gen_Design",
+                        new { id = Model.EditDesign.Id, search = currentFilter, activeFilter },
+                        FormMethod.Post,
+                        new { @class = "d-flex flex-nowrap overflow-auto align-items-center gap-3" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.EditDesign.Id)
+
+                    <div class="d-flex flex-column text-center">
+                        @Html.LabelFor(m => m.EditDesign.DCode)
+                        @Html.TextBoxFor(m => m.EditDesign.DCode, new { @class = "form-control form-control-sm" })
+                    </div>
+
+                    <div class="d-flex flex-column text-center">
+                        @Html.LabelFor(m => m.EditDesign.DNo)
+                        @Html.TextBoxFor(m => m.EditDesign.DNo, new { @class = "form-control form-control-sm" })
+                    </div>
+
+                    <div class="d-flex flex-column text-center">
+                        @Html.LabelFor(m => m.EditDesign.CollectionName)
+                        @Html.TextBoxFor(m => m.EditDesign.CollectionName, new { @class = "form-control form-control-sm" })
+                    </div>
+
+                    <div class="d-flex flex-column text-center">
+                        @Html.LabelFor(m => m.EditDesign.CostumerId)
+                        @Html.TextBoxFor(m => m.EditDesign.CostumerId, new { @class = "form-control form-control-sm" })
+                    </div>
+
+                    <div class="d-flex flex-column text-center">
+                        @Html.LabelFor(m => m.EditDesign.BranchId)
+                        @Html.DropDownListFor(m => m.EditDesign.BranchId, Model.BranchList, "-- select --", new { @class = "form-select form-select-sm" })
+                    </div>
+
+                    <div class="d-flex flex-column align-items-center">
+                        @Html.Label("Active")
+                        <div class="form-check form-switch mt-1">
+                            @Html.CheckBox(
+                                "EditDesign.Active",
+                                Model.EditDesign.Active.GetValueOrDefault(false),
+                                new { @class = "form-check-input" })
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column align-items-center">
+                        @Html.Label("Deleted")
+                        <div class="form-check form-switch mt-1">
+                            @Html.CheckBox(
+                                "EditDesign.Deleted",
+                                Model.EditDesign.Deleted.GetValueOrDefault(false),
+                                new { @class = "form-check-input" })
+                        </div>
+                    </div>
+
+                    <div class="col text-end">
+                        <button type="submit" class="btn btn-sm btn-success">
+                            <i class="bi bi-save"></i> Save
+                        </button>
+                        <a href="@Url.Action("Index",new{ showCreate=false, search=cf, activeFilter=af })"
+                           class="btn btn-sm btn-danger">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+
+    <!-- DATA GRID -->
+    <div class="table-responsive shadow-sm">
+        <table class="table table-striped table-hover">
+            <thead class="table-info">
+                <tr>
+                    <th>D Code</th>
+                    <th>D No</th>
+                    <th>Collection</th>
+                    <th>Customer</th>
+                    <th>Branch</th>
+                    <th class="text-center">Active</th>
+                    <th class="text-center">Deleted</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var d in Model.Designs)
+                {
+                    <tr>
+                        <td>@d.DCode</td>
+                        <td>@d.DNo</td>
+                        <td>@d.CollectionName</td>
+                        <td>@d.CostumerId</td>
+                        <td>@(d.Branches?.Name ?? "—")</td>
+                        <td class="text-center">
+                            <span class="badge @(d.Active.GetValueOrDefault()?"bg-success":"bg-secondary")">
+                                @(d.Active.GetValueOrDefault()?"Yes":"No")
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge @(d.Deleted.GetValueOrDefault()?"bg-danger":"bg-secondary")">
+                                @(d.Deleted.GetValueOrDefault()?"Yes":"No")
+                            </span>
+                        </td>
+
+                        <td class="text-center">
+                            <a class="btn btn-outline-primary btn-sm me-1"
+                               href="@Url.Action("Index","Gen_Design", new { showEdit=true, editId=d.Id, search=currentFilter, activeFilter })">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a class="btn btn-outline-danger btn-sm me-1"
+                               href="@Url.Action("Delete","Gen_Design", new { id=d.Id })">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            <a class="btn btn-outline-info btn-sm"
+                               href="@Url.Action("Details","Gen_Design", new { id=d.Id })">
+                                <i class="bi bi-info-circle"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="d-flex justify-content-center mt-3">
+        @Html.PagedListPager(Model.Designs, page => Url.Action("Index", new { page, search = currentFilter, activeFilter }),
+            new PagedListRenderOptions { UlElementClasses = new[] { "pagination" }, LiElementClasses = new[] { "page-item" } })
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function() {
+            // highlight rows on hover
+            $('table.table-hover tbody tr').hover(
+                function() { $(this).addClass('table-active'); },
+                function() { $(this).removeClass('table-active'); }
+            );
+        });
+    </script>
+}

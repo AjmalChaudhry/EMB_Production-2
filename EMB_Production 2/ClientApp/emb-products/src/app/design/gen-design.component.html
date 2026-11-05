@@ -1,0 +1,430 @@
+<div class="container-fluid py-3">
+
+  <!-- ================= HEADER ================= -->
+  <div class="row align-items-center mb-3">
+    <div class="col-md-3">
+      <h4 class="mb-0 d-flex align-items-center">
+        <i class="bi bi-palette me-2 text-primary"></i>
+        Designs Management
+      </h4>
+    </div>
+
+    <div class="col-md-9 d-flex justify-content-end align-items-center gap-2 flex-wrap">
+
+      <button class="btn btn-primary btn-sm" (click)="openCreate()">
+        <i class="bi bi-plus-circle me-1"></i> Add
+      </button>
+
+      <button class="btn btn-outline-secondary btn-sm" (click)="refresh()" title="Refresh">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+
+      <button class="btn btn-outline-success btn-sm" (click)="exportExcel()">
+        <i class="bi bi-file-earmark-excel"></i>
+      </button>
+
+      <button class="btn btn-outline-danger btn-sm" (click)="exportPdf()">
+        <i class="bi bi-file-earmark-pdf"></i>
+      </button>
+
+      <button class="btn btn-outline-primary btn-sm" (click)="printTable()">
+        <i class="bi bi-printer"></i>
+      </button>
+
+      <div class="input-group input-group-sm" style="max-width: 170px;">
+        <input class="form-control" placeholder="Search..." [(ngModel)]="searchText" />
+        <button class="btn btn-outline-secondary" (click)="onSearch()">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+
+      <select class="form-select form-select-sm"
+              style="max-width: 140px;"
+              [(ngModel)]="productFilter"
+              (change)="onFilterChange()"
+              title="Filter by Product">
+        <option [ngValue]="null">All Products</option>
+        <option *ngFor="let p of products" [ngValue]="p.id">{{ p.name }}</option>
+      </select>
+
+      <select class="form-select form-select-sm"
+              style="max-width: 140px;"
+              [(ngModel)]="machineFilter"
+              (change)="onFilterChange()"
+              title="Filter by Machine">
+        <option [ngValue]="null">All Machines</option>
+        <option *ngFor="let m of machines" [ngValue]="m.id">{{ m.name }}</option>
+      </select>
+
+      <select class="form-select form-select-sm"
+              style="max-width: 140px;"
+              [(ngModel)]="customerFilter"
+              (change)="onFilterChange()"
+              title="Filter by Customer">
+        <option [ngValue]="null">All Customers</option>
+        <option *ngFor="let c of customers" [ngValue]="c.id">{{ c.name }}</option>
+      </select>
+
+      <select class="form-select form-select-sm"
+              style="max-width: 120px;"
+              [(ngModel)]="activeFilter"
+              (change)="onActiveFilterChange(activeFilter)">
+        <option value="">All Status</option>
+        <option value="true">Active</option>
+        <option value="false">Inactive</option>
+      </select>
+
+    </div>
+  </div>
+
+  <!-- ================= TABLE ================= -->
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle mb-0 table-fixed">
+
+      <thead class="table-light">
+        <tr>
+          <th class="col-code">Code</th>
+          <th>D No</th>
+          <th>Collection</th>
+          <th>Product</th>
+          <th>Machine</th>
+          <th>Branch</th>
+          <th style="width:130px;" class="text-center">Usage</th>
+          <th style="width:100px;">Status</th>
+          <th style="width:170px;" class="text-center">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let d of designs">
+          <td class="col-code">{{ d.d_Code }}</td>
+          <td>{{ d.dNo || '-' }}</td>
+          <td>{{ d.collectionName || '-' }}</td>
+          <td>{{ d.productName || '-' }}</td>
+          <td>{{ d.machineName || '-' }}</td>
+          <td>{{ d.branchName || '-' }}</td>
+
+          <td class="text-center">
+            <span class="badge bg-primary me-1"
+                  *ngIf="(d.jobOrderCount || 0) > 0"
+                  title="Job orders using this design">
+              JO {{ d.jobOrderCount }}
+            </span>
+            <span class="badge bg-info me-1"
+                  *ngIf="d.hasCosting"
+                  title="Has Design Costing">
+              <i class="bi bi-currency-rupee"></i>
+            </span>
+            <span class="badge bg-secondary"
+                  *ngIf="(d.componentCount || 0) > 0"
+                  title="Components defined">
+              C {{ d.componentCount }}
+            </span>
+            <span class="badge bg-light text-muted border"
+                  *ngIf="!d.inUse && (d.componentCount || 0) === 0 && !d.hasCosting && (d.jobOrderCount || 0) === 0"
+                  title="No components, costing, or job orders yet — define them to start using this design">
+              <i class="bi bi-plus-circle me-1"></i>New
+            </span>
+          </td>
+
+          <td>
+            <span class="badge"
+                  [class.bg-success]="d.active"
+                  [class.bg-secondary]="!d.active">
+              {{ d.active ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+
+          <td class="text-center">
+            <button class="btn btn-sm btn-outline-info me-1"
+                    title="View"
+                    (click)="openDetail(d.id)">
+              <i class="bi bi-eye"></i>
+            </button>
+
+            <button class="btn btn-sm btn-outline-warning me-1"
+                    title="Edit"
+                    (click)="openEdit(d.id)">
+              <i class="bi bi-pencil"></i>
+            </button>
+
+            <button class="btn btn-sm btn-outline-primary me-1"
+                    title="Open Profile"
+                    [routerLink]="['/designs', d.id, 'profile']">
+              <i class="bi bi-layers"></i>
+            </button>
+
+            <button class="btn btn-sm btn-outline-success me-1"
+                    title="Clone"
+                    (click)="cloneDesign(d.id)">
+              <i class="bi bi-files"></i>
+            </button>
+
+            <button class="btn btn-sm btn-outline-danger"
+                    [title]="d.inUse ? 'In use — cannot delete' : 'Delete'"
+                    [disabled]="d.inUse"
+                    (click)="openDelete(d.id)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="designs.length === 0">
+          <td colspan="9" class="text-center text-muted py-4">
+            No designs found.
+          </td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+
+  <!-- ================= PAGINATION ================= -->
+  <nav class="mt-3" *ngIf="pages.length > 1">
+    <ul class="pagination justify-content-end mb-0">
+
+      <li class="page-item" [class.disabled]="page === 1">
+        <button class="page-link" (click)="onPageChange(page - 1)">Previous</button>
+      </li>
+
+      <li class="page-item" *ngFor="let p of pages" [class.active]="p === page">
+        <button class="page-link" (click)="onPageChange(p)">{{ p }}</button>
+      </li>
+
+      <li class="page-item" [class.disabled]="page === pages[pages.length - 1]">
+        <button class="page-link" (click)="onPageChange(page + 1)">Next</button>
+      </li>
+
+    </ul>
+  </nav>
+
+  <!-- ================= CREATE / EDIT / DETAIL MODAL ================= -->
+  <div class="modal fade design-modal" #formModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable design-modal-dialog">
+      <div class="modal-content design-modal-content">
+
+        <div class="modal-header"
+             [ngClass]="{
+               'bg-primary text-white': modalMode === 'create',
+               'bg-warning': modalMode === 'edit',
+               'bg-info text-white': modalMode === 'detail'
+             }">
+
+          <h5 class="modal-title">
+            {{
+              modalMode === 'create' ? 'Add Design' :
+              modalMode === 'edit' ? 'Edit Design' :
+              'Design Details'
+            }}
+          </h5>
+
+          <button class="btn-close"
+                  [class.btn-close-white]="modalMode === 'create' || modalMode === 'detail'"
+                  data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <!-- ========= DETAIL VIEW ========= -->
+          <ng-container *ngIf="modalMode === 'detail' && selectedDesign">
+
+            <div class="row mb-2">
+              <div class="col-md-4"><strong>Id:</strong> {{ selectedDesign.id }}</div>
+              <div class="col-md-4"><strong>Code:</strong> {{ selectedDesign.d_Code }}</div>
+              <div class="col-md-4"><strong>D No:</strong> {{ selectedDesign.dNo || '-' }}</div>
+            </div>
+
+            <hr>
+
+            <div class="row mb-2">
+              <div class="col-md-4"><strong>Collection:</strong> {{ selectedDesign.collectionName || '-' }}</div>
+              <div class="col-md-4"><strong>Product:</strong> {{ selectedDesign.productName || '-' }}</div>
+              <div class="col-md-4"><strong>Machine:</strong> {{ selectedDesign.machineName || '-' }}</div>
+            </div>
+
+            <hr>
+
+            <div class="row mb-2">
+              <div class="col-md-4"><strong>Branch:</strong> {{ selectedDesign.branchName || '-' }}</div>
+              <div class="col-md-4"><strong>Status:</strong> {{ selectedDesign.active ? 'Active' : 'Inactive' }}</div>
+              <div class="col-md-4"><strong>Deleted:</strong> {{ selectedDesign.deleted ? 'Yes' : 'No' }}</div>
+            </div>
+
+            <hr>
+
+            <div class="row mb-2">
+              <div class="col-md-4"><strong>Created:</strong> {{ selectedDesign.createdDate || '-' }}</div>
+              <div class="col-md-2"><strong>By:</strong> {{ selectedDesign.createdBy || '-' }}</div>
+
+              <div class="col-md-4"><strong>Updated:</strong> {{ selectedDesign.updatedDate || '-' }}</div>
+              <div class="col-md-2"><strong>By:</strong> {{ selectedDesign.updatedBy || '-' }}</div>
+            </div>
+
+            <!-- ========= USAGE + LINKED COSTING ========= -->
+            <ng-container *ngIf="$any(selectedDesign).jobOrderCount !== undefined">
+              <hr>
+              <div class="row mb-2">
+                <div class="col-md-4">
+                  <strong>Job Orders:</strong>
+                  <span class="badge bg-primary ms-1">{{ $any(selectedDesign).jobOrderCount || 0 }}</span>
+                </div>
+                <div class="col-md-4">
+                  <strong>Components:</strong>
+                  <span class="badge bg-secondary ms-1">{{ $any(selectedDesign).componentCount || 0 }}</span>
+                </div>
+                <div class="col-md-4">
+                  <strong>In Use:</strong>
+                  <span class="badge ms-1"
+                        [class.bg-warning]="$any(selectedDesign).inUse"
+                        [class.bg-success]="!$any(selectedDesign).inUse">
+                    {{ $any(selectedDesign).inUse ? 'Yes' : 'No' }}
+                  </span>
+                </div>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="$any(selectedDesign).costing">
+              <hr>
+              <h6 class="mb-2"><i class="bi bi-cash-coin me-1 text-success"></i> Linked Costing</h6>
+              <div class="row mb-2">
+                <div class="col-md-3"><strong>Batch Qty:</strong> {{ $any(selectedDesign).costing.batchQty }}</div>
+                <div class="col-md-3"><strong>Material/Unit:</strong> {{ $any(selectedDesign).costing.materialCostPerUnit | number:'1.0-2' }}</div>
+                <div class="col-md-3"><strong>Production/Unit:</strong> {{ $any(selectedDesign).costing.productionCostPerUnit | number:'1.0-2' }}</div>
+                <div class="col-md-3"><strong>Service/Unit:</strong> {{ $any(selectedDesign).costing.serviceCostPerUnit | number:'1.0-2' }}</div>
+              </div>
+              <div class="row mb-2">
+                <div class="col-md-3"><strong>Product Cost/Unit:</strong> {{ $any(selectedDesign).costing.productCostPerUnit | number:'1.0-2' }}</div>
+                <div class="col-md-3"><strong>Total Cost:</strong> {{ $any(selectedDesign).costing.totalProductCost | number:'1.0-2' }}</div>
+                <div class="col-md-3"><strong>Selling/Unit:</strong> {{ $any(selectedDesign).costing.sellingPricePerUnit | number:'1.0-2' }}</div>
+                <div class="col-md-3"><strong>Margin %:</strong> {{ $any(selectedDesign).costing.marginPercent | number:'1.0-2' }}</div>
+              </div>
+            </ng-container>
+
+          </ng-container>
+
+          <!-- ========= CREATE / EDIT ========= -->
+          <ng-container *ngIf="modalMode !== 'detail'">
+
+            <div class="row g-3">
+
+              <div class="col-md-4">
+                <label class="form-label">Design Code</label>
+                <input class="form-control"
+                       [value]="formDesign.d_Code || 'Auto-generated'"
+                       disabled>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">D No</label>
+                <input class="form-control"
+                       placeholder="e.g. D-2026-1001"
+                       [(ngModel)]="formDesign.dNo">
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Collection / Design Name</label>
+                <input class="form-control"
+                       placeholder="e.g. Summer 2026"
+                       [(ngModel)]="formDesign.collectionName">
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Product</label>
+                <select class="form-select"
+                        [(ngModel)]="formDesign.productId">
+                  <option [ngValue]="null">-- Select Product --</option>
+                  <option *ngFor="let p of products"
+                          [ngValue]="p.id">
+                    {{ p.name }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Machine</label>
+                <select class="form-select"
+                        [(ngModel)]="formDesign.machineId">
+                  <option [ngValue]="null">-- Select Machine --</option>
+                  <option *ngFor="let m of machines"
+                          [ngValue]="m.id">
+                    {{ m.name }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Branch</label>
+                <input class="form-control"
+                       [value]="selectedDesign?.branchName || 'Current Branch'"
+                       disabled>
+              </div>
+
+              <div class="col-12">
+                <div class="form-check mt-2">
+                  <input type="checkbox"
+                         class="form-check-input"
+                         [(ngModel)]="formDesign.active">
+
+                  <label class="form-check-label">
+                    Active
+                  </label>
+                </div>
+              </div>
+
+            </div>
+
+          </ng-container>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary"
+                  data-bs-dismiss="modal">
+            Close
+          </button>
+
+          <button *ngIf="modalMode === 'create'"
+                  class="btn btn-success"
+                  (click)="saveCreate()">
+            Save
+          </button>
+
+          <button *ngIf="modalMode === 'edit'"
+                  class="btn btn-warning"
+                  (click)="saveEdit()">
+            Update
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= DELETE MODAL ================= -->
+  <div class="modal fade design-modal" #deleteModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-scrollable design-modal-dialog">
+      <div class="modal-content design-modal-content border-danger">
+
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Delete Design</h5>
+          <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          Are you sure you want to delete this design?
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            Cancel
+          </button>
+          <button class="btn btn-danger" (click)="confirmDelete()">
+            Delete
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>

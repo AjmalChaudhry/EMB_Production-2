@@ -1,0 +1,37 @@
+MANUAL Gen_Fabrics REMOVAL — only if the EDMX designer won't cooperate
+=======================================================================
+
+1. Delete the model class
+   ─ DELETE  Models/Gen_Fabrics.cs
+
+2. Remove DbSet from both context files
+   ─ Models/Model1.Context.cs   → delete line:  public virtual DbSet<Gen_Fabrics> Gen_Fabrics { get; set; }
+   ─ Models/Model1.Context1.cs  → same line, delete it
+   ─ Look for any  modelBuilder.Entity<Gen_Fabrics>() line in OnModelCreating and delete it too
+     (usually there isn't one because EDMX-generated contexts don't use fluent config)
+
+3. Remove the nav property from Gen_RawItems.cs
+   In  Models/Gen_RawItems.cs  delete these lines:
+
+      this.Gen_Fabrics = new HashSet<Gen_Fabrics>();        // in the constructor
+      public virtual ICollection<Gen_Fabrics> Gen_Fabrics { get; set; }   // the property
+      [System.Diagnostics.CodeAnalysis.SuppressMessage(...)]               // the attribute above it, if present
+
+4. Edit the .edmx (it's XML — open with text editor)
+   Search for occurrences of  Gen_Fabrics  and delete the matching blocks:
+
+      <EntityType Name="Gen_Fabrics" …>  …  </EntityType>     (×2 — once in SSDL, once in CSDL)
+      <AssociationSet Name="FK_Gen_Fabrics_Gen_RawItems" …>  …  </AssociationSet>
+      <EntitySet Name="Gen_Fabrics" …/>                       (×2)
+      Any <NavigationProperty> with Relationship containing Gen_Fabrics
+      Any <End> / <Association> with Role="Gen_Fabrics"
+
+5. Remove from .csproj
+   Look in EMB_Production 2.csproj for:
+      <Compile Include="Models\Gen_Fabrics.cs">
+        <DependentUpon>Model1.tt</DependentUpon>
+      </Compile>
+   Delete that whole block.
+
+6. Build. If errors remain, search the solution for "Gen_Fabrics" and remove
+   any remaining usage (there shouldn't be any after my code edits).

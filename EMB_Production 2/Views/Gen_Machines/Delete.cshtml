@@ -1,0 +1,149 @@
+﻿@model EMB_Production.Models.Gen_Machines
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Delete Machine";
+}
+
+<style>
+    .detail-card {
+        background: #fff;
+        border-left: 5px solid #dc3545;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        margin-top: 1rem;
+    }
+
+    .details-header {
+        background: #dc3545;
+        color: #fff;
+        padding: .75rem 1rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+        border-radius: 6px 6px 0 0;
+        margin: -1.5rem -1.5rem 1rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        font-size: .9rem;
+        color: #2c3e50;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        color: #34495e;
+        word-wrap: break-word;
+    }
+
+        .detail-value.hover-highlight:hover {
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+</style>
+
+<div class="detail-card">
+    <div class="details-header">Delete Machine</div>
+
+    <div class="alert alert-warning rounded mb-4">
+        <strong>Are you sure you want to delete this machine?</strong>
+        <p>This action cannot be undone.</p>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow-sm mb-4">
+        <div class="row gy-4">
+            <!-- scalar properties -->
+            @foreach (var prop in ViewData.ModelMetadata.Properties
+                                  .Where(p => p.ShowForDisplay
+                                           && p.PropertyName != nameof(Model.Id)
+                                           && p.PropertyName != nameof(Model.Gen_Brands)
+                                           && p.PropertyName != nameof(Model.Gen_TheServices)
+                                           && p.PropertyName != nameof(Model.Gen_MachineParameters)))
+            {
+                <div class="col-md-4">
+                    <div class="detail-label">@prop.GetDisplayName()</div>
+                    <div class="detail-value hover-highlight">@prop.Model</div>
+                </div>
+            }
+
+            <!-- Brand -->
+            <div class="col-md-4">
+                <div class="detail-label">Brand</div>
+                <div class="detail-value hover-highlight">
+                    @(Model.Gen_Brands?.BrandName ?? "(none)")
+                </div>
+            </div>
+
+            <!-- Service -->
+            <div class="col-md-4">
+                <div class="detail-label">Service</div>
+                <div class="detail-value hover-highlight">
+                    @(Model.Gen_TheServices?.Service_Name ?? "(none)")
+                </div>
+            </div>
+
+            <!-- Branch -->
+            <div class="col-md-4">
+                <div class="detail-label">Branch</div>
+                <div class="detail-value hover-highlight">
+                    @(Model.Branches != null
+                        ? Model.Branches.Name
+                        : "(none)")
+                </div>
+            </div>
+
+            <!-- Parameters -->
+            @if (Model.Gen_MachineParameters != null && Model.Gen_MachineParameters.Any())
+            {
+                <div class="col-12">
+                    <div class="detail-label mb-2">
+                        Machine Parameters (@Model.Gen_MachineParameters.Count)
+                    </div>
+                    <table class="table table-sm table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Head-to-Head</th>
+                                <th>Frame Height</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Model.Gen_MachineParameters.OrderBy(x => x.Id))
+                            {
+                                <tr>
+                                    <td>@p.HeadToHead</td>
+                                    <td>
+                                        @(p.FrameHeight.HasValue
+                                            ? p.FrameHeight.Value.ToString("0.##")
+                                            : "(none)")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    @using (Html.BeginForm("Delete", "Gen_Machines", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.Id)
+
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-danger me-2">Confirm Delete</button>
+            @Html.ActionLink("Cancel", "Index", null, new { @class = "btn btn-outline-secondary" })
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // give a light hover background on each value cell
+        $('.detail-value.hover-highlight').hover(
+            function() { $(this).addClass('bg-light rounded'); },
+            function() { $(this).removeClass('bg-light rounded'); }
+        );
+    </script>
+}

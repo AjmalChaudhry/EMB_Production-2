@@ -1,0 +1,357 @@
+<div class="bom-audit-page container-fluid py-3">
+
+  <div class="mb-3">
+    <h4 class="mb-1 d-flex align-items-center">
+      <i class="bi bi-clipboard-data me-2 text-primary"></i>
+      BOM vs Actual Audit
+    </h4>
+    <div class="text-muted small">
+      Find designs whose <strong>recipe (BOM)</strong> doesn't match what production actually used.
+    </div>
+  </div>
+
+  <!-- ===================== HOW IT WORKS ===================== -->
+  <div class="card border-info-subtle bg-info-subtle mb-3 shadow-sm" style="border-left: 4px solid #0dcaf0;">
+    <div class="card-body py-2 px-3">
+      <div class="d-flex align-items-start">
+        <i class="bi bi-info-circle text-info me-2 fs-5"></i>
+        <div class="flex-grow-1">
+          <div class="small mb-2">
+            For every <strong>posted Work Order</strong> in the selected date range, this page
+            compares <strong>BOM × WO qty</strong> (what the design says you should use)
+            against <strong>materials actually issued from store</strong>. Three things can be wrong:
+          </div>
+          <div class="row g-2 small">
+            <div class="col-md-4">
+              <span class="badge bg-warning text-dark me-1">Wrong Qty</span>
+              BOM says 10/unit, floor issued 7/unit → fix the BOM number.
+            </div>
+            <div class="col-md-4">
+              <span class="badge bg-danger text-white me-1">Wrong Item</span>
+              BOM listed an item that was never issued → wrong material in BOM.
+            </div>
+            <div class="col-md-4">
+              <span class="badge bg-info text-white me-1">Missing from BOM</span>
+              Floor used something the BOM doesn't list → add it to the BOM.
+            </div>
+          </div>
+          <div class="small text-muted mt-2">
+            <i class="bi bi-lightbulb me-1"></i>
+            Why this matters: a wrong BOM makes auto-PR over- or under-purchase. Fix the
+            worst-drifting designs first.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== FILTERS ===================== -->
+  <div class="card mb-3 shadow-sm">
+    <div class="card-body py-2">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label small mb-1">WO Order Date — From</label>
+          <input type="date" class="form-control form-control-sm"
+                 [(ngModel)]="fromDate">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small mb-1">To</label>
+          <input type="date" class="form-control form-control-sm"
+                 [(ngModel)]="toDate">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small mb-1">
+            Tolerance ± <span class="fw-bold">{{ tolerancePctUi }}%</span>
+            <i class="bi bi-info-circle text-muted ms-1"
+               title="Qty diffs within this window count as OK. Above it = WRONG_QTY."></i>
+          </label>
+          <input type="range" class="form-range" min="0" max="50" step="5"
+                 [(ngModel)]="tolerancePctUi">
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+          <button class="btn btn-primary btn-sm" (click)="loadSummary()">
+            <i class="bi bi-search me-1"></i>Apply
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" (click)="resetFilters()">
+            <i class="bi bi-arrow-clockwise me-1"></i>Reset
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== KPIs ===================== -->
+  <div class="row g-2 mb-3">
+    <div class="col-md col-6">
+      <div class="card border-0 shadow-sm kpi-tile kpi-tile-primary h-100"
+           title="Distinct designs that have at least one posted Work Order in the selected date range.">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">Designs audited</div>
+          <div class="kpi-value">{{ kpis.designsAudited | number }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md col-6">
+      <div class="card border-0 shadow-sm kpi-tile kpi-tile-muted h-100"
+           title="Total BOM-vs-issued comparison rows across all audited designs.">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">Total rows</div>
+          <div class="kpi-value">{{ kpis.totalRows | number }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md col-6">
+      <div class="card border-0 shadow-sm kpi-tile kpi-tile-success h-100"
+           title="Rows where expected vs issued match (within tolerance). BOM is correct for these.">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">OK</div>
+          <div class="kpi-value">{{ kpis.okRows | number }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md col-6">
+      <div class="card border-0 shadow-sm kpi-tile kpi-tile-danger h-100"
+           title="BOM listed an item but production never issued it. The BOM has the wrong material.">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">Wrong Item</div>
+          <div class="kpi-value">{{ kpis.wrongItem | number }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md col-6">
+      <div class="card border-0 shadow-sm kpi-tile kpi-tile-warning h-100"
+           title="BOM qty per unit drifts from actual issued qty by more than the tolerance. Fix the BOM number.">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">Wrong Qty</div>
+          <div class="kpi-value">{{ kpis.wrongQty | number }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md col-6">
+      <div class="card border-0 shadow-sm kpi-tile kpi-tile-info h-100"
+           title="Production issued an item that the BOM doesn't list. Add it to the BOM.">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">Missing from BOM</div>
+          <div class="kpi-value">{{ kpis.missing | number }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md col-6">
+      <div class="card border-0 shadow-sm kpi-tile h-100"
+           [ngClass]="kpis.driftRate > 30 ? 'kpi-tile-danger' : 'kpi-tile-muted'"
+           title="(Wrong Item + Wrong Qty + Missing) ÷ Total rows. Lower is better. > 30% is highlighted red.">
+        <div class="card-body py-2 px-3">
+          <div class="kpi-label">Drift Rate</div>
+          <div class="kpi-value">{{ kpis.driftRate | number:'1.0-1' }}%</div>
+          <div class="kpi-sub text-muted small">across all designs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== DESIGN TABLE ===================== -->
+  <div class="card shadow-sm">
+    <div class="card-header py-2 d-flex justify-content-between align-items-center">
+      <strong><i class="bi bi-grid-3x3-gap me-1"></i>Designs (worst drift first)</strong>
+      <small class="text-muted" *ngIf="loadingSummary">
+        <i class="bi bi-hourglass-split me-1"></i>Loading…
+      </small>
+    </div>
+    <div class="card-body p-0">
+      <table class="table table-sm mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th style="width:32px;"></th>
+            <th>Design</th>
+            <th class="text-end">WOs</th>
+            <th class="text-end">Item rows</th>
+            <th class="text-end">OK</th>
+            <th class="text-end">Wrong Item</th>
+            <th class="text-end">Wrong Qty</th>
+            <th class="text-end">Missing</th>
+            <th class="text-end">Total Expected</th>
+            <th class="text-end">Total Issued</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let d of designs">
+            <tr (click)="toggleDesign(d)" class="design-row"
+                [class.table-active]="expandedDesignId === d.designId">
+              <td class="text-center">
+                <i class="bi"
+                   [ngClass]="expandedDesignId === d.designId ? 'bi-chevron-down' : 'bi-chevron-right'"></i>
+              </td>
+              <td>
+                <div class="fw-semibold">{{ d.designCode }}</div>
+                <div class="text-muted small">{{ d.designName }}</div>
+              </td>
+              <td class="text-end">{{ d.workOrderCount }}</td>
+              <td class="text-end">{{ d.itemRowCount }}</td>
+              <td class="text-end text-success">{{ d.okCount }}</td>
+              <td class="text-end">
+                <span *ngIf="d.wrongItemCount > 0" class="badge bg-danger">{{ d.wrongItemCount }}</span>
+                <span *ngIf="d.wrongItemCount === 0" class="text-muted">—</span>
+              </td>
+              <td class="text-end">
+                <span *ngIf="d.wrongQtyCount > 0" class="badge bg-warning text-dark">{{ d.wrongQtyCount }}</span>
+                <span *ngIf="d.wrongQtyCount === 0" class="text-muted">—</span>
+              </td>
+              <td class="text-end">
+                <span *ngIf="d.missingCount > 0" class="badge bg-info text-white">{{ d.missingCount }}</span>
+                <span *ngIf="d.missingCount === 0" class="text-muted">—</span>
+              </td>
+              <td class="text-end">{{ d.totalExpected | number:'1.0-2' }}</td>
+              <td class="text-end">{{ d.totalIssued | number:'1.0-2' }}</td>
+            </tr>
+
+            <!-- ===================== DRILL-DOWN ROW ===================== -->
+            <tr *ngIf="expandedDesignId === d.designId">
+              <td colspan="10" class="bg-light p-0">
+                <div class="p-3">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>Drill-down — {{ d.designCode }}</strong>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="onlyDriftToggle"
+                             [(ngModel)]="showOnlyDrift">
+                      <label class="form-check-label small" for="onlyDriftToggle">
+                        Hide OK rows
+                      </label>
+                    </div>
+                  </div>
+
+                  <div *ngIf="loadingDetail" class="text-muted small">
+                    <i class="bi bi-hourglass-split me-1"></i>Loading detail…
+                  </div>
+
+                  <table class="table table-sm bg-white mb-0" *ngIf="!loadingDetail">
+                    <thead class="table-light">
+                      <tr>
+                        <th>WO</th>
+                        <th>Item</th>
+                        <th>Thread</th>
+                        <th class="text-end">Expected</th>
+                        <th class="text-end">Issued</th>
+                        <th class="text-end">Drift</th>
+                        <th class="text-end">Drift %</th>
+                        <th>Status</th>
+                        <th>Order Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let r of visibleDetailRows()">
+                        <td>
+                          <span class="fw-semibold">{{ r.workOrderCode || '—' }}</span>
+                        </td>
+                        <td>{{ r.rawItemName }}</td>
+                        <td class="small text-muted">
+                          <span *ngIf="r.threadCode">{{ r.threadCode }}</span>
+                          <span *ngIf="r.threadName"> — {{ r.threadName }}</span>
+                          <span *ngIf="!r.threadCode && !r.threadName">—</span>
+                        </td>
+                        <td class="text-end">{{ r.expectedQty | number:'1.0-2' }}</td>
+                        <td class="text-end">{{ r.issuedQty | number:'1.0-2' }}</td>
+                        <td class="text-end" [ngClass]="r.driftQty > 0 ? 'text-info' : (r.driftQty < 0 ? 'text-danger' : 'text-muted')">
+                          {{ r.driftQty | number:'1.0-2' }}
+                        </td>
+                        <td class="text-end" *ngIf="r.driftPct !== null">
+                          {{ r.driftPct | number:'1.0-1' }}%
+                        </td>
+                        <td class="text-end text-muted" *ngIf="r.driftPct === null">—</td>
+                        <td>
+                          <span class="badge" [ngClass]="driftBadgeClass(r.kind)">
+                            {{ driftLabel(r.kind) }}
+                          </span>
+                        </td>
+                        <td class="small text-muted">{{ r.orderDate }}</td>
+                      </tr>
+                      <tr *ngIf="visibleDetailRows().length === 0">
+                        <td colspan="9" class="text-center text-muted small p-3">
+                          <i class="bi bi-check-circle me-1"></i>
+                          No drift rows for this design within current filters.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+
+          <tr *ngIf="!loadingSummary && designs.length === 0">
+            <td colspan="10" class="text-center text-muted p-4">
+              <div class="mb-2">
+                <i class="bi bi-inbox fs-3 text-secondary"></i>
+              </div>
+              <div class="fw-semibold text-dark mb-1">No data to audit yet</div>
+
+              <!-- ===== Diagnostic counts — show which pipeline stage is empty ===== -->
+              <div *ngIf="diagnostics" class="mt-3 mx-auto" style="max-width: 720px;">
+                <div class="d-flex justify-content-center gap-2 flex-wrap mb-2">
+                  <div class="diag-pill"
+                       [class.diag-pill-bad]="diagnostics.workOrdersInScope === 0"
+                       [class.diag-pill-good]="diagnostics.workOrdersInScope > 0">
+                    <i class="bi" [ngClass]="diagnostics.workOrdersInScope > 0 ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                    Work Orders in scope: <strong>{{ diagnostics.workOrdersInScope < 0 ? '?' : diagnostics.workOrdersInScope }}</strong>
+                  </div>
+                  <div class="diag-pill"
+                       [class.diag-pill-bad]="diagnostics.bomComponentMaterialRows === 0"
+                       [class.diag-pill-good]="diagnostics.bomComponentMaterialRows > 0">
+                    <i class="bi" [ngClass]="diagnostics.bomComponentMaterialRows > 0 ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                    BOM rows for these designs: <strong>{{ diagnostics.bomComponentMaterialRows < 0 ? '?' : diagnostics.bomComponentMaterialRows }}</strong>
+                  </div>
+                  <div class="diag-pill"
+                       [class.diag-pill-bad]="diagnostics.materialIssueRows === 0"
+                       [class.diag-pill-good]="diagnostics.materialIssueRows > 0">
+                    <i class="bi" [ngClass]="diagnostics.materialIssueRows > 0 ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                    Material Issue rows: <strong>{{ diagnostics.materialIssueRows < 0 ? '?' : diagnostics.materialIssueRows }}</strong>
+                  </div>
+                </div>
+
+                <!-- Targeted hint based on which count is 0 -->
+                <div class="alert alert-warning small mb-0 text-start"
+                     *ngIf="diagnostics.workOrdersInScope === 0">
+                  <i class="bi bi-exclamation-triangle me-1"></i>
+                  <strong>No posted Work Orders match this date range.</strong>
+                  Either widen the date range (or clear it with Reset) or post some Work Orders first.
+                  Drafts and reversed WOs are excluded.
+                </div>
+                <div class="alert alert-warning small mb-0 text-start"
+                     *ngIf="diagnostics.workOrdersInScope > 0 && diagnostics.bomComponentMaterialRows === 0 && diagnostics.materialIssueRows === 0">
+                  <i class="bi bi-exclamation-triangle me-1"></i>
+                  <strong>WOs exist but nothing else to compare.</strong>
+                  Their designs have <em>no BOM rows</em> in <code>Gen_ComponentMaterials</code>,
+                  and <em>no Material Issues</em> have been recorded against them.
+                </div>
+                <div class="alert alert-info small mb-0 text-start"
+                     *ngIf="diagnostics.workOrdersInScope > 0 && diagnostics.bomComponentMaterialRows === 0 && diagnostics.materialIssueRows > 0">
+                  <i class="bi bi-info-circle me-1"></i>
+                  <strong>BOM is empty for these designs but materials were issued.</strong>
+                  Everything issued should appear as <span class="badge bg-info text-white">Missing from BOM</span>.
+                  If you don't see it, rebuild the .NET backend so this page picks up the latest audit query.
+                </div>
+                <div class="alert alert-info small mb-0 text-start"
+                     *ngIf="diagnostics.workOrdersInScope > 0 && diagnostics.bomComponentMaterialRows > 0 && diagnostics.materialIssueRows === 0">
+                  <i class="bi bi-info-circle me-1"></i>
+                  <strong>BOM exists but nothing was issued.</strong>
+                  Everything in the BOM should appear as <span class="badge bg-danger">Wrong Item</span>.
+                  If you don't see it, rebuild the .NET backend.
+                </div>
+              </div>
+
+              <!-- Fallback when diagnostics aren't present (old backend not rebuilt) -->
+              <div *ngIf="!diagnostics" class="small mt-2">
+                Nothing was found that matches your filters. The page needs:
+                <ol class="text-start d-inline-block mt-2 mb-1">
+                  <li>A <strong>Work Order</strong> that is <strong>posted</strong> (not draft)</li>
+                  <li>One or more <strong>Material Issues</strong> against that Work Order</li>
+                  <li>The Work Order's <strong>order date</strong> within the date range above</li>
+                </ol>
+                <div>Rebuild the .NET backend to see exact diagnostic counts here.</div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

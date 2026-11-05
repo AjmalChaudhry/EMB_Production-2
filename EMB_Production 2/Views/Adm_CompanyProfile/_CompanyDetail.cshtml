@@ -1,0 +1,224 @@
+﻿@model EMB_Production.Models.Adm_CompanyProfile
+@using System
+
+@{ 
+    string logoSrc = null;
+    var rawLogo = (Model.Logo ?? "").Trim();
+    if (!string.IsNullOrEmpty(rawLogo))
+    {
+      logoSrc = rawLogo.StartsWith("http", StringComparison.OrdinalIgnoreCase) || rawLogo.StartsWith("~/") || rawLogo.StartsWith("/")
+                        ? Url.Content(rawLogo) : Url.Content("~/" + rawLogo);
+    }
+               
+     DateTime? lastModifiedLocal = null;
+    if (Model.RecordTimeStamp.HasValue)
+    {
+         try
+         {
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("Pakistan Standard Time");
+            lastModifiedLocal = TimeZoneInfo.ConvertTimeFromUtc(Model.RecordTimeStamp.Value, tz);
+         }
+         catch
+         {
+            lastModifiedLocal = Model.RecordTimeStamp;
+         }
+    }
+               
+    DateTime? createdLocal = null;
+    if (Model.CreatedDate.HasValue)
+    {
+         try
+         {
+             var tz = TimeZoneInfo.FindSystemTimeZoneById("Pakistan Standard Time");
+             createdLocal = TimeZoneInfo.ConvertTimeFromUtc(Model.CreatedDate.Value, tz);
+         }
+         catch
+         {
+         createdLocal = Model.CreatedDate;
+         }
+    }
+}
+
+<div class="card detail-card border-primary shadow-sm m-2">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Company Details</h5>
+        <button type="button" class="btn-close btn-close-white btn-detail-close" aria-label="Close"></button>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="detail-label">Company ID</div>
+                <div class="detail-value">@Model.CompanyID</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Company Name</div>
+                <div class="detail-value">@Model.CompanyName</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Nick Name</div>
+                <div class="detail-value">@Model.NickName</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Address</div>
+                <div class="detail-value">@Model.Address</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Email</div>
+                <div class="detail-value">@Model.Email</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Contact Number</div>
+                <div class="detail-value">@Model.ContactNumber</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">License Key</div>
+                <div class="detail-value">@Model.LicenseKey</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Master Password</div>
+                <div class="detail-value">@Model.MasterPassword</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">NTN</div>
+                <div class="detail-value">@Model.NTN</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">STRN</div>
+                <div class="detail-value">@Model.STRN</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Parent ID</div>
+                <div class="detail-value">@Model.ParentId</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Period ID</div>
+                <div class="detail-value">@Model.PeriodId</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Currency Default</div>
+                <div class="detail-value">@Model.CurrencyDefault</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Decimals In Amount</div>
+                <div class="detail-value">@Model.DecimalsInAmount</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Amount Format</div>
+                <div class="detail-value">@Model.AmountFormat</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Decimal Points</div>
+                <div class="detail-value">@Model.Decimal_Points</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Culture Code</div>
+                <div class="detail-value">@Model.CultureCode</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Calendar Code</div>
+                <div class="detail-value">@Model.CalendarCode</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Theme</div>
+                <div class="detail-value">@Model.Theme</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Language</div>
+                <div class="detail-value">@Model.Language</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Show Currency Name</div>
+                <div class="detail-value">@(Model.ShowCurrencyName == true ? "Yes" : "No")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Stop Login</div>
+                <div class="detail-value">@(Model.StopLogin == true ? "Yes" : "No")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Tax Enabled</div>
+                <div class="detail-value">@(Model.TaxEnabled == true ? "Yes" : "No")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Active / Deleted</div>
+                <div class="detail-value">
+                    <span class='badge @(Model.Active == true ? "bg-success" : "bg-secondary")'>
+                        @(Model.Active == true ? "Active" : "Inactive")
+                    </span>
+                    <span class='badge @(Model.Deleted == true ? "bg-danger" : "bg-secondary")'>
+                        @(Model.Deleted == true ? "Deleted" : "Exists")
+                    </span>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Approval</div>
+                <div class="detail-value">@Model.Approval</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Operating User ID</div>
+                <div class="detail-value">@Model.OperatingUserID</div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Created By</div>
+                <div class="detail-value">@Model.CreatedBy</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Created Date (PKT)</div>
+                <div class="detail-value">
+                    @(createdLocal.HasValue ? createdLocal.Value.ToString("yyyy-MM-dd HH:mm:ss") : "—")
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Updated By</div>
+                <div class="detail-value">@Model.UpdatedBy</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Updated Date (UTC)</div>
+                <div class="detail-value">
+                    @(Model.UpdatedDate.HasValue ? Model.UpdatedDate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "—")
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-label">Allow Extra P</div>
+                <div class="detail-value">@(Model.AllowExtraP == true ? "Yes" : "No")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Allow RM</div>
+                <div class="detail-value">@(Model.AllowRM == true ? "Yes" : "No")</div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Logo))
+            {
+                <div class="col-12">
+                    <div class="detail-label">Logo Preview</div>
+                    <img src="@Url.Action("Logo", "Adm_CompanyProfile", new { fileName = Model.Logo })"
+                         class="img-fluid"
+                         style="max-height:6rem; object-fit:contain;"
+                         alt="@Model.CompanyName Logo" />
+                </div>
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="detail-label">Logo Preview</div>
+                    <div class="text-muted">No logo uploaded</div>
+                </div>
+            }
+        </div>
+
+    </div>
+
+    <div class="detail-footer text-end">
+        <button type="button" class="btn btn-secondary btn-sm btn-detail-close">
+            <i class="bi bi-arrow-left me-1"></i> Back to list
+        </button>
+    </div>
+</div>

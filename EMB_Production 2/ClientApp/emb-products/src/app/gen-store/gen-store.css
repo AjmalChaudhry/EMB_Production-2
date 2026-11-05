@@ -1,0 +1,377 @@
+:host {
+  display: block;
+  --topbar-height: 72px;
+}
+
+/* ===================== KPI TILES (Phase G.0) ===================== */
+.store-kpi-row .kpi-tile {
+  border-left: 4px solid #adb5bd;
+  transition: transform 0.15s ease;
+}
+.store-kpi-row .kpi-tile:hover { transform: translateY(-2px); }
+.store-kpi-row .kpi-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+}
+.store-kpi-row .kpi-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #212529;
+}
+.store-kpi-row .kpi-sub { font-size: 0.7rem; margin-top: 2px; }
+
+.kpi-tile-primary { border-left-color: #0d6efd; }
+.kpi-tile-success { border-left-color: #198754; }
+.kpi-tile-danger  { border-left-color: #dc3545; }
+.kpi-tile-warning { border-left-color: #ffc107; }
+.kpi-tile-info    { border-left-color: #0dcaf0; }
+
+/* ===================== STORE LEDGER COLUMN SIZING =====================
+   Goal: every column readable on a 1366-px laptop with the sidebar
+   open, Item + Remarks legible across 2-3 lines, Date a single
+   readable line, numeric columns tightly packed.
+
+   Key choices:
+   - table-layout: auto so Item / Remarks can claim leftover space
+     instead of being starved by the `width` declarations on numeric
+     columns. (Fixed layout ignores min-width entirely.)
+   - Compact 12-px font on data cells so 15 columns fit horizontally
+     without crushing the wrap targets.
+   - .col-item / .col-remarks use plain word-wrap (no -webkit-box
+     clamp) so the cell grows to the height needed — typically 2 lines
+     for an item name and 2-3 lines for remarks. Tooltip on hover
+     still shows the full text.
+   ====================================================================== */
+/* Auto layout so columns expand to their declared widths; fixed layout
+   ignored width hints and starved Item/Remarks. */
+.ledger-table {
+  table-layout: auto;
+  font-size: 0.78rem;          /* 12.5 px — dense but legible */
+}
+.ledger-table thead th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+/* Same vertical anchor everywhere — middle — so single-line cells
+   (Date, Branch, Type, numbers) and the wrapped Item / Remarks cells
+   sit at the same baseline. No more "Item floats while Date stacks". */
+.ledger-table td {
+  vertical-align: middle;
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+}
+.ledger-table .col-date {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+/* Wrap inside an inner span (.cell-clamp), NOT on the <td>: the table
+   layout algorithm requires `display: table-cell` on the cell itself,
+   so the -webkit-box clamp has to live on an interior element or the
+   cell escapes its column. */
+.ledger-table .col-item,
+.ledger-table .col-remarks {
+  white-space: normal;
+  line-height: 1.3;
+}
+.ledger-table .cell-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.ledger-table .col-item a,
+.ledger-table .col-item a:hover {
+  text-decoration: none;
+  color: #0d6efd;
+}
+.ledger-table .col-ref { white-space: normal; }
+.ledger-table .col-ref small { display: block; margin-top: 2px; }
+.ledger-table .col-ref .badge { white-space: normal; }
+.ledger-table .text-end {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ledger-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+.kpi-tile-muted   { border-left-color: #adb5bd; }
+
+/* Item Balance Summary row tinting */
+.table-danger-soft  > * { background-color: #fdecea !important; }
+.table-muted-soft   > * { background-color: #f8f9fa !important; color: #6c757d; }
+.table-warning-soft > * { background-color: #fff8e1 !important; }
+
+/* Phase G.1 - Set Levels modal */
+.set-levels-modal {
+  background: rgba(0, 0, 0, 0.4);
+  padding-top: calc(var(--topbar-height) + 8px);
+  overflow-y: auto;
+}
+.set-levels-modal .modal-dialog { margin: 0 auto; }
+
+.item-history-modal {
+  background: rgba(0, 0, 0, 0.4);
+  padding-top: calc(var(--topbar-height) + 8px);
+  overflow-y: auto;
+}
+.item-history-modal .modal-dialog {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.item-history-modal .modal-dialog-scrollable .modal-content {
+  max-height: calc(100vh - var(--topbar-height) - 30px);
+}
+
+/* Phase G.2 - Branch transfer modal */
+.branch-transfer-modal {
+  background: rgba(0, 0, 0, 0.4);
+  padding-top: calc(var(--topbar-height) + 8px);
+  overflow-y: auto;
+}
+.branch-transfer-modal .modal-dialog {
+  margin: 0 auto;
+}
+
+/* Phase G.3 - Stock adjustment modal */
+.stock-adjust-modal {
+  background: rgba(0, 0, 0, 0.4);
+  padding-top: calc(var(--topbar-height) + 8px);
+  overflow-y: auto;
+}
+.stock-adjust-modal .modal-dialog {
+  margin: 0 auto;
+}
+
+.container-fluid {
+  padding-top: 14px;
+  padding-bottom: 20px;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+h3 {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.text-muted.small {
+  font-size: 12px;
+}
+
+/* =========================================================
+   CARDS
+========================================================= */
+.card {
+  border: 0;
+  border-radius: 14px;
+  box-shadow: 0 0.125rem 0.75rem rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+  border-bottom: 1px solid #eef1f4;
+  background: #f8f9fb;
+  font-weight: 600;
+  border-top-left-radius: 14px !important;
+  border-top-right-radius: 14px !important;
+}
+
+.card-body {
+  padding: 1rem 1rem;
+}
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+.row.g-3 .card .card-body {
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.fs-4 {
+  font-size: 1.5rem !important;
+  line-height: 1.2;
+}
+
+.fw-bold {
+  font-weight: 700 !important;
+}
+
+/* =========================================================
+   FORMS
+========================================================= */
+.form-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: #495057;
+}
+
+.form-control,
+.form-select {
+  min-height: 38px;
+  border-radius: 10px;
+  border-color: #d9dee3;
+  box-shadow: none;
+}
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.14rem rgba(13, 110, 253, 0.12);
+  }
+
+textarea.form-control {
+  min-height: 78px;
+  resize: vertical;
+}
+
+.form-check-input {
+  cursor: pointer;
+}
+
+.form-check-label {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+.btn {
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.btn-sm {
+  border-radius: 8px;
+}
+
+.btn-group .btn {
+  min-width: 38px;
+}
+
+/* =========================================================
+   TABLE
+========================================================= */
+.table-responsive {
+  border-radius: 12px;
+}
+
+.table {
+  margin-bottom: 0;
+  font-size: 13.5px;
+}
+
+  .table thead th {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #374151;
+    background: #f8f9fb !important;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .table tbody td {
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+    .table tbody td:nth-child(3),
+    .table tbody td:nth-child(6),
+    .table tbody td:nth-child(14) {
+      white-space: normal;
+    }
+
+.table-bordered > :not(caption) > * > * {
+  border-color: #e9ecef;
+}
+
+/* =========================================================
+   BADGES
+========================================================= */
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0.42rem 0.55rem;
+  border-radius: 7px;
+}
+
+/* =========================================================
+   DETAIL SECTION
+========================================================= */
+.card-body strong {
+  font-weight: 600;
+  color: #374151;
+}
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+.btn-group-sm > .btn,
+.btn-sm {
+  font-size: 0.8rem;
+}
+
+.small.text-muted {
+  font-size: 12px;
+}
+
+/* =========================================================
+   UTILITIES
+========================================================= */
+.text-end {
+  text-align: right !important;
+}
+
+.fw-semibold {
+  font-weight: 600 !important;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+@media (max-width: 991.98px) {
+  .container-fluid {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .card-body {
+    padding: 0.9rem;
+  }
+
+  .table {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  .fs-4 {
+    font-size: 1.25rem !important;
+  }
+
+  .d-flex.flex-wrap.gap-2 .btn {
+    width: 100%;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+  }
+}

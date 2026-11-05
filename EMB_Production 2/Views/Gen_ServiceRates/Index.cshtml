@@ -1,0 +1,212 @@
+﻿@model EMB_Production.ViewModels.ServiceRatesPageViewModel
+@using PagedList.Mvc
+@using PagedList
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Service Rates";
+    var cf = Model.Search ?? "";
+    var af = Model.ActiveFilter ?? "";
+    var bf = Model.BranchFilter?.ToString() ?? "";
+}
+
+<div class="d-flex align-items-center gap-3 mb-4 p-3 bg-primary rounded shadow-sm">
+    <h5 class="text-white mb-0">Service Rates</h5>
+
+    @if (!Model.ShowCreate && !Model.ShowEdit)
+    {
+        <a class="btn btn-success btn-sm" href="@Url.Action("Index", new { showCreate = true, search = cf, activeFilter = af, branchFilter = bf })">
+            <i class="bi bi-plus-lg"></i> Add
+        </a>
+    }
+    else if (Model.ShowEdit)
+    {
+        <span class="btn btn-warning btn-sm disabled"><i class="bi bi-pencil"></i> Modify</span>
+    }
+
+    <form method="get" action="@Url.Action("Index")" class="d-flex align-items-center ms-auto gap-2">
+        <input name="search" value="@cf" class="form-control form-control-sm bg-light border-0" placeholder="Search…" style="width:100px;" />
+        <select name="activeFilter" class="form-select form-select-sm bg-light border-0" style="width:60px;">
+            <option value="">All</option>
+            <option value="Yes" @(af == "Yes" ? "selected" : "")>Active</option>
+            <option value="No" @(af == "No" ? "selected" : "")>Inactive</option>
+        </select>
+        <select name="branchFilter" class="form-select form-select-sm bg-light border-0" style="width:100px;">
+            <option value="">All Branches</option>
+            @foreach (var b in Model.BranchList)
+            {
+                <option value="@b.Value" @(b.Value == bf ? "selected" : "")>@b.Text</option>
+            }
+        </select>
+        <button type="submit" class="btn btn-light btn-sm" title="Filter"><i class="bi bi-funnel-fill text-primary"></i></button>
+        <a class="btn btn-light btn-sm" href="@Url.Action("Index")" title="Clear"><i class="bi bi-x-circle text-bg-danger"></i></a>
+        <button type="button" onclick="location.reload()" class="btn btn-light btn-sm" title="Refresh"><i class="bi bi-arrow-clockwise text-bg-dark"></i></button>
+        <button type="button" onclick="window.print()" class="btn btn-light btn-sm" title="Print"><i class="bi bi-printer text-bg-primary"></i></button>
+        <a class="btn btn-light btn-sm" href="@Url.Action("ExportToExcel", new { search=cf, activeFilter=af, branchFilter=bf })" title="Excel"><i class="bi bi-file-earmark-spreadsheet text-bg-secondary"></i></a>
+        <a class="btn btn-light btn-sm" href="@Url.Action("ExportToPdf", new { search=cf, activeFilter=af, branchFilter=bf })" title="PDF"><i class="bi bi-file-earmark-pdf text-bg-danger"></i></a>
+    </form>
+</div>
+
+@if (Model.ShowCreate)
+{
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body p-2">
+            @using (Html.BeginForm("CreateFromIndex", "Gen_ServiceRates", FormMethod.Post, new { @class = "inline-form row gx-2 gy-1 align-items-end" }))
+            {
+                @Html.AntiForgeryToken()
+                @* Customer *@
+                <div class="col-auto d-flex flex-column align-items-center">
+                    <label class="small mb-1">Customer</label>
+                    @Html.DropDownListFor(m => m.NewRate.CustomerId, Model.CustomerList, "–Customer–", new { @class = "form-select form-select-sm" })
+                </div>
+                @* Service *@
+                <div class="col-auto d-flex flex-column align-items-center">
+                    <label class="small mb-1">Service</label>
+                    @Html.DropDownListFor(m => m.NewRate.ServiceId, Model.ServiceList, "–Service–", new { @class = "form-select form-select-sm" })
+                </div>
+                @* Charge *@
+                <div class="col-auto d-flex flex-column align-items-center">
+                    <label class="small mb-1">Charge</label>
+                    @Html.TextBoxFor(m => m.NewRate.ChargeFactor, new { @class = "form-control form-control-sm text-center", style = "width:150px" })
+                </div>
+                @* Remarks *@
+                <div class="col-auto d-flex flex-column align-items-center">
+                    <label class="small mb-1">Remarks</label>
+                    @Html.TextBoxFor(m => m.NewRate.Remarks, new { @class = "form-control form-control-sm", style = "width:250px" })
+                </div>
+                @* Branch *@
+                <div class="col-auto d-flex flex-column align-items-center">
+                    <label class="small mb-1">Branch</label>
+                    @Html.DropDownListFor(m => m.NewRate.BranchId, Model.BranchList, "–Branch–", new { @class = "form-select form-select-sm" })
+                </div>
+                @* Flags *@
+                <div class="col-auto form-check form-switch">
+                    @Html.CheckBoxFor(m => m.NewRate.Active, new { @class = "form-check-input" })<label class="form-check-label small ms-2">Active</label>
+                </div>
+                <div class="col-auto form-check form-switch">
+                    @Html.CheckBoxFor(m => m.NewRate.Deleted, new { @class = "form-check-input" })<label class="form-check-label small ms-2">Deleted</label>
+                </div>
+                @* Controls *@
+                <div class="col-auto ms-auto d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-save"></i> Save</button>
+                    <a href="@Url.Action("Index", new { showCreate=false, search=cf, activeFilter=af, branchFilter=bf })" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-circle"></i> Cancel</a>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@* Inline Edit *@
+@if (Model.ShowEdit)
+ {
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body p-2">
+           @using (Html.BeginForm("EditFromIndex","Gen_ServiceRates",FormMethod.Post,new { @class = "inline-form row gx-2 gy-1 align-items-end" }))
+            {
+                @Html.AntiForgeryToken()
+                @* Hidden PK *@
+                @Html.HiddenFor(m => m.EditRate.Id)
+
+                @* Customer *@
+                <div class="col-auto d-flex flex-column align-items-center">
+                    <label class="small mb-1" for="EditRate_CustomerId">Customer</label>
+                    @Html.DropDownListFor(m => m.EditRate.CustomerId,Model.CustomerList,"–Customer–",new { @class = "form-select form-select-sm", id = "EditRate_CustomerId" })
+                </div>
+
+                @* Service *@
+                <div class="col-auto d-flex flex-column align-items-center">
+                    <label class="small mb-1" for="EditRate_ServiceId">Service</label>
+                    @Html.DropDownListFor(m => m.EditRate.ServiceId,Model.ServiceList,"–Service–",new { @class = "form-select form-select-sm", id = "EditRate_ServiceId" })
+                </div>
+
+                @* Charge *@
+                <div class="col-auto d-flex flex-column align-items-center">
+                    <label class="small mb-1" for="EditRate_ChargeFactor">Charge</label>
+                    @Html.TextBoxFor(m => m.EditRate.ChargeFactor,new{@class = "form-control form-control-sm text-center",style = "width:150px",id = "EditRate_ChargeFactor"})
+                </div>
+
+                @* Remarks *@
+                <div class="col-auto d-flex flex-column align-items-center">
+                    <label class="small mb-1" for="EditRate_Remarks">Remarks</label>
+                    @Html.TextBoxFor(m => m.EditRate.Remarks,new{@class = "form-control form-control-sm",style = "width:250px",id = "EditRate_Remarks"})
+                </div>
+
+                @* Branch *@
+                <div class="col-auto d-flex flex-column align-items-center">
+                    <label class="small mb-1" for="EditRate_BranchId">Branch</label>
+                    @Html.DropDownListFor(m => m.EditRate.BranchId,Model.BranchList,"–Branch–",new { @class = "form-select form-select-sm", id = "EditRate_BranchId" })
+                </div>
+
+                @* Flags *@
+                <div class="col-auto form-check form-switch d-flex flex-column align-items-center">
+                    @Html.CheckBoxFor(m => m.EditRate.Active,new { @class = "form-check-input", id = "EditRate_Active" })
+                    <label class="form-check-label small ms-2" for="EditRate_Active">
+                        Active
+                    </label>
+                </div>
+                <div class="col-auto form-check form-switch d-flex flex-column align-items-center">
+                    @Html.CheckBoxFor(m => m.EditRate.Deleted,new { @class = "form-check-input", id = "EditRate_Deleted" })
+                    <label class="form-check-label small ms-2" for="EditRate_Deleted">
+                        Deleted
+                    </label>
+                </div>
+
+                @* Actions *@
+                <div class="col-auto ms-auto d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-success">
+                        <i class="bi bi-save"></i> Update
+                    </button>
+                    <a href="@Url.Action("Index",new {showEdit = false,search = Model.Search,activeFilter  = Model.ActiveFilter,branchFilter  = Model.BranchFilter})"
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+ }
+
+
+<div class="table-responsive shadow-sm rounded">
+    <table class="table table-striped table-hover table-small mb-0">
+        <thead class="table-secondary">
+            <tr>
+                <th>Customer</th>
+                <th>Service</th>
+                <th>Charge</th>
+                <th>Remarks</th>
+                <th>Branch</th>
+                <th class="text-center">Act</th>
+                <th class="text-center">Del</th>
+                <th class="text-center">Time</th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model.Rows)
+            {
+            <tr>
+                <td>@r.CustomerId</td>
+                <td>@r.ServiceId</td>
+                <td>@r.ChargeFactor</td>
+                <td>@r.Remarks</td>
+                <td>@r.BranchName</td>
+                <td class="text-center"><span class="badge @(r.Active?"bg-success":"bg-secondary")">@(r.Active?"Yes":"No")</span></td>
+                <td class="text-center"><span class="badge @(r.Deleted?"bg-danger":"bg-secondary")">@(r.Deleted?"Yes":"No")</span></td>
+                <td class="text-center">
+                    @(r.RecordTimeStamp?.ToString("yyyy-MM-dd"))
+                </td>
+                <td class="text-center">
+                    <a class="btn btn-outline-primary btn-sm me-1" href="@Url.Action("Index","Gen_ServiceRates", new { showEdit=true, editId=r.Id, search=cf, activeFilter=af, branchFilter=bf })"><i class="bi bi-pencil"></i></a>
+                    <a class="btn btn-outline-info btn-sm me-1" href="@Url.Action("Details","Gen_ServiceRates", new { id=r.Id })"><i class="bi bi-info-circle"></i></a>
+                    <a class="btn btn-outline-danger btn-sm" href="@Url.Action("Delete","Gen_ServiceRates", new { id=r.Id })"><i class="bi bi-trash"></i></a>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="d-flex justify-content-center mt-2">
+    @Html.PagedListPager(Model.Rows, page => Url.Action("Index", new { page, search = cf, activeFilter = af, branchFilter = bf }), new PagedListRenderOptions { UlElementClasses = new[] { "pagination" }, LiElementClasses = new[] { "page-item" } })
+</div>

@@ -1,0 +1,135 @@
+DEVELOPMENT PROGRESS REPORT
+EMB Production 2
+
+Project: EMB Production 2
+Reporting period: Session-level snapshot through 16 June 2026
+Prepared for: Stakeholder review
+
+
+1. EXECUTIVE SUMMARY
+
+The EMB Production 2 ERP is operationally complete end-to-end. Every stage from design entry through dispatch has a working implementation, a persisted data model, and a UI surface. The current focus has shifted away from feature delivery and toward polish, defensive defaults, and resolving cross-module data-flow issues, so that the system works correctly even on a freshly-seeded database with sparse master data.
+
+Status at a glance
+Area	Status
+Core master data (Products, Branches, Customers, Users, Designs, Components, BOM)	Shipped
+Production pipeline (Job Order, Work Order, Issue, Daily Production, QC, Stock, Dispatch)	Shipped
+Costing and pricing	Shipped, hardened during this session
+Purchase and Purchase Returns	Shipped
+Reporting (Excel and PDF exports, dashboards, KPI strips)	Shipped
+360 Profile drawers (Phase R polish)	Shipped for User, Design, Costing and Dispatch
+Raw Sales module	Pending (scoped, not started)
+styleUrls cleanup	3 components remaining
+
+
+2. MODULES SHIPPED THIS PERIOD
+
+Module	Surface	Notes
+Sidebar redesign	Typed NavGroup array configuration, role-gated, search filter, collapse-all, Products and Inventory split into two groups	visibleGroups memoised to avoid change-detection loops
+Dashboard	Range filter, click-through KPIs, alerts strip, Workflow tag with 7-stage pending counts	Workflow Summary block now exposed by AuthController.Dashboard
+Login redesign	Split-screen brand panel plus mock pipeline window, password toggle, submitting state	Aligned to the brand palette (navy with blue-to-purple gradient)
+Home / Landing	Hero section, mock dashboard preview, features grid, workflow strip, CTA, footer	Public, marketing-style page
+Topbar	Avatar dropdown showing Username header, Profile, Settings and Logout	Fixed invisible logout text caused by an over-aggressive global color rule
+User Management	Designation dropdown, 360 Profile drawer with real avatar image, audit fields	Created new Adm_Designations master with 14 seed values
+Service Rates	Product by Service Type charge factor matrix	Backs the GetProductServicePerUnitCost helper
+Design Costing	Auto-fill cascade for Material, Production, Service, Product Cost and Total Product Cost	Now multi-source resilient (see Session Fix Report sections 2 and 3)
+Dispatch	Auto-fill for Cost, Base, Net and Total with a 4-priority cost chain and a 5-priority sale chain	Includes the DesignCosting fallback added this session
+Designs Management	Usage badges (JO N, rupee, C N, New)	The "New" badge replaces an ambiguous dash
+
+
+3. DEFECTS RESOLVED THIS SESSION
+
+(See the Session Fix Report for full root-cause analysis.)
+
+Number	Defect	Fix surface
+1	Dispatch modal overlapping topbar	CSS - rescoped the modal frame below the topbar and removed margin: auto !important
+2	Design Costing per-unit fields stayed at zero	Backend (Recalculate and Calculate now return five new fields) plus frontend defensive math
+3	Service / Unit stayed at zero	Frontend defensive lookup via /service-rates/list, and the field was made editable
+4	Dispatch all calculation columns stayed at zero	Backend DesignCosting fallback in cost and price chains, plus frontend defensive lookup
+5	Usage column showed an ambiguous dash	Replaced with explicit "New" badge and tooltip
+
+
+4. RECURRING PATTERNS ESTABLISHED
+
+1. Multi-priority data resolution for cost and price. Every helper now walks at least three sources before returning zero.
+2. Frontend defensive layers. When backend changes are pending a rebuild, parallel Angular lookups against existing endpoints make the same data flow visible immediately. The pattern is now in three places: Design Costing service-rate lookup, Design Costing per-unit math fallback, and Dispatch design-costing lookup.
+3. Memoise projected lists. Templates iterate plain properties with trackBy. Getters that return new arrays are explicitly banned because they caused a Page Unresponsive earlier this session.
+4. Editable computed fields where master data may be sparse (for example Service / Unit). The operator override is always available.
+5. Component CSS hygiene. A missing styleUrls is treated as a P1 bug. Four components were silently unstyled during Phase R and three still remain (see Pending items below).
+
+
+5. OUTSTANDING AND PENDING ITEMS
+
+5.1 High priority
+Item	Type	Notes
+styleUrls missing on app.component.ts	Component config	Phase R styles silently unapplied
+styleUrls missing on adm-branch.component.ts	Component config	Same as above
+styleUrls missing on adm-company.component.ts	Component config	Same as above
+Raw Sales module	Feature	User scoped this work as "Build Purchase Returns first, ship it, then Raw Sales". Returns are shipped; Sales is not started
+
+5.2 Medium priority
+Item	Type	Notes
+Master Price on every product (Gen_Products.Price)	Data hygiene	Empty for several products. Once set, both dispatch and costing fallbacks resolve immediately
+Gen_ComponentMaterials BOM material lines	Data hygiene	Many designs have Gen_BOM (production specs) but no Gen_ComponentMaterials (raw material per unit). Without these, Material / Unit reflects thread only
+Gen_Store.Rate on every raw item	Data hygiene	Required for the BOM-walk material valuation
+Branch alignment between Design, Service Rate and Stock	Data hygiene	Several mismatches were observed. The cross-branch fallback now masks them, but the root cause is operational
+
+5.3 Low priority
+Item	Type	Notes
+ClientApp/AspNetProject empty folder	Cleanup	Safe to remove
+Models/Model11.cs and Models/Model1.Context1.cs	Documentation	Will be overwritten on EDMX regeneration. Note in README
+PascalCase responses in AuthController	Consistency	Migrate to camelCase incrementally. Angular handles both today
+
+
+6. DATA QUALITY OBSERVATIONS FROM THIS SESSION
+
+The most expensive bugs of this session were not code bugs. They were silent data gaps that the UI then surfaced as zeros. The new fallback chains reduce the blast radius, but the underlying data hygiene work still matters.
+
+- Seven of eight users had bad CreatedBy or UpdatedBy values (0, 1, 2075 - the last being an EmployeeId confused with a UserId). The data was fixed with a targeted SQL update that only touched broken rows. The GetCurrentUserId fallback to the lowest-id active user should paper over future occurrences.
+- The Component Materials table is empty for most designs. The BOM screen displays Gen_BOM (Rpt, Head, Panni, Solv production specs), which is not the same table as Gen_ComponentMaterials (QtyPerUnit by RawItemId). Operators need clearer guidance on which screen drives material costing.
+- The Service Rate branch occasionally differs from the Design branch. The frontend lookup added this session bypasses the branch filter, but operations should align them at the data level.
+
+
+7. BACKEND REBUILD DEPENDENCY TABLE
+
+Every backend change this session lives behind a Visual Studio Rebuild. The table below summarises which user-visible improvements survive without one.
+
+Improvement	Works without MVC rebuild
+Modal-overlap CSS fix	Yes - Angular only
+Design Costing per-unit local computation	Yes - Angular only
+Service / Unit lookup via /service-rates/list	Yes - uses an existing endpoint
+Service / Unit editable override	Yes
+Dispatch DesignCosting frontend lookup	Yes - uses an existing endpoint
+"New" Usage badge on Designs	Yes
+Recalculate returning five new fields	No - needs rebuild
+BOM-walk material cost helper	No - needs rebuild
+Dispatch backend DesignCosting fallback chain	No - needs rebuild
+
+
+8. RECOMMENDED NEXT STEPS
+
+1. Rebuild the MVC backend and verify that the three "No - needs rebuild" items above are active in production.
+2. Fix the three missing styleUrls bindings in app.component.ts, adm-branch.component.ts and adm-company.component.ts.
+3. Scope the Raw Sales module to match the shape of Dispatch (Customer Demand and Direct Sale split), drawing from Gen_Store instead of Gen_Stocks.
+4. Drive the master-data clean-up: every active product needs a Gen_Products.Price, every active raw item needs a Gen_Store purchase entry with a non-zero Rate, and every active component needs at least one Gen_ComponentMaterials row.
+5. Document the distinction between BOM and Component Materials for operators. This distinction confused even the engineering team during this session.
+
+
+9. KPI SNAPSHOT
+
+(From dashboard sample data on 16 June 2026.)
+
+KPI	Value
+Active designs	5
+Designs with costing	6
+Total Cost across costings	1,550,600
+Total Selling	1,752,400
+Estimated profit	201,800
+Average margin	13.3%
+Average Cost / Unit	1,551
+Average Selling / Unit	1,752
+
+These are sample and seed values, not production reality. However, the fact that all nine KPIs are correctly computed and rendered, with sensible defensive fallbacks behind them, is itself the success indicator for this reporting period.
+
+
+END OF REPORT

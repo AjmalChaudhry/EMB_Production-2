@@ -1,0 +1,731 @@
+<div class="page-wrap">
+
+  <!-- HEADER -->
+  <div class="row align-items-center mb-3">
+    <div class="col-md-5">
+      <h5 class="mb-0 d-flex align-items-center">
+        <i class="bi bi-calendar-week me-2 text-primary"></i>
+        Production Plan
+      </h5>
+      <div class="text-muted small">
+        Weekly scheduling — allocate Job Orders to machines, validate capacity, generate Work Orders
+      </div>
+    </div>
+    <div class="col-md-7 d-flex justify-content-end align-items-center gap-2 flex-nowrap">
+      <button class="btn btn-sm btn-primary" (click)="openCreate()">
+        <i class="bi bi-plus-circle me-1"></i>New Plan
+      </button>
+      <div class="input-group input-group-sm" style="width:240px;">
+        <input class="form-control" [(ngModel)]="searchText"
+               (keyup.enter)="applyFilters()"
+               placeholder="Search plan code / remarks">
+        <button class="btn btn-outline-secondary" (click)="applyFilters()"><i class="bi bi-search"></i></button>
+        <button class="btn btn-outline-secondary" (click)="clearFilters()"><i class="bi bi-arrow-clockwise"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="card mb-3 pp-filter-bar">
+    <div class="card-body py-2">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label small mb-0">Status</label>
+          <select class="form-select form-select-sm" [(ngModel)]="statusFilter" (change)="applyFilters()">
+            <option value="">All</option>
+            <option value="DRAFT">Draft</option>
+            <option value="APPROVED">Approved</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="CLOSED">Closed</option>
+          </select>
+        </div>
+        <!-- Sprint-1: Branch filter (multi-branch sites need to isolate plans) -->
+        <div class="col-md-3">
+          <label class="form-label small mb-0">Branch</label>
+          <select class="form-select form-select-sm"
+                  [(ngModel)]="branchFilter" (change)="applyFilters()">
+            <option [ngValue]="null">All Branches</option>
+            <option *ngFor="let b of branches" [ngValue]="b.id">{{ b.name }}</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small mb-0">Year</label>
+          <input type="number" class="form-control form-control-sm"
+                 [(ngModel)]="yearFilter" (change)="applyFilters()"
+                 placeholder="e.g. 2026">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small mb-0">Week No</label>
+          <input type="number" class="form-control form-control-sm"
+                 [(ngModel)]="weekFilter" (change)="applyFilters()"
+                 placeholder="1..53">
+        </div>
+        <!-- Sprint-1: This / Next week shortcuts. Sets year+week to the
+             matching ISO week and reloads — most common filter case for
+             planners, who almost always look at this week or next week. -->
+        <div class="col-md-2 d-flex gap-1">
+          <button type="button"
+                  class="btn btn-sm btn-outline-primary flex-grow-1"
+                  (click)="goCurrentWeek()"
+                  title="Filter to today's ISO week">
+            <i class="bi bi-calendar2-event me-1"></i>This wk
+          </button>
+          <button type="button"
+                  class="btn btn-sm btn-outline-secondary flex-grow-1"
+                  (click)="goNextWeek()"
+                  title="Filter to next ISO week">
+            <i class="bi bi-calendar2-plus me-1"></i>Next wk
+          </button>
+        </div>
+      </div>
+      <div class="row g-2 mt-1" *ngIf="statusFilter || branchFilter || yearFilter || weekFilter || searchText">
+        <div class="col-auto">
+          <button type="button" class="btn btn-sm btn-link p-0" (click)="clearFilters()">
+            <i class="bi bi-x-circle me-1"></i>Clear all filters
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY CHIPS -->
+  <div class="d-flex flex-wrap gap-2 mb-3 pp-summary-strip">
+    <span class="badge bg-light text-dark border">Total <strong class="ms-1">{{ summary.count }}</strong></span>
+    <span class="badge bg-secondary">Draft <strong class="ms-1">{{ summary.draftCount }}</strong></span>
+    <span class="badge bg-primary">Approved <strong class="ms-1">{{ summary.approvedCount }}</strong></span>
+    <span class="badge bg-info">In Progress <strong class="ms-1">{{ summary.inProgressCount }}</strong></span>
+    <span class="badge bg-success">Closed <strong class="ms-1">{{ summary.closedCount }}</strong></span>
+  </div>
+
+  <!-- Sprint-3: bulk-action toolbar. Shown only when at least one row is
+       selected. Buttons act on the current selection set; failures are
+       reported per-id in an alert so the operator can fix and re-select. -->
+  <div *ngIf="selectedCount() > 0"
+       class="alert alert-info d-flex flex-wrap align-items-center gap-2 py-2 mb-2">
+    <strong class="me-2">
+      <i class="bi bi-check2-square me-1"></i>
+      {{ selectedCount() }} selected
+    </strong>
+
+    <button type="button"
+            class="btn btn-sm btn-primary"
+            [disabled]="bulkBusy"
+            (click)="bulkApprove()"
+            title="Approve every Draft plan in the selection. Non-Draft rows will be skipped.">
+      <i class="bi bi-check-circle me-1"></i>Approve all
+    </button>
+
+    <button type="button"
+            class="btn btn-sm btn-success"
+            [disabled]="bulkBusy"
+            (click)="bulkClose()"
+            title="Close every Approved / In Progress plan in the selection. Drafts and already-closed plans will be skipped.">
+      <i class="bi bi-archive me-1"></i>Close all
+    </button>
+
+    <button type="button"
+            class="btn btn-sm btn-outline-secondary ms-auto"
+            (click)="clearSelection()">
+      <i class="bi bi-x-circle me-1"></i>Clear selection
+    </button>
+  </div>
+
+  <!-- LIST -->
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 pp-list-table">
+          <thead class="table-light">
+            <tr>
+              <!-- Sprint-3: select-all checkbox with indeterminate state
+                   when only some rows on the page are selected. -->
+              <th style="width: 38px;" class="text-center">
+                <input type="checkbox"
+                       class="form-check-input"
+                       [checked]="allOnPageSelected()"
+                       [indeterminate]="someOnPageSelected()"
+                       (change)="toggleAllOnPage($any($event.target).checked)"
+                       title="Select all rows on this page">
+              </th>
+              <th>Plan Code</th>
+              <th>Branch</th>
+              <th class="text-center">Year / Week</th>
+              <th>Week Range</th>
+              <th class="text-end">Items</th>
+              <!-- Sprint-2: deep-link counters per row. Shows distinct JOs
+                   this plan touches and how many of those items have already
+                   generated a Work Order. -->
+              <th class="text-center" style="width:130px;">Related</th>
+              <th>Status</th>
+              <th>Approved</th>
+              <th class="text-end" style="width:170px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="loading">
+              <td colspan="10" class="text-center text-muted py-4">
+                <span class="spinner-border spinner-border-sm me-2"></span>Loading…
+              </td>
+            </tr>
+            <tr *ngIf="!loading && !rows.length">
+              <td colspan="10" class="text-center text-muted py-4">No plans yet — click "New Plan".</td>
+            </tr>
+            <tr *ngFor="let r of rows"
+                [class.pp-current-week]="r.isCurrentWeek"
+                [class.table-info]="isSelected(r.id)">
+              <!-- Sprint-3: per-row selection checkbox -->
+              <td class="text-center">
+                <input type="checkbox"
+                       class="form-check-input"
+                       [checked]="isSelected(r.id)"
+                       (change)="toggleRow(r.id, $any($event.target).checked)">
+              </td>
+              <td class="fw-semibold">
+                {{ r.planCode }}
+                <!-- Sprint-1: visual flag for "this is the active week" so
+                     the planner spots their working row in a long list. -->
+                <span *ngIf="r.isCurrentWeek"
+                      class="badge bg-primary ms-1"
+                      style="font-size: 0.62rem;"
+                      title="Plan for the current ISO week">
+                  <i class="bi bi-star-fill me-1"></i>current
+                </span>
+              </td>
+              <td>{{ r.branchName || '-' }}</td>
+              <td class="text-center">{{ r.year }} / W{{ r.weekNo }}</td>
+              <td>{{ r.weekStartDate | date:'MMM dd' }} — {{ r.weekEndDate | date:'MMM dd' }}</td>
+              <td class="text-end">{{ r.itemCount }}</td>
+              <!-- Sprint-2: clickable counter badges. JO opens the detail
+                   modal where the items table shows every linked JO. WO
+                   opens the same modal so the planner can drill into the
+                   generated WO codes. Dimmed when count is 0. -->
+              <td class="text-center text-nowrap">
+                <button type="button"
+                        class="btn btn-sm btn-outline-info me-1"
+                        (click)="showJobOrdersForPlan(r)"
+                        [title]="(r.joCount || 0) + ' linked Job Order(s)'">
+                  <i class="bi bi-card-checklist me-1"></i>JO
+                  <span class="badge ms-1"
+                        [class.bg-info]="r.joCount"
+                        [class.bg-secondary]="!r.joCount">
+                    {{ r.joCount || 0 }}
+                  </span>
+                </button>
+                <button type="button"
+                        class="btn btn-sm btn-outline-success"
+                        (click)="openEdit(r.id)"
+                        [title]="(r.woCount || 0) + ' generated Work Order(s)'">
+                  <i class="bi bi-list-task me-1"></i>WO
+                  <span class="badge ms-1"
+                        [class.bg-success]="r.woCount"
+                        [class.bg-secondary]="!r.woCount">
+                    {{ r.woCount || 0 }}
+                  </span>
+                </button>
+              </td>
+              <td><span class="badge" [ngClass]="badgeClass(r.status)">{{ r.status }}</span></td>
+              <td class="small text-muted">
+                {{ r.approvedByName ? r.approvedByName : '-' }}
+                <div *ngIf="r.approvedDate" class="text-muted">{{ r.approvedDate | date:'yyyy-MM-dd' }}</div>
+              </td>
+              <td class="text-end text-nowrap">
+                <!-- Edit/Open is always available; the modal will show the
+                     plan read-only when status != DRAFT, with the Reverse
+                     action right inside the modal too. -->
+                <button class="btn btn-sm btn-outline-primary me-1"
+                        (click)="openEdit(r.id)"
+                        [title]="r.status === 'DRAFT' ? 'Edit plan' : 'Open plan (read-only)'">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+
+                <!-- Sprint-2: Clone to next week. Works on plans in any
+                     status (DRAFT, APPROVED, IN_PROGRESS, CLOSED) since
+                     the clone is always a fresh DRAFT. Best fit for a
+                     closed plan from the previous week to seed next
+                     week's schedule. -->
+                <button class="btn btn-sm btn-outline-info me-1"
+                        (click)="cloneToNextWeek(r)"
+                        title="Clone to next ISO week (items copied, dates +7d)">
+                  <i class="bi bi-files"></i>
+                </button>
+
+                <!-- Reverse: only visible for plans that have something to
+                     reverse (APPROVED or IN_PROGRESS). DRAFT has nothing
+                     to roll back; CLOSED is final. -->
+                <button class="btn btn-sm btn-outline-warning me-1"
+                        *ngIf="r.status === 'APPROVED' || r.status === 'IN_PROGRESS'"
+                        (click)="reverse(r.id)"
+                        title="Reverse plan back to DRAFT">
+                  <i class="bi bi-arrow-counterclockwise"></i>
+                </button>
+
+                <!-- Delete only for DRAFT — once approved a plan must be
+                     reversed before it can be removed. -->
+                <button class="btn btn-sm btn-outline-secondary"
+                        *ngIf="r.status === 'DRAFT'"
+                        (click)="remove(r.id)" title="Delete draft plan">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================================================== -->
+<!-- EDITOR MODAL (full plan view)                              -->
+<!-- ========================================================== -->
+<div #editorModal class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header bg-primary text-white py-2">
+        <h6 class="modal-title mb-0">
+          <i class="bi bi-calendar-week me-1"></i>
+          {{ modalMode === 'create' ? 'New Production Plan' : 'Plan ' + current.planCode }}
+          <span class="badge ms-2" [ngClass]="badgeClass(current.status)">{{ current.status }}</span>
+        </h6>
+
+        <div class="d-flex align-items-center gap-2">
+          <!-- Sprint-1: Reopen to Draft — operators occasionally need to
+               add another JO to a plan that has already been Approved /
+               In Progress / Closed. This flips the plan back to DRAFT
+               (soft-deletes the auto-generated WOs first; refuses if
+               any of those WOs are already Posted). -->
+          <button type="button"
+                  *ngIf="modalMode === 'edit'
+                      && current.status
+                      && current.status !== 'DRAFT'"
+                  class="btn btn-sm btn-warning"
+                  (click)="reopenToDraft()"
+                  [disabled]="saving"
+                  title="Reopen this plan back to DRAFT so you can edit items or add another Job Order">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Reopen to Draft
+          </button>
+          <button type="button" class="btn-close btn-close-white" (click)="closeEditor()"></button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Sprint-4: workflow stepper. Hidden in create mode (no plan
+             yet, no meaningful current stage). Shows 4 stages: Draft →
+             Approved → In Progress → Closed. Past stages green, current
+             blue/bold, future grey. -->
+        <div *ngIf="modalMode === 'edit'" class="card mb-3 pp-stepper-card">
+          <div class="card-body py-2 px-3">
+            <div class="pp-stepper d-flex align-items-center justify-content-between">
+              <ng-container *ngFor="let stage of workflowStages; let i = index; let last = last">
+                <div class="d-flex flex-column align-items-center pp-stepper-step">
+                  <div class="pp-stepper-dot border d-flex align-items-center justify-content-center"
+                       [ngClass]="stepperState(i).dotCls"
+                       [title]="stageLabel(stage)">
+                    <i *ngIf="i < workflowStageIndex" class="bi bi-check2"></i>
+                    <i *ngIf="i === workflowStageIndex" class="bi bi-circle-fill" style="font-size: 0.5rem;"></i>
+                    <span *ngIf="i > workflowStageIndex">{{ i + 1 }}</span>
+                  </div>
+                  <small class="mt-1" [ngClass]="stepperState(i).textCls">
+                    {{ stageLabel(stage) }}
+                  </small>
+                </div>
+                <!-- Connector line between dots (skip after the last dot) -->
+                <div *ngIf="!last"
+                     class="flex-grow-1 pp-stepper-line mx-2"
+                     [ngClass]="stepperState(i + 1 <= workflowStageIndex ? i + 1 : 999).lineCls"></div>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+
+        <!-- Header form -->
+        <div class="card mb-3 pp-header-card">
+          <div class="card-body py-2">
+            <div class="row g-2">
+              <div class="col-md-2">
+                <label class="form-label small">Plan Code</label>
+                <input class="form-control form-control-sm" [(ngModel)]="current.planCode" readonly>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Branch</label>
+                <select class="form-select form-select-sm"
+                        [(ngModel)]="current.branchId"
+                        [disabled]="modalMode === 'edit'">
+                  <option [ngValue]="null">-- current branch --</option>
+                  <option *ngFor="let b of branches" [ngValue]="b.id">{{ b.name }}</option>
+                </select>
+              </div>
+              <div class="col-md-1">
+                <label class="form-label small">Year</label>
+                <input type="number" class="form-control form-control-sm"
+                       [(ngModel)]="current.year"
+                       (ngModelChange)="recomputeWeekRange()"
+                       [readonly]="modalMode === 'edit'">
+              </div>
+              <div class="col-md-1">
+                <label class="form-label small">Week No</label>
+                <input type="number" class="form-control form-control-sm"
+                       [(ngModel)]="current.weekNo"
+                       (ngModelChange)="recomputeWeekRange()"
+                       [readonly]="modalMode === 'edit'">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small">Week Range</label>
+                <input class="form-control form-control-sm bg-light"
+                       [value]="current.weekStartDate && current.weekEndDate
+                                ? current.weekStartDate + ' → ' + current.weekEndDate
+                                : '—'"
+                       readonly>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Status</label>
+                <div class="form-control form-control-sm bg-light d-flex align-items-center"
+                     style="min-height:31px;">
+                  <span class="badge" [ngClass]="badgeClass(current.status)">{{ current.status }}</span>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label small">Remarks</label>
+                <input class="form-control form-control-sm" [(ngModel)]="current.remarks"
+                       [readonly]="current.status !== 'DRAFT'"
+                       placeholder="Optional notes for this plan">
+              </div>
+            </div>
+            <div class="d-flex justify-content-end mt-2 gap-2">
+              <button *ngIf="current.status === 'DRAFT'"
+                      class="btn btn-sm btn-success" (click)="saveHeader()" [disabled]="saving">
+                <i class="bi bi-save me-1"></i>{{ modalMode === 'create' ? 'Save Plan' : 'Save Header' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add item picker — always visible. Controls disabled until plan header is saved. -->
+        <div *ngIf="current.status === 'DRAFT'" class="card mb-3 pp-picker-card"
+             [class.opacity-75]="!current.id">
+          <div class="card-header py-2 d-flex justify-content-between align-items-center">
+            <strong><i class="bi bi-plus-circle me-1"></i>Allocate a Job Order to a machine</strong>
+            <small *ngIf="!current.id" class="text-muted">
+              <i class="bi bi-info-circle me-1"></i>Save the plan header first
+            </small>
+          </div>
+          <div class="card-body py-2">
+            <div class="row g-2 align-items-end">
+              <div class="col-md-4">
+                <label class="form-label small">Job Order</label>
+                <select class="form-select form-select-sm" [(ngModel)]="pickJobOrderId"
+                        [disabled]="!current.id"
+                        (change)="onPickJoChange()">
+                  <option [ngValue]="null">-- pick JO --</option>
+                  <option *ngFor="let j of eligibleJOs" [ngValue]="j.id">
+                    {{ j.code }} · {{ j.customerName }} · {{ j.productName }} ({{ j.orderQty }}){{ j.isPosted === false ? ' — Draft (post before Approve)' : '' }}
+                  </option>
+                </select>
+                <!-- Warns the operator when they pick an unposted JO —
+                     the JO still needs Post before Plan Approve can
+                     regenerate the WOs correctly. -->
+                <small *ngIf="pickedJoIsDraft()"
+                       class="text-warning d-block mt-1">
+                  <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                  This JO is still Draft — post it before you Approve the plan.
+                </small>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Machine</label>
+                <select class="form-select form-select-sm" [(ngModel)]="pickMachineId"
+                        [disabled]="!current.id">
+                  <option [ngValue]="null">-- pick machine --</option>
+                  <option *ngFor="let m of machines" [ngValue]="m.id">{{ m.display }}</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small">Qty (override)</label>
+                <input type="number" class="form-control form-control-sm" [(ngModel)]="pickQty"
+                       placeholder="auto" [disabled]="!current.id">
+              </div>
+              <div class="col-md-1">
+                <label class="form-label small">Start</label>
+                <input type="date" class="form-control form-control-sm" [(ngModel)]="pickStartDate"
+                       [disabled]="!current.id">
+              </div>
+              <div class="col-md-1">
+                <label class="form-label small">End</label>
+                <input type="date" class="form-control form-control-sm" [(ngModel)]="pickEndDate"
+                       [disabled]="!current.id">
+              </div>
+              <div class="col-md-1">
+                <button class="btn btn-sm btn-primary w-100" (click)="addItemFromPicker()"
+                        [disabled]="!current.id">
+                  <i class="bi bi-plus-lg"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+          <!-- Items table -->
+          <div class="card mb-3">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+              <strong><i class="bi bi-list-task me-1"></i>Plan Items ({{ items.length }})</strong>
+              <span *ngIf="capacityOver()" class="badge bg-danger">
+                <i class="bi bi-exclamation-triangle me-1"></i>Capacity over-allocated
+              </span>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>JO</th>
+                      <th>Product</th>
+                      <th>Design</th>
+                      <th class="text-end">Qty</th>
+                      <th>Machine</th>
+                      <th>Start</th>
+                      <th>End</th>
+                      <th>Status</th>
+                      <th>WO</th>
+                      <th class="text-end" *ngIf="current.status === 'DRAFT'"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let i of items" [class.table-warning]="!i.machineId">
+                      <td>
+                        <span *ngIf="i.isCompanyStockOrder" class="badge bg-primary me-1">Stock</span>
+                        {{ i.jobOrderCode }}
+                      </td>
+                      <td>{{ i.productName }}</td>
+                      <td>{{ i.designCode }}</td>
+                      <td class="text-end">
+                        <input type="number" class="form-control form-control-sm text-end"
+                               *ngIf="current.status === 'DRAFT'; else qtyText"
+                               [(ngModel)]="i.plannedQty" min="1"
+                               (change)="updateItemInline(i)">
+                        <ng-template #qtyText>{{ i.plannedQty | number }}</ng-template>
+                      </td>
+                      <td>
+                        <select *ngIf="current.status === 'DRAFT'" class="form-select form-select-sm"
+                                [(ngModel)]="i.machineId" (change)="updateItemInline(i)">
+                          <option [ngValue]="null">--</option>
+                          <option *ngFor="let m of machines" [ngValue]="m.id">{{ m.code }}</option>
+                        </select>
+                        <span *ngIf="current.status !== 'DRAFT'">{{ i.machineId || '-' }}</span>
+                      </td>
+                      <td>
+                        <input *ngIf="current.status === 'DRAFT'" type="date" class="form-control form-control-sm"
+                               [(ngModel)]="i.plannedStartDate" (change)="updateItemInline(i)">
+                        <span *ngIf="current.status !== 'DRAFT'">{{ i.plannedStartDate }}</span>
+                      </td>
+                      <td>
+                        <input *ngIf="current.status === 'DRAFT'" type="date" class="form-control form-control-sm"
+                               [(ngModel)]="i.plannedEndDate" (change)="updateItemInline(i)">
+                        <span *ngIf="current.status !== 'DRAFT'">{{ i.plannedEndDate }}</span>
+                      </td>
+                      <td><span class="badge bg-light text-dark border">{{ i.status }}</span></td>
+                      <td class="small">
+                        <!-- Sprint-1: deep-link to the generated Work Order
+                             via the WO list's search-by-code path. Saves the
+                             planner a navigate + manual search every time
+                             they want to check WO status from a plan. -->
+                        <button *ngIf="i.generatedWorkOrderCode"
+                                type="button"
+                                class="btn btn-sm btn-link p-0 text-success text-decoration-none"
+                                (click)="gotoWorkOrder(i.generatedWorkOrderCode)"
+                                [title]="'Open Work Order ' + i.generatedWorkOrderCode">
+                          <i class="bi bi-check2-circle me-1"></i>{{ i.generatedWorkOrderCode }}
+                          <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.7rem;"></i>
+                        </button>
+                        <span *ngIf="!i.generatedWorkOrderCode" class="text-muted">-</span>
+                      </td>
+                      <td class="text-end" *ngIf="current.status === 'DRAFT'">
+                        <button class="btn btn-sm btn-outline-danger" (click)="removeItem(i.id)">
+                          <i class="bi bi-x"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr *ngIf="!items.length">
+                      <td colspan="10" class="text-center text-muted py-3">
+                        <span *ngIf="!current.id">No items yet — save the plan header first, then allocate Job Orders above.</span>
+                        <span *ngIf="current.id">No items yet. Allocate a Job Order using the form above.</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Two columns: Capacity + BOM Rollup -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-header py-2"><strong><i class="bi bi-clock-history me-1"></i>Machine Capacity</strong></div>
+                <div class="card-body p-0">
+                  <div *ngIf="!capacity.length && !items.length" class="text-muted small p-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Add plan items above first, then assign Start &amp; End dates to see machine load.
+                  </div>
+                  <div *ngIf="!capacity.length && items.length" class="text-warning small p-3">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <strong>{{ items.length }} item(s) added</strong> but none have Start + End dates set.
+                    <div class="mt-1 text-muted">
+                      To compute machine load, each plan item needs a date range
+                      (Start &amp; End) so we know when the machine is occupied.
+                      Set both dates in the item row above and save.
+                    </div>
+                  </div>
+                  <table *ngIf="capacity.length" class="table table-sm mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Machine</th>
+                        <th class="text-end" title="Total pieces scheduled on this machine (sum of plan-item Qty)">
+                          Qty
+                        </th>
+                        <th>Range</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let c of capacity" [class.table-danger]="c.hasConflict">
+                        <td>
+                          {{ c.machineName || ('MC #' + c.machineId) }}
+                          <span class="text-muted small ms-1"
+                                [title]="c.itemCount + ' plan item(s)'">
+                            ({{ c.itemCount }})
+                          </span>
+                        </td>
+                        <td class="text-end fw-semibold">{{ c.totalPlannedQty | number }}</td>
+                        <td class="small">{{ c.earliestStart | date:'MMM dd' }} — {{ c.latestEnd | date:'MMM dd' }}</td>
+                        <td>
+                          <span *ngIf="!c.hasConflict" class="badge bg-success">OK</span>
+                          <span *ngIf="c.hasConflict" class="badge bg-danger" [title]="c.conflictDetails.join(' | ')">
+                            Overlap
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <ng-container *ngFor="let c of capacity">
+                    <div *ngIf="c.hasConflict" class="border-top px-3 py-2 small text-danger">
+                      <strong>{{ c.machineName }}:</strong>
+                      <div *ngFor="let d of c.conflictDetails">{{ d }}</div>
+                    </div>
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                  <strong><i class="bi bi-box-seam me-1"></i>BOM Rollup (thread demand vs on-hand)</strong>
+                  <span *ngIf="bomShortfall() > 0" class="badge bg-warning text-dark">
+                    Total shortfall: {{ bomShortfall() | number:'1.0-2' }}
+                  </span>
+                </div>
+                <div class="card-body p-0">
+                  <div *ngIf="!bom.length && !items.length" class="text-muted small p-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Add plan items above first, then thread demand will compute automatically.
+                  </div>
+                  <div *ngIf="!bom.length && items.length" class="text-warning small p-3">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <strong>{{ items.length }} item(s) added</strong> but no thread demand was computed.
+                    <div class="mt-1 text-muted">
+                      Likely cause: one or more of these items' <strong>Designs</strong>
+                      have no <em>Component Materials</em> or <em>Thread Usage</em>
+                      configured. Open
+                      <em>Designs &amp; Patterns → Design Costing</em>,
+                      pick the design, and add its components + thread usage —
+                      then come back and reload this plan.
+                    </div>
+                  </div>
+                  <table *ngIf="bom.length" class="table table-sm mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th class="text-end">Required</th>
+                        <th class="text-end">On Hand</th>
+                        <th class="text-end">Shortfall</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let r of bom" [class.table-warning]="r.shortfall > 0">
+                        <td>{{ r.code }}</td>
+                        <td>{{ r.name }} <span class="text-muted small">{{ r.color }}</span></td>
+                        <td class="text-end">{{ r.requiredQty | number:'1.0-2' }} {{ r.unit }}</td>
+                        <td class="text-end">{{ r.onHand | number:'1.0-2' }}</td>
+                        <td class="text-end fw-semibold"
+                            [class.text-danger]="r.shortfall > 0">
+                          {{ r.shortfall | number:'1.0-2' }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <!-- Sprint-4: Audit Timeline. Newest-first list of every state-
+             changing action on this plan. Hidden in create mode. Empty
+             state when the plan was created before the audit table
+             existed; that's expected for legacy rows. -->
+        <div *ngIf="modalMode === 'edit'" class="card mb-3">
+          <div class="card-header bg-light py-1 d-flex align-items-center">
+            <strong><i class="bi bi-clock-history me-1"></i>Audit Timeline</strong>
+            <small class="text-muted ms-2" *ngIf="!auditLoading">{{ auditLog.length }} entr{{ auditLog.length === 1 ? 'y' : 'ies' }}</small>
+            <span *ngIf="auditLoading"
+                  class="spinner-border spinner-border-sm ms-2 text-muted"
+                  role="status"></span>
+          </div>
+          <div class="card-body py-2">
+            <div *ngIf="!auditLoading && auditLog.length === 0"
+                 class="text-muted small text-center py-2">
+              No audit history yet — this plan pre-dates the audit log, or no state changes have been recorded.
+            </div>
+            <ul *ngIf="auditLog.length" class="pp-audit-timeline list-unstyled mb-0">
+              <li *ngFor="let a of auditLog" class="d-flex align-items-start py-1">
+                <span class="badge me-2 pp-audit-pill"
+                      [ngClass]="auditPill(a.action).cls">
+                  <i [class]="'bi ' + auditPill(a.action).icon + ' me-1'"></i>{{ auditPill(a.action).label }}
+                </span>
+                <div class="flex-grow-1 small">
+                  <div>
+                    <span *ngIf="a.oldValue || a.newValue" class="me-1">
+                      <span *ngIf="a.oldValue" class="text-muted text-decoration-line-through me-1">{{ a.oldValue }}</span>
+                      <i *ngIf="a.oldValue && a.newValue" class="bi bi-arrow-right text-muted mx-1"></i>
+                      <span *ngIf="a.newValue" class="fw-semibold">{{ a.newValue }}</span>
+                    </span>
+                    <span *ngIf="a.detail" class="text-muted">{{ a.detail }}</span>
+                  </div>
+                  <div class="text-muted">
+                    <i class="bi bi-person me-1"></i>{{ a.changedByName || 'system' }}
+                    <i class="bi bi-clock ms-2 me-1"></i>{{ a.changedDateText }}
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer bg-light py-2">
+        <button class="btn btn-light btn-sm" (click)="closeEditor()">Close</button>
+        <button *ngIf="current.id && current.status === 'DRAFT'"
+                class="btn btn-success btn-sm" (click)="approve()"
+                [disabled]="!items.length || capacityOver()">
+          <i class="bi bi-check2-circle me-1"></i>Approve & Generate Work Orders
+        </button>
+        <button *ngIf="current.status === 'APPROVED' || current.status === 'IN_PROGRESS'"
+                class="btn btn-outline-success btn-sm" (click)="close()">
+          <i class="bi bi-archive me-1"></i>Mark Closed
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

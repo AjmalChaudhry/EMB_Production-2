@@ -1,0 +1,164 @@
+﻿@model EMB_Production.Models.Gen_Components
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Delete Component";
+}
+
+<style>
+    .detail-card {
+        background-color: #fff;
+        border-left: 5px solid #dc3545;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-top: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .details-header {
+        font-size: 1.25rem;
+        font-weight: bold;
+        background: #dc3545;
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 6px 6px 0 0;
+        margin: -2rem -2rem 1.5rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #2c3e50;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        color: #495057;
+        word-break: break-word;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <div class="alert alert-warning shadow-sm rounded">
+        <h4 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Confirm Delete</h4>
+        <p>Are you sure you want to delete this component? This action cannot be undone.</p>
+    </div>
+
+    <div class="detail-card">
+        <div class="details-header">Component Information</div>
+
+        <div class="row gy-4">
+            <!-- Branch -->
+            <div class="col-md-3">
+                <div class="detail-label">Branch</div>
+                <div class="detail-value">
+                    @(Model.Branches != null ? Model.Branches.Name : "(none)")
+                </div>
+            </div>
+
+            <!-- Design -->
+            <div class="col-md-3">
+                <div class="detail-label">Design</div>
+                <div class="detail-value">
+                    @(Model.Gen_Design != null ? Model.Gen_Design.CollectionName : "(none)")
+                </div>
+            </div>
+
+            <!-- Created Date -->
+            <div class="col-md-3">
+                <div class="detail-label">Created Date</div>
+                <div class="detail-value">
+                    @(Model.CreatedDate.HasValue
+                        ? Model.CreatedDate.Value.ToString("yyyy-MM-dd")
+                        : "(none)")
+                </div>
+            </div>
+
+            <!-- Scalar Fields -->
+            @foreach (var prop in ViewData.ModelMetadata.Properties
+                     .Where(p => p.ShowForDisplay &&
+                                 !new[] { "Id", "Branches", "Gen_Design", "Gen_JobOrders" }
+                                 .Contains(p.PropertyName)))
+            {
+                <div class="col-md-3">
+                    <div class="detail-label">@prop.GetDisplayName()</div>
+                    <div class="detail-value">
+                        @{
+                            var val = prop.Model;
+                            if (val is DateTime dt)
+                            {
+                                @dt.ToString("yyyy-MM-dd HH:mm:ss")
+                            }
+                            else
+                            {
+                                @(val != null ? val.ToString() : "(none)")
+                            }
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Job Orders -->
+            <div class="col-md-3">
+                <div class="detail-label">Job Orders</div>
+                <div class="detail-value">
+                    @if (Model.Gen_JobOrders != null && Model.Gen_JobOrders.Any())
+                    {
+                        <ul class="mb-0 ps-3">
+                            @foreach (var job in Model.Gen_JobOrders.OrderBy(j => j.Id))
+                            {
+                                <li>ID: @job.Id, Code: @job.Code</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <em>(no job orders)</em>
+                    }
+                </div>
+            </div>
+
+            <!-- Thread Usage section removed — see Gen_ComponentMaterials
+                 for unified material BOM (threads + fabrics + accessories). -->
+            <div class="col-md-3">
+                <div class="detail-label">Materials</div>
+                <div class="detail-value">
+                    @if (Model.Gen_ComponentMaterials != null && Model.Gen_ComponentMaterials.Any())
+                    {
+                        <ul class="mb-0 ps-3">
+                            @foreach (var cm in Model.Gen_ComponentMaterials.OrderBy(t => t.Id))
+                            {
+                                <li>RawItemId: @cm.RawItemId, Qty/Unit: @cm.QtyPerUnit</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <em>(no materials)</em>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @using (Html.BeginForm())
+        {
+            @Html.AntiForgeryToken()
+            <div class="mt-4 d-flex justify-content-end">
+                <input type="submit" value="Confirm Delete" class="btn btn-danger me-3" />
+                @Html.ActionLink("Cancel", "Index", null, new { @class = "btn btn-outline-secondary" })
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('.detail-value').hover(
+                function () { $(this).addClass('bg-light rounded'); },
+                function () { $(this).removeClass('bg-light rounded'); }
+            );
+        });
+    </script>
+}

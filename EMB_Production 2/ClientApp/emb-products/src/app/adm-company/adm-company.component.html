@@ -1,0 +1,548 @@
+<!--<div class="dashboard-content">-->
+<div class="dashboard-card p-3 shadow-sm rounded bg-white">
+  <!-- Header Toolbar -->
+  <div class="dashboard-card-header d-flex align-items-center flex-wrap">
+    <!-- Left: Title -->
+    <h3 class="mb-0 text-primary fw-bold">
+      <i class="bi bi-buildings me-2"></i> Companies
+    </h3>
+
+    <!-- Right: Toolbar -->
+    <div class="d-flex align-items-center gap-2 ms-auto flex-wrap">
+      <!-- Add Company -->
+      <button type="button" class="btn btn-success btn-sm" (click)="openFormModal()" title="Add a new company">
+        <i class="bi bi-plus-circle me-1"></i> Add
+      </button>
+
+      <!-- Search Input with Buttons -->
+      <div class="input-group input-group-sm" style="width: 220px;">
+        <input type="text"
+               class="form-control"
+               [(ngModel)]="search"
+               name="search"
+               (keyup.enter)="onSearch()"
+               placeholder="Search companies..." />
+        <button class="btn btn-outline-primary" type="button" (click)="onSearch()" title="Search">
+          <i class="bi bi-search"></i>
+        </button>
+        <button class="btn btn-outline-secondary" type="button" (click)="clearSearch()" title="Clear search">
+          <i class="bi bi-x-circle"></i>
+        </button>
+      </div>
+
+      <!-- Export & Print -->
+      <button type="button" class="btn btn-success btn-sm" (click)="exportExcel()" title="Export to Excel">
+        <i class="bi bi-file-earmark-excel"></i>
+      </button>
+      <button type="button" class="btn btn-danger btn-sm" (click)="exportPdf()" title="Export to PDF">
+        <i class="bi bi-file-earmark-pdf"></i>
+      </button>
+      <button type="button" class="btn btn-dark btn-sm" (click)="printTable()" title="Print table">
+        <i class="bi bi-printer"></i>
+      </button>
+    </div>
+  </div>
+
+  <hr class="mt-3 mb-2" />
+
+  <!-- Sprint-3: bulk action strip. -->
+  <div *ngIf="selectedIds.size > 0"
+       class="alert alert-info d-flex flex-wrap align-items-center gap-2 py-2 mb-2"
+       role="status">
+    <span class="me-2"><strong>{{ selectedIds.size }}</strong> selected</span>
+    <button class="btn btn-sm btn-success" (click)="bulkActivate()" [disabled]="bulkBusy">
+      <i class="bi bi-check-circle me-1"></i>Activate
+    </button>
+    <button class="btn btn-sm btn-secondary" (click)="bulkDeactivate()" [disabled]="bulkBusy">
+      <i class="bi bi-pause-circle me-1"></i>Deactivate
+    </button>
+    <button class="btn btn-sm btn-outline-danger" (click)="bulkDeleteRows()" [disabled]="bulkBusy">
+      <i class="bi bi-trash me-1"></i>Delete
+    </button>
+    <button class="btn btn-sm btn-light ms-auto" (click)="clearSelection()" [disabled]="bulkBusy">
+      Clear
+    </button>
+  </div>
+
+  <!-- Company Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover table-sm">
+      <thead class="table-light">
+        <tr>
+          <th class="text-center" style="width:30px;">
+            <input type="checkbox" class="form-check-input"
+                   [checked]="allVisibleSelected()"
+                   (change)="toggleSelectAll()" />
+          </th>
+          <th>Logo</th>
+          <th>Company Name</th>
+          <th>Nick Name</th>
+          <th>Email</th>
+          <th>Contact</th>
+          <th>Address</th>
+          <th>Approval</th>
+          <th>Status</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of companies">
+          <td class="text-center">
+            <input type="checkbox" class="form-check-input"
+                   [checked]="isSelected(c.companyID)"
+                   (change)="toggleSelect(c.companyID)" />
+          </td>
+          <td>
+            <img *ngIf="c.logoPath" [src]="c.logoPath" class="img-thumbnail" width="50">
+          </td>
+          <td>{{ c.companyName || '-' }}</td>
+          <td>{{ c.nickName || '-' }}</td>
+          <td>{{ c.email || '-' }}</td>
+          <td>{{ c.contactNumber || '-' }}</td>
+          <td>{{ c.address || '-' }}</td>
+          <td>{{ c.approval || 'Pending' }}</td>
+          <td [ngClass]="{'text-danger': c.deleted}">{{ c.deleted ? 'Deleted' : 'Active' }}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-outline-info me-1" (click)="openDetail(c)">View</button>
+            <button class="btn btn-sm btn-primary" (click)="openFormModal(c)">Edit</button>
+            <button class="btn btn-sm btn-danger" (click)="confirmDelete(c)">Delete</button>
+          </td>
+        </tr>
+        <tr *ngIf="companies.length === 0">
+          <td colspan="9" class="text-center text-muted py-3">No companies found.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <nav *ngIf="totalPages > 1" aria-label="Company pagination">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" [class.disabled]="page === 1">
+          <a class="page-link" (click)="onPageChange(page - 1)">Previous</a>
+        </li>
+        <li class="page-item" *ngFor="let pg of paginationArray" [class.active]="pg === page">
+          <a class="page-link" (click)="onPageChange(pg)">{{ pg }}</a>
+        </li>
+        <li class="page-item" [class.disabled]="page === totalPages">
+          <a class="page-link" (click)="onPageChange(page + 1)">Next</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+
+</div>
+
+<!-- Add / Edit Company Modal -->
+<div class="content-wrapper">
+  <!-- your main content area -->
+  <div class="modal fade" #companyFormModal tabindex="-1" aria-labelledby="companyFormLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-scrollable modal-xl" style=" position: absolute; left: 250px; right:10px; margin: auto; max-width: calc(100% - 260px);">
+      <!-- horizontally centered -->
+      <div class="modal-content border-0 shadow-lg rounded-3">
+
+        <!-- Header -->
+        <div class="modal-header text-white py-2 px-3" style="background: linear-gradient(90deg, #198754, #28a745);">
+          <h5 class="modal-title mb-0">{{ editingCompany ? 'Edit Company' : 'Create Company' }}</h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeFormModal()"></button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body" style="background: #f8f9fa; padding: 1rem;">
+          <form [formGroup]="form" (ngSubmit)="saveCompany()">
+
+            <!-- General Info -->
+            <div class="row g-3 mb-2 bg-white rounded shadow-sm p-2 m-0">
+              <div class="col-md-3">
+                <label class="form-label mb-1">Company Name *</label>
+                <input type="text" class="form-control form-control-sm" formControlName="companyName" required>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label mb-1">Nick Name</label>
+                <input type="text" class="form-control form-control-sm" formControlName="nickName">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label mb-1">Email</label>
+                <input type="email" class="form-control form-control-sm" formControlName="email">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label mb-1">Contact Number</label>
+                <input type="text" class="form-control form-control-sm" formControlName="contactNumber">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label mb-1">Owner Name</label>
+                <input type="text" class="form-control form-control-sm" formControlName="ownerName">
+              </div>
+            </div>
+
+            <!-- Address + License + NTN -->
+            <div class="row g-2 mb-2 bg-white rounded shadow-sm p-2 m-0">
+              <div class="col-md-4">
+                <label class="form-label mb-1">Address</label>
+                <textarea class="form-control form-control-sm" rows="2" formControlName="address"></textarea>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label mb-1">License Key</label>
+                <input type="text" class="form-control form-control-sm" formControlName="licenseKey">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label mb-1">NTN</label>
+                <input type="text" class="form-control form-control-sm" formControlName="ntn">
+              </div>
+            </div>
+
+            <!-- STRN + Password + Culture + Calendar + Theme -->
+            <div class="row g-2 mb-2 bg-white rounded shadow-sm p-2 m-0">
+              <div class="col-md-4">
+                <label class="form-label mb-1">STRN</label>
+                <input type="text" class="form-control form-control-sm" formControlName="strn">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label mb-1">Master Password</label>
+                <input type="password" class="form-control form-control-sm" formControlName="masterPassword" autocomplete="current-password">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label mb-1">Culture Code</label>
+                <input type="text" class="form-control form-control-sm" formControlName="cultureCode">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label mb-1">Calendar Code</label>
+                <input type="text" class="form-control form-control-sm" formControlName="calendarCode">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label mb-1">Theme</label>
+                <select class="form-select form-select-sm" formControlName="theme">
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Currency & Points -->
+            <div class="row g-2 mb-2 bg-white rounded shadow-sm p-2 m-0">
+              <div class="col-md-3">
+                <label class="form-label mb-1">Currency Default</label>
+                <input type="text" class="form-control form-control-sm" formControlName="currencyDefault">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label mb-1">Decimals in Amount</label>
+                <input type="number" class="form-control form-control-sm" formControlName="decimalsInAmount">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label mb-1">Decimal Points</label>
+                <input type="number" class="form-control form-control-sm" formControlName="decimal_Points">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label mb-1">Period ID</label>
+                <input type="number" class="form-control form-control-sm" formControlName="periodId">
+              </div>
+            </div>
+
+            <!-- Approval status (string workflow field — Pending / Approved / Rejected) -->
+            <div class="row g-2 mb-2 bg-white rounded shadow-sm p-2 m-0 align-items-center">
+              <div class="col-md-3">
+                <label class="form-label small mb-1 fw-semibold">Approval Status</label>
+                <select class="form-select form-select-sm" formControlName="approval">
+                  <option value="Pending">Pending</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </div>
+              <div class="col-md-9">
+                <span class="badge"
+                      [ngClass]="{
+                        'bg-warning text-dark': form.get('approval')?.value === 'Pending',
+                        'bg-success':           form.get('approval')?.value === 'Approved',
+                        'bg-danger':            form.get('approval')?.value === 'Rejected'
+                      }">
+                  <i class="bi"
+                     [ngClass]="{
+                       'bi-hourglass-split': form.get('approval')?.value === 'Pending',
+                       'bi-check-circle':    form.get('approval')?.value === 'Approved',
+                       'bi-x-circle':        form.get('approval')?.value === 'Rejected'
+                     }"></i>
+                  {{ form.get('approval')?.value || 'Pending' }}
+                </span>
+                <small class="text-muted ms-2">
+                  Pending = newly created · Approved = ready for use · Rejected = blocked from logins
+                </small>
+              </div>
+            </div>
+
+            <!-- Flags -->
+            <div class="row g-2 mb-2 bg-white rounded shadow-sm p-2 m-0 align-items-center">
+              <div class="col-md-2 form-check mt-2">
+                <input type="checkbox" class="form-check-input" formControlName="showCurrencyName" id="showCurrency">
+                <label class="form-check-label" for="showCurrency">Show Currency</label>
+              </div>
+              <div class="col-md-2 form-check mt-2">
+                <input type="checkbox" class="form-check-input" formControlName="taxEnabled" id="taxEnabled">
+                <label class="form-check-label" for="taxEnabled">Tax Enabled</label>
+              </div>
+              <div class="col-md-2 form-check mt-2">
+                <input type="checkbox" class="form-check-input" formControlName="stopLogin" id="stopLogin">
+                <label class="form-check-label" for="stopLogin">Stop Login</label>
+              </div>
+              <div class="col-md-2 form-check mt-2">
+                <input type="checkbox" class="form-check-input" formControlName="active" id="activeCheck">
+                <label class="form-check-label" for="activeCheck">Active</label>
+              </div>
+              <div class="col-md-2 form-check mt-2">
+                <input type="checkbox" class="form-check-input" formControlName="allowExtraP" id="extraPCheck">
+                <label class="form-check-label" for="extraPCheck">Allow Extra P</label>
+              </div>
+              <div class="col-md-2 form-check mt-2">
+                <input type="checkbox" class="form-check-input" formControlName="deleted" id="deletedCheck">
+                <label class="form-check-label text-danger" for="deletedCheck">Deleted</label>
+              </div>
+            </div>
+
+            <!-- Logo + Buttons -->
+            <div class="row g-2 bg-white rounded shadow-sm p-2 m-0 align-items-center">
+              <div class="col-md-6 d-flex align-items-center">
+                <label class="form-label mb-0 me-2 fw-semibold">Logo:</label>
+                <input type="file" class="form-control form-control-sm w-auto" (change)="onFileSelected($event)">
+                <img *ngIf="logoPreview" [src]="logoPreview" class="img-thumbnail ms-3 shadow-sm" style="width: 80px; height: auto;">
+              </div>
+
+              <div class="col-md-6 text-end">
+                <button type="submit" class="btn btn-sm btn-success shadow-sm me-2 px-3">
+                  <i class="bi bi-check-circle me-1"></i>
+                  {{ editingCompany ? 'Update' : 'Create' }}
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary shadow-sm" (click)="closeFormModal()">
+                  <i class="bi bi-x-circle me-1"></i> Cancel
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Company Detail Modal -->
+<!-- ================= COMPANY DETAIL MODAL ================= -->
+<div class="modal fade" #companyDetailModal tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow-lg">
+
+      <!-- Header -->
+      <div class="modal-header text-white py-2 px-3"
+           style="background: linear-gradient(90deg, #0d6efd, #0a58ca);">
+        <h5 class="modal-title mb-0">Company Details</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeDetail()"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body" *ngIf="selectedCompany">
+
+        <!-- =============== BASIC INFO =============== -->
+        <h6 class="fw-bold text-secondary mb-2">Basic Information</h6>
+        <div class="row g-3">
+
+          <div class="col-md-4">
+            <strong>Company ID:</strong> {{ selectedCompany.companyID }}
+          </div>
+
+          <div class="col-md-4">
+            <strong>Company Name:</strong> {{ selectedCompany.companyName }}
+          </div>
+
+          <div class="col-md-4">
+            <strong>Nick Name:</strong> {{ selectedCompany.nickName || '-' }}
+          </div>
+
+          <div class="col-md-4">
+            <strong>Contact Number:</strong> {{ selectedCompany.contactNumber || '-' }}
+          </div>
+
+          <div class="col-md-4">
+            <strong>Email:</strong> {{ selectedCompany.email || '-' }}
+          </div>
+
+          <div class="col-md-4">
+            <strong>Address:</strong> {{ selectedCompany.address || '-' }}
+          </div>
+
+        </div>
+        <hr />
+
+
+        <!-- =============== STATUS & FLAGS =============== -->
+        <h6 class="fw-bold text-secondary mb-2">Status & Flags</h6>
+        <div class="row g-3">
+
+          <div class="col-md-3">
+            <strong>Approval:</strong> {{ selectedCompany.approval }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Active:</strong> {{ selectedCompany.active ? 'Yes' : 'No' }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Allow Extra P:</strong> {{ selectedCompany.allowExtraP ? 'Yes' : 'No' }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Tax Enabled:</strong> {{ selectedCompany.taxEnabled ? 'Yes' : 'No' }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Stop Login:</strong> {{ selectedCompany.stopLogin ? 'Yes' : 'No' }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Deleted:</strong> {{ selectedCompany.deleted ? 'Yes' : 'No' }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Show Currency Name:</strong> {{ selectedCompany.showCurrencyName ? 'Yes' : 'No' }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Operating User ID:</strong> {{ selectedCompany.operatingUserID }}
+          </div>
+
+        </div>
+        <hr />
+
+
+        <!-- =============== LICENSING =============== -->
+        <h6 class="fw-bold text-secondary mb-2">Licensing & Identifiers</h6>
+        <div class="row g-3">
+
+          <div class="col-md-3">
+            <strong>License Key:</strong> {{ selectedCompany.licenseKey }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>NTN:</strong> {{ selectedCompany.ntn }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>STRN:</strong> {{ selectedCompany.strn }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Master Password:</strong> {{ selectedCompany.masterPassword }}
+          </div>
+
+        </div>
+        <hr />
+
+
+        <!-- =============== SETTINGS =============== -->
+        <h6 class="fw-bold text-secondary mb-2">Settings</h6>
+        <div class="row g-3">
+
+          <div class="col-md-3">
+            <strong>Culture Code:</strong> {{ selectedCompany.cultureCode }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Calendar Code:</strong> {{ selectedCompany.calendarCode }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Theme:</strong> {{ selectedCompany.theme }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Period ID:</strong> {{ selectedCompany.periodId }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Currency Default:</strong> {{ selectedCompany.currencyDefault }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Decimals In Amount:</strong> {{ selectedCompany.decimalsInAmount }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Decimal Points:</strong> {{ selectedCompany.decimal_Points }}
+          </div>
+
+          <div class="col-md-3">
+            <strong>Language:</strong> {{ selectedCompany.language }}
+          </div>
+
+        </div>
+        <hr />
+
+
+        <!-- =============== AUDIT INFO =============== -->
+        <h6 class="fw-bold text-secondary mb-2">Audit Information</h6>
+        <div class="row g-3">
+
+          <div class="col-md-4">
+            <strong>Created By:</strong> {{ selectedCompany.createdBy }}
+          </div>
+
+          <div class="col-md-4">
+            <strong>Created Date:</strong> {{ selectedCompany.createdDate | date:'medium' }}
+          </div>
+
+          <div class="col-md-4">
+            <strong>Record Time:</strong> {{ selectedCompany.recordTime | date:'medium' }}
+          </div>
+
+          <div class="col-md-4">
+            <strong>Updated By:</strong> {{ selectedCompany.updatedBy }}
+          </div>
+
+          <div class="col-md-4">
+            <strong>Updated Date:</strong> {{ selectedCompany.updatedDate | date:'medium' }}
+          </div>
+
+          <div class="col-md-4 d-flex align-items-center">
+            <strong class="me-2">Logo:</strong>
+            <img *ngIf="selectedCompany.logo"
+                 [src]="selectedCompany.logo"
+                 width="100"
+                 class="rounded shadow-sm border" />
+          </div>
+
+        </div>
+
+        <hr />
+
+        <!-- Close Button -->
+        <div class="text-end mt-2">
+          <button class="btn btn-secondary btn-sm" (click)="closeDetail()">Close</button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- =======================
+     Delete Modal
+======================== -->
+<div class="modal fade" #companyDeleteModal tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header text-white py-2 px-3"
+           style="background: linear-gradient(90deg, #dc3545, #b02a37);">
+        <h5 class="modal-title mb-0">Confirm Delete</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeDeleteModal()"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete <strong>{{ selectedCompany?.companyName }}</strong>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDeleteModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="deleteCompany()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+

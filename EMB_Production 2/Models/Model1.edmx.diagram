@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="d6bb04d8c1414aa5b1d5d46f417d7b49" Name="Diagram1">
+        <EntityTypeShape EntityType="EMB_ProductionModel.Adm_CompanyProfile" Width="1.5" PointX="0.75" PointY="45.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Adm_Departments" Width="1.5" PointX="5.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Adm_Roles" Width="1.5" PointX="0.75" PointY="65" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Adm_Users" Width="1.5" PointX="3" PointY="51.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Branches" Width="1.5" PointX="0.75" PointY="54.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.DailyProduction" Width="1.5" PointX="21" PointY="62.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.DailyProductionStops" Width="1.5" PointX="23.25" PointY="68.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.DesignCosting" Width="1.5" PointX="21.75" PointY="56.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Dispatch" Width="1.5" PointX="13.5" PointY="56.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_Brands" Width="1.5" PointX="5.25" PointY="56.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_Catagories" Width="1.5" PointX="7.5" PointY="50.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_Design" Width="1.5" PointX="16.5" PointY="56.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_FinishedStocks" Width="1.5" PointX="19" PointY="51.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_MachineParameters" Width="1.5" PointX="9.75" PointY="64" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_Machines" Width="1.5" PointX="7.5" PointY="62.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_Products" Width="1.5" PointX="15.75" PointY="47.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_RawItems" Width="1.5" PointX="3" PointY="6.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_ServiceRates" Width="1.5" PointX="13.5" PointY="50.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_ServiceType" Width="1.5" PointX="8.25" PointY="57" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_StockLedger" Width="1.5" PointX="24" PointY="50.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_Suppliers" Width="1.5" PointX="3" PointY="73.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_TheServices" Width="1.5" PointX="16.625" PointY="65.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_Threads" Width="1.5" PointX="5.25" PointY="62.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_Units" Width="1.5" PointX="0.75" PointY="3.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Hr_Customers" Width="1.5" PointX="11.25" PointY="55.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.JobTrackingHistory" Width="1.5" PointX="24.125" PointY="62.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Purchase" Width="1.5" PointX="15.75" PointY="42.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.PurchaseItems" Width="1.5" PointX="18" PointY="46.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.WorkOrderItems" Width="1.5" PointX="18.75" PointY="63" IsExpanded="true" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.WorkOrders" Width="1.5" PointX="13.5" PointY="63.625" IsExpanded="true" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Adm_Users_Adm_CompanyProfile" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_AdmUsers_Roles" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Adm_Users_Branches" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Customers_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_DailyProduction_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_DailyProduction_Operator" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_DailyProduction_UpdatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_DesignCosting_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_DesignCosting_UpdatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Dispatch_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Dispatch_UpdatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Brands_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Brands_UpdatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Design_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Design_UpdatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_MachineParameters_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_MachineParameters_UpdatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Machines_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_ServiceType_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_ServiceType_UpdatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_StockLedger_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_GenThreads_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_GenThreads_UpdatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_JobTrackingHistory_CreatedBy_Adm_Users" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_JobTrackingHistory_UpdatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_JobTrackingHistory_UpdatedBy_Adm_Users" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_JobTrackingHistory_Users" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Products_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Products_UpdatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_ServiceRates_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrders_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrders_UpdatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Customers_Branch" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_FinishedStock_Branch" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Brands_Branch" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Catagories_Branches" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Design_Branch" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Design_Branches" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Machines_Branch" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Machines_Branches" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Products_Branches" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_ServiceRates_Branches" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_ServiceType_Branch" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_ServiceType_Branches" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_StockLedger_Branch" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_TheServices_Branches" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Threads_Branches" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_GenSuppliers_Branches" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_GenThreads_Branch" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Hr_Customers_Branches" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_JobTrackingHistory_Branches" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Products_Branch" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_ServiceRates_Branch" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrderItems_Branch" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_DailyProd_Machine" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_DailyProd_WorkOrderItem" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_DailyProduction_Machine" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_DailyProduction_WorkOrderItem" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_DailyProductionStops_Production" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_ProdStops_DailyProduction" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_ProductionStops_Daily" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_DesignCosting_Design" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Dispatch_Customer" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Catagories_Gen_Brands" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Machines_Brand" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Machines_Gen_Brands" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Products_Gen_Catagories" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Products_Category" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Design_Customer" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Design_Product" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrderItems_Design" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_FinishedStock_Product" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_MachineParameters_Gen_Machines" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Machines_Gen_TheServices" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Machines_Service" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_TheServices_Machine" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrderItems_Machine" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_StockLedger_Product" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PurchaseItems_Gen_Products" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrderItems_Product" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrders_Product" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_RawItems_Unit" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_ServiceRates_Gen_TheServices" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_ServiceRates_Customer" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_ServiceRates_Customers" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_ServiceRates_Service" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_TheServices_Gen_ServiceType" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_TheServices_ServiceType" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_GenThreads_GenSuppliers" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_GenThreads_Supplier" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrders_Customer" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_JobTrackingHistory_WorkOrderItem" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PurchaseItems_Purchase" ManuallyRouted="false" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrderItems_WorkOrder" ManuallyRouted="false" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.MachineCostProfile" Width="1.5" PointX="9.75" PointY="68.625" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_MachineCostProfile_Gen_Machines" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_GenDesign_Machine" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_ServiceRates_ServiceType" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_JobOrders" Width="1.5" PointX="29.75" PointY="56.75" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_JobOrders_CreatedBy" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_JobOrders_UpdatedBy" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_JobOrders_Branches" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_JobOrders_Branch" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_JobOrders_Design" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_BOM" Width="1.5" PointX="30" PointY="51.875" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_BOM_Gen_Design" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_ComponentMaterials" Width="1.5" PointX="24" PointY="27.75" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_ComponentMaterials_Gen_RawItems" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_ComponentMaterials_Gen_Units" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrders_Branches" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrders_Design" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrders_JobOrders" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrders_FinishedProduct" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrderItems_JobOrders" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.StockAdjustment" Width="1.5" PointX="5.25" PointY="49.75" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_StockAdjustment_CreatedBy" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_StockAdjustment_UpdatedBy" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_StockAdjustment_Branch" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.QC_InspectionItems" Width="1.5" PointX="29.25" PointY="66" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_QCItems_Production" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_QCItems_WorkOrderItem" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.QC_Inspection" Width="1.5" PointX="32.25" PointY="59.25" IsExpanded="true" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_QC_Inspection_Inspector" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_QC_Inspection_PostedBy" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_QCInspection_CreatedBy" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_QCInspection_Inspector" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_QC_Inspection_DailyProduction" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_QC_Inspection_WorkOrderItems" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_QCInspection_WorkOrderItem" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_QCItems_Header" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_QC_Design" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_QC_Product" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_QC_WorkOrder" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_Stocks" Width="1.5" PointX="27" PointY="47.375" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Stocks_CreatedBy" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Stocks_UpdatedBy" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Stocks_Branch" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Stocks_Product" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_Store" Width="1.5" PointX="5.25" PointY="32.25" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Store_Branches" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Store_RawItems" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_JobOrders_HrCustomers" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_JobOrderItems" Width="1.5" PointX="33" PointY="53.625" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_JobOrderItems_JobOrders" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_JobOrders_Product" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.DispatchItems" Width="1.5" PointX="19" PointY="57.125" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_DispatchItems_Dispatch" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_DispatchItems_Gen_Products" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_ServiceRates_Gen_Products" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_DesignCosting_Gen_Products" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_DesignFiles" Width="1.5" PointX="18.75" PointY="73.625" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_GenDesignFiles_Design" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_ComponentSpecs" Width="1.5" PointX="24" PointY="55.5" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Gen_Components" Width="1.5" PointX="21.75" PointY="49.875" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Components_CreatedBy" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Components_UpdatedBy" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Components_Branch" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Components_Branches" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_BOM_Gen_Components" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_ComponentMaterials_Gen_Components" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Components_Gen_Design" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_GenComponentSpecs_Component" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_JobOrderItems_Components" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_WorkOrderItems_Components" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Gen_Threads_RawItem" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.Adm_Designations" Width="1.5" PointX="5.375" PointY="3.75" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.ExtraMaterialRequest" Width="1.5" PointX="25.75" PointY="68.25" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.ExtraMaterialRequestItems" Width="1.5" PointX="28" PointY="37.875" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_EMR_Branch" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_EMR_WorkOrder" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_EMRI_Header" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_EMRI_RawItem" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_EMRI_Thread" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.ProductionPlan" Width="1.5" PointX="3" PointY="44.875" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.ProductionPlanItems" Width="1.5" PointX="35" PointY="58.5" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PP_Branch" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PPI_Design" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PPI_JobOrder" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PPI_Machine" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PPI_Product" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PPI_Plan" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PPI_WorkOrder" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.PurchaseOrder" Width="1.5" PointX="7.75" PointY="71.625" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.PurchaseOrderItems" Width="1.5" PointX="10" PointY="38.5" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.PurchaseRequisition" Width="1.5" PointX="5.5" PointY="70.125" />
+        <EntityTypeShape EntityType="EMB_ProductionModel.PurchaseRequisitionItems" Width="1.5" PointX="7.75" PointY="37.5" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PO_Branch" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PR_Branch" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_POI_RawItem" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PRI_RawItem" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PO_Supplier" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PR_Supplier" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_POI_Unit" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PRI_Unit" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_Purchase_PO" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PurchaseItems_POItem" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PO_PR" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_POI_Header" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_POI_PRItem" />
+        <AssociationConnector Association="EMB_ProductionModel.FK_PRI_Header" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

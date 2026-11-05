@@ -1,0 +1,207 @@
+﻿@model EMB_Production.ViewModels.MachineParametersPageViewModel
+@using PagedList.Mvc;
+@using PagedList
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Machine Parameters";
+    var currentFilter = Request.QueryString["search"] ?? "";
+    var activeFilter = Request.QueryString["activeFilter"] ?? "";
+    bool showCreate = Model.ShowCreate;
+    bool showEdit = Model.ShowEdit;
+    int? editId = Model.EditId;
+}
+
+
+<div class="bg-primary text-white rounded p-2 mb-4 d-flex flex-wrap align-items-center">
+    <h4 class="mb-0">Machine Parameters</h4>
+    <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
+        <a class="btn btn-sm btn-light"
+           href="@Url.Action("Index", new { showCreate = true, search = Model.Search, activeFilter = Model.ActiveFilter })">
+            <i class="bi bi-plus-lg text-success me-1"></i>
+            <span class="text-success">Add</span>
+        </a>
+
+
+
+        @using (Html.BeginForm("Index", "Gen_MachineParameters", FormMethod.Get, new { @class = "d-flex align-items-center gap-1 mb-0" }))
+        {
+            @Html.TextBox("search", Model.Search, new
+            {
+              @class = "form-control form-control-sm",
+              placeholder = "Search head/frame…",
+              style = "width:140px;"
+            })
+            <select name="activeFilter" class="form-select form-select-sm" style="width:90px;">
+                <option value="">All</option>
+                <option value="Yes" @(Model.ActiveFilter == "Yes" ? "selected" : "")>Active</option>
+                <option value="No" @(Model.ActiveFilter == "No" ? "selected" : "")>Inactive</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-light" title="Go">
+                <i class="bi bi-search text-primary"></i>
+            </button>
+        }
+        <button type="button" class="btn btn-sm btn-light" title="Refresh" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise text-primary"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-light" title="Print" onclick="window.print()">
+            <i class="bi bi-printer text-secondary"></i>
+        </button>
+        <a class="btn btn-sm btn-light"
+           href="@Url.Action("ExportToExcel", new { search = Model.Search, activeFilter = Model.ActiveFilter })">
+            <i class="bi bi-file-earmark-spreadsheet text-success"></i> Excel
+        </a>
+        <a class="btn btn-sm btn-light"
+           href="@Url.Action("ExportToPdf", new { search = Model.Search, activeFilter = Model.ActiveFilter })">
+            <i class="bi bi-file-earmark-pdf text-danger"></i> PDF
+        </a>
+    </div>
+</div>
+
+
+@if (Model.ShowCreate)
+{
+    <div class="card mb-3 shadow-sm p-2 bg-light">
+       @using (Html.BeginForm("CreateFromIndex", "Gen_MachineParameters", FormMethod.Post, new { @class = "row gx-2 gy-1 align-items-end" }))
+        {
+            @Html.AntiForgeryToken()
+            <!-- first row -->
+            <div class="col-auto">
+                @Html.LabelFor(m => m.NewParam.MachineId, "Machine", new { @class = "form-label small" })
+                @Html.DropDownListFor(m => m.NewParam.MachineId, Model.MachineList, "-- select --",
+                    new { @class = "form-select form-select-sm", style = "width:250px" })
+            </div>
+            <div class="col-auto">
+                @Html.LabelFor(m => m.NewParam.HeadToHead, new { @class = "form-label small" })
+                @Html.TextBoxFor(m => m.NewParam.HeadToHead, new { @class = "form-control form-control-sm", style = "width:250px" })
+            </div>
+            <div class="col-auto">
+                @Html.LabelFor(m => m.NewParam.FrameHeight, new { @class = "form-label small" })
+                @Html.TextBoxFor(m => m.NewParam.FrameHeight, new { @class = "form-control form-control-sm", style = "width:250px" })
+            </div>
+            
+            <div class="col-auto">
+                <label class="form-label small mb-2">Active</label>
+                <div class="form-check form-switch">
+                    @Html.CheckBox("NewParam.Active", Model.NewParam.Active.GetValueOrDefault(false), new { @class = "form-check-input" })
+                </div>
+            </div>
+            <div class="col-auto">
+                <label class="form-label small mb-2">Deleted</label>
+                <div class="form-check form-switch">
+                    @Html.CheckBox("NewParam.Deleted", Model.NewParam.Deleted.GetValueOrDefault(false), new { @class = "form-check-input" })
+                </div>
+            </div>
+            <div class="col-auto ms-auto d-flex gap-3">
+                <button type="submit" class="btn btn-success btn-sm small"><i class="bi bi-save"></i> Save</button>
+                <a href="@Url.Action("Index", new { showCreate=false, search=Model.Search, activeFilter=Model.ActiveFilter })"
+                   class="btn btn-outline-secondary btn-sm small"><i class="bi bi-x-circle"></i> Cancel</a>
+            </div>
+        }
+    </div>
+}
+
+@if (Model.ShowEdit)
+{
+    <div class="card mb-3 shadow-sm p-2 bg-light">
+       @using (Html.BeginForm("EditFromIndex", "Gen_MachineParameters", FormMethod.Post, new { @class = "row gx-2 gy-1 align-items-end" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.EditParam.Id)
+
+            <!-- first row -->
+            <div class="col-auto">
+                @Html.LabelFor(m => m.EditParam.MachineId, "Machine", new { @class = "form-label small" })
+                @Html.DropDownListFor(m => m.EditParam.MachineId, Model.MachineList, "-- select --",
+                    new { @class = "form-select form-select-sm", style = "width:250px" })
+            </div>
+            <div class="col-auto">
+                @Html.LabelFor(m => m.EditParam.HeadToHead, new { @class = "form-label small" })
+                @Html.TextBoxFor(m => m.EditParam.HeadToHead, new { @class = "form-control form-control-sm", style = "width:250px" })
+            </div>
+            <div class="col-auto">
+                @Html.LabelFor(m => m.EditParam.FrameHeight, new { @class = "form-label small" })
+                @Html.TextBoxFor(m => m.EditParam.FrameHeight, new { @class = "form-control form-control-sm", style = "width:250px" })
+            </div>
+
+            <!-- second row -->
+            <div class="col-auto">
+                <label class="form-label small mb-2">Active</label>
+                <div class="form-check form-switch">
+                    @Html.CheckBox("EditParam.Active", Model.EditParam.Active.GetValueOrDefault(false), new { @class = "form-check-input" })
+                </div>
+            </div>
+            <div class="col-auto">
+                <label class="form-label small mb-2">Deleted</label>
+                <div class="form-check form-switch">
+                    @Html.CheckBox("EditParam.Deleted", Model.EditParam.Deleted.GetValueOrDefault(false), new { @class = "form-check-input" })
+                </div>
+            </div>
+            <div class="col-auto ms-auto d-flex gap-3">
+                <button type="submit" class="btn btn-success btn-sm small"><i class="bi bi-save"></i> Update</button>
+                <a href="@Url.Action("Index", new { showEdit=false, search=Model.Search, activeFilter=Model.ActiveFilter })"
+                   class="btn btn-outline-secondary btn-sm small"><i class="bi bi-x-circle"></i> Cancel</a>
+            </div>
+        }
+    </div>
+}
+
+<div class="table-responsive shadow-sm rounded">
+    <table class="table table-striped table-hover align-middle small mb-0">
+        <thead class="table-secondary">
+            <tr>
+                <th>Machine</th>
+                <th>Head-to-Head</th>
+                <th>Frame Height</th>
+                <th class="text-center">Active</th>
+                <th class="text-center">Deleted</th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+           @foreach (var r in Model.Rows)
+            {
+                <tr>
+                    <td class="text-wrap">@r.MachineCode</td>
+                    <td class="text-wrap">@r.HeadToHead</td>
+                    <td class="text-wrap">@r.FrameHeight</td>
+                    <td class="text-center">
+                        <span class="badge @(r.Active?"bg-success":"bg-secondary")">
+                            @(r.Active?"Yes":"No")
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge @(r.Deleted?"bg-danger":"bg-secondary")">
+                            @(r.Deleted?"Yes":"No")
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <a class="btn btn-outline-primary btn-sm me-1"
+                           href="@Url.Action("Index","Gen_MachineParameters", new { showEdit=true, editId=r.Id, search=Model.Search, activeFilter=Model.ActiveFilter })">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a class="btn btn-outline-info btn-sm me-1"
+                           href="@Url.Action("Details","Gen_MachineParameters", new { id=r.Id })">
+                            <i class="bi bi-info-circle"></i>
+                        </a>
+                        <a class="btn btn-outline-danger btn-sm"
+                           href="@Url.Action("Delete","Gen_MachineParameters", new { id=r.Id })">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="d-flex justify-content-center mt-3">
+    @Html.PagedListPager(
+        Model.Rows,
+        page => Url.Action("Index", new { page, search = Model.Search, activeFilter = Model.ActiveFilter }),
+        new PagedListRenderOptions
+        {
+            UlElementClasses = new[] { "pagination" },
+            LiElementClasses = new[] { "page-item" }
+        })
+</div>

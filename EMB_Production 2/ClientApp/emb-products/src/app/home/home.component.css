@@ -1,0 +1,649 @@
+/* ===================================================
+   LANDING ROOT
+=================================================== */
+.landing-root {
+  min-height: 100vh;
+  background: #0b1437;
+  color: #e7e9f3;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+}
+
+/* ===================================================
+   HEADER
+=================================================== */
+.landing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 40px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(11, 20, 55, 0.88);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.01em;
+}
+
+.brand-icon {
+  color: #4f8cff;
+  font-size: 22px;
+}
+
+.brand-name-accent {
+  background: linear-gradient(90deg, #4f8cff, #9b6cff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+  .landing-nav a {
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.18s ease;
+  }
+
+    .landing-nav a:hover { color: #fff; }
+
+/* ===================================================
+   BUTTONS
+=================================================== */
+.btn-primary-lg {
+  background: linear-gradient(90deg, #4f8cff, #9b6cff);
+  color: #fff;
+  font-weight: 600;
+  padding: 12px 24px;
+  border: 0;
+  border-radius: 10px;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(79, 140, 255, 0.32);
+  transition: transform 0.15s ease, box-shadow 0.18s ease;
+}
+
+  .btn-primary-lg:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(79, 140, 255, 0.45);
+  }
+
+.btn-ghost-lg {
+  background: transparent;
+  color: #e7e9f3;
+  font-weight: 500;
+  padding: 12px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  font-size: 15px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+  .btn-ghost-lg:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #fff;
+  }
+
+/* ===================================================
+   HERO
+=================================================== */
+.hero {
+  padding: 70px 40px 50px;
+  position: relative;
+  background: radial-gradient(ellipse at top left, rgba(79, 140, 255, 0.22) 0%, transparent 50%),
+              radial-gradient(ellipse at bottom right, rgba(155, 108, 255, 0.18) 0%, transparent 50%);
+}
+
+.hero-grid {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.hero-eyebrow {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #b9bedc;
+  margin-bottom: 18px;
+}
+
+.hero-title {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  margin: 0 0 18px;
+}
+
+.hero-accent {
+  background: linear-gradient(90deg, #4f8cff 0%, #9b6cff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-sub {
+  font-size: 16.5px;
+  color: #b9bedc;
+  line-height: 1.55;
+  margin-bottom: 26px;
+  max-width: 520px;
+}
+
+.hero-ctas {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.hero-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.trust-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  min-width: 170px;
+}
+
+  .trust-item i {
+    color: #4f8cff;
+    font-size: 18px;
+    margin-top: 2px;
+  }
+
+  .trust-item strong {
+    display: block;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .trust-item span {
+    color: #8c92b3;
+    font-size: 12px;
+  }
+
+/* ===================================================
+   HERO MOCK DASHBOARD
+=================================================== */
+.hero-mock {
+  display: flex;
+  justify-content: center;
+}
+
+.mock-window {
+  position: relative;       /* anchors .mock-sample-watermark */
+  width: 100%;
+  max-width: 520px;
+  background: #131c45;
+  overflow: hidden;         /* clips the rotated watermark */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  transform: perspective(1400px) rotateY(-6deg) rotateX(2deg);
+}
+
+.mock-titlebar {
+  background: #0f1638;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mock-titlebar .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.mock-titlebar .red    { background: #ff6058; }
+.mock-titlebar .amber  { background: #ffbe2e; }
+.mock-titlebar .green  { background: #28c941; }
+
+.mock-title {
+  margin-left: 10px;
+  font-size: 12px;
+  color: #8c92b3;
+}
+
+/* Sample-preview pill in the mock dashboard titlebar. Previously a
+   small yellow pill that visitors missed — now red, larger, and with
+   a warning glyph. Paired with the diagonal SAMPLE watermark below. */
+.mock-preview-badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  background: #d63b3b;
+  border: 1px solid #ff6b6b;
+  border-radius: 6px;
+  padding: 5px 10px;
+  box-shadow: 0 2px 8px rgba(214, 59, 59, 0.45);
+  animation: mock-pulse 2.8s ease-in-out infinite;
+}
+.mock-preview-badge i {
+  font-size: 13px;
+}
+
+@keyframes mock-pulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(214, 59, 59, 0.45); }
+  50%      { box-shadow: 0 2px 16px rgba(214, 59, 59, 0.85); }
+}
+
+/* Big diagonal watermark across the whole mock dashboard. Makes the
+   illustrative nature unmistakable even at a glance. */
+.mock-sample-watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 2;
+  font-size: clamp(60px, 8vw, 110px);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.08);
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.04);
+  transform: rotate(-18deg);
+  user-select: none;
+}
+
+/* Caption directly under the mock window so the line of sight from
+   numbers → "illustrative preview" is instant. */
+.mock-caption {
+  margin-top: 12px;
+  max-width: 520px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: center;
+  font-style: italic;
+}
+
+.mock-body {
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.mock-tile {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 10px;
+  color: #fff;
+}
+
+.mock-tile-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.mock-tile .mock-num {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.mock-tile .mock-label {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.mock-tile.blue   { background: linear-gradient(135deg, #2563eb, #4dabf7); }
+.mock-tile.purple { background: linear-gradient(135deg, #6f42c1, #9775fa); }
+.mock-tile.green  { background: linear-gradient(135deg, #16a34a, #51cf66); }
+.mock-tile.orange { background: linear-gradient(135deg, #f59f00, #ff922b); }
+
+.mock-bar {
+  grid-column: 1 / -1;
+  background: #0e1638;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.mock-bar-label { font-size: 12px; color: #b9bedc; }
+.mock-bar-val   { font-size: 13px; color: #fff; font-weight: 600; }
+
+.mock-bar-track {
+  background: rgba(255, 255, 255, 0.08);
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.mock-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4f8cff, #9b6cff);
+  border-radius: 999px;
+}
+
+/* ===================================================
+   SECTIONS
+=================================================== */
+.section-title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+  text-align: center;
+  color: #fff;
+}
+
+.section-sub {
+  font-size: 15px;
+  color: #b9bedc;
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 38px;
+  line-height: 1.5;
+}
+
+/* ----------- Features ----------- */
+.features {
+  padding: 80px 40px;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.feature {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 22px;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+  .feature:hover {
+    transform: translateY(-3px);
+    border-color: rgba(79, 140, 255, 0.4);
+  }
+
+  .feature h5 {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 14px 0 6px;
+    color: #fff;
+  }
+
+  .feature p {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: #b9bedc;
+    margin: 0;
+  }
+
+.feature-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #fff;
+}
+
+.icon-blue   { background: linear-gradient(135deg, #2563eb, #4dabf7); }
+.icon-violet { background: linear-gradient(135deg, #6f42c1, #9775fa); }
+.icon-amber  { background: linear-gradient(135deg, #f59f00, #ff922b); }
+.icon-green  { background: linear-gradient(135deg, #16a34a, #51cf66); }
+.icon-pink   { background: linear-gradient(135deg, #db2777, #f472b6); }
+.icon-teal   { background: linear-gradient(135deg, #0891b2, #22d3ee); }
+
+/* ----------- Workflow strip ----------- */
+.workflow {
+  padding: 60px 40px;
+  background: rgba(255, 255, 255, 0.025);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Sized to keep all 9 gated stages on a single row across common
+   desktop widths (≥1280px). On narrower viewports the flex-wrap
+   lets the strip break gracefully — still readable, just two rows. */
+.flow-strip {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 0 12px;
+}
+
+.flow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 8px;
+  min-width: 92px;
+}
+
+.flow-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f8cff, #9b6cff);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.flow-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #e7e9f3;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.flow-arrow {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+}
+
+/* ----------- Why ----------- */
+.why {
+  padding: 90px 40px;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.why-left .section-title,
+.why-left .section-sub {
+  text-align: left;
+  margin-left: 0;
+}
+
+.why-list {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 32px;
+}
+
+.why-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #d2d5e8;
+  font-size: 14px;
+  padding: 7px 0;
+}
+
+  .why-list i {
+    color: #4f8cff;
+    font-size: 18px;
+  }
+
+.why-right {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 22px;
+  text-align: center;
+}
+
+  .stat-num {
+    font-size: 36px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #4f8cff, #9b6cff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-size: 12.5px;
+    color: #b9bedc;
+  }
+
+/* ----------- CTA ----------- */
+.cta {
+  padding: 0 40px 80px;
+}
+
+.cta-card {
+  max-width: 1180px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, rgba(79, 140, 255, 0.22), rgba(155, 108, 255, 0.22));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 32px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+  .cta-card h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .cta-card p {
+    margin: 4px 0 0;
+    color: #c4c8de;
+    font-size: 14px;
+  }
+
+/* ----------- Footer ----------- */
+.landing-footer {
+  padding: 22px 40px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: #8c92b3;
+}
+
+/* ===================================================
+   RESPONSIVE
+=================================================== */
+@media (max-width: 992px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .why-grid { grid-template-columns: 1fr; }
+  .feature-grid { grid-template-columns: 1fr 1fr; }
+  .hero-title { font-size: 36px; }
+  .section-title { font-size: 26px; }
+}
+
+@media (max-width: 640px) {
+  .landing-header { padding: 14px 20px; }
+  .landing-nav { gap: 14px; font-size: 13px; }
+  .landing-nav a { display: none; }
+  .hero { padding: 50px 20px; }
+  .features, .workflow, .why { padding: 50px 20px; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .why-right { grid-template-columns: 1fr; }
+  .cta { padding: 0 20px 60px; }
+  .cta-card { padding: 22px; flex-direction: column; align-items: flex-start; }
+  .hero-title { font-size: 28px; }
+  .landing-footer { padding: 22px 20px; flex-direction: column; gap: 10px; }
+}

@@ -1,0 +1,869 @@
+<div class="page-content">
+
+  <!-- ================= HEADER ================= -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+      <div>
+        <h5 class="m-0">
+          <i class="bi bi-cpu me-1"></i>
+          Machine Cost Profile
+        </h5>
+        <div class="text-muted small">
+          Define costing parameters per machine
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 flex-wrap align-items-end">
+        <div class="d-flex flex-column">
+          <span class="small fw-semibold text-muted">Search</span>
+          <input type="text" class="form-control form-control-sm"
+                 style="width:160px;"
+                 [(ngModel)]="search" (keyup.enter)="onFiltersChange()"
+                 placeholder="Search..." />
+        </div>
+        <div class="d-flex flex-column">
+          <span class="small fw-semibold text-muted">Status</span>
+          <select class="form-select form-select-sm" style="width:120px;"
+                  [(ngModel)]="activeFilter" (change)="onFiltersChange()">
+            <option value="">All</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+        <div class="d-flex flex-column">
+          <span class="small fw-semibold text-muted">Machine</span>
+          <select class="form-select form-select-sm" style="width:160px;"
+                  [(ngModel)]="machineFilter" (change)="onFiltersChange()">
+            <option [ngValue]="null">All</option>
+            <option *ngFor="let m of machines" [ngValue]="m.id">{{ m.name }}</option>
+          </select>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary"
+                (click)="clearFiltersR()" title="Clear">
+          <i class="bi bi-x-circle"></i>
+        </button>
+        <button class="btn btn-sm btn-primary"
+                (click)="openForm()">
+          <i class="bi bi-plus-circle me-1"></i>
+          Add
+        </button>
+
+        <button class="btn btn-sm btn-outline-dark"
+                (click)="load()">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Phase R.6 - Summary Strip -->
+  <div class="mcp-summary-strip d-flex flex-wrap gap-2 align-items-center mb-3">
+    <span class="badge bg-primary-subtle text-primary">
+      <i class="bi bi-list-ul me-1"></i> Total <strong>{{ summary.count }}</strong>
+    </span>
+    <span class="badge bg-success-subtle text-success">
+      <i class="bi bi-check2-circle me-1"></i> Active <strong>{{ summary.activeCount }}</strong>
+    </span>
+    <span class="badge bg-secondary-subtle text-secondary">
+      <i class="bi bi-slash-circle me-1"></i> Inactive <strong>{{ summary.inactiveCount }}</strong>
+    </span>
+    <span class="badge bg-info-subtle text-info">
+      <i class="bi bi-cpu me-1"></i> Machines <strong>{{ summary.distinctMachines }}</strong>
+    </span>
+    <span class="badge bg-dark-subtle text-dark">
+      Avg Hourly <strong>{{ summary.avgHourly | number:'1.2-2' }}</strong>
+    </span>
+    <span class="badge bg-dark-subtle text-dark">
+      Avg Operator <strong>{{ summary.avgOperator | number:'1.2-2' }}</strong>
+    </span>
+    <span class="badge bg-dark-subtle text-dark">
+      Avg Power KW <strong>{{ summary.avgPower | number:'1.2-2' }}</strong>
+    </span>
+    <span class="badge bg-dark-subtle text-dark">
+      Avg Stitch/Min <strong>{{ summary.avgStitch }}</strong>
+    </span>
+    <span class="badge bg-warning-subtle text-warning">
+      Avg Total/Hour <strong>{{ summary.avgTotalHourly | number:'1.2-2' }}</strong>
+    </span>
+  </div>
+
+  <!-- ================= TABLE ================= -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+
+      <div *ngIf="loading" class="text-center py-4">
+        <div class="spinner-border"></div>
+      </div>
+
+      <!-- Sprint-3: bulk action strip. -->
+      <div *ngIf="selectedIds.size > 0"
+           class="alert alert-info d-flex flex-wrap align-items-center gap-2 py-2 mb-2"
+           role="status">
+        <span class="me-2"><strong>{{ selectedIds.size }}</strong> selected</span>
+        <button class="btn btn-sm btn-success" (click)="bulkActivate()" [disabled]="bulkBusy">
+          <i class="bi bi-check-circle me-1"></i>Activate
+        </button>
+        <button class="btn btn-sm btn-secondary" (click)="bulkDeactivate()" [disabled]="bulkBusy">
+          <i class="bi bi-pause-circle me-1"></i>Deactivate
+        </button>
+        <button class="btn btn-sm btn-outline-danger" (click)="bulkDeleteRows()" [disabled]="bulkBusy">
+          <i class="bi bi-trash me-1"></i>Delete
+        </button>
+        <button class="btn btn-sm btn-light ms-auto" (click)="clearSelection()" [disabled]="bulkBusy">
+          Clear
+        </button>
+      </div>
+
+      <div *ngIf="!loading" class="table-responsive">
+        <table class="table table-hover table-sm align-middle">
+
+          <thead class="table-light">
+            <tr>
+              <th class="text-center" style="width:30px;">
+                <input type="checkbox" class="form-check-input"
+                       [checked]="allVisibleSelected()"
+                       (change)="toggleSelectAll()" />
+              </th>
+              <th>ID</th>
+              <th>Machine</th>
+              <th class="text-end">Hourly</th>
+              <th class="text-end">Power (KW)</th>
+              <th class="text-end">Stitch/Min</th>
+              <th class="text-end">Operator</th>
+              <th class="text-end">Electric Unit</th>
+              <th>Effective</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <tr *ngFor="let row of rows">
+
+              <td class="text-center">
+                <input type="checkbox" class="form-check-input"
+                       [checked]="isSelected(row.Id)"
+                       (change)="toggleSelect(row.Id)" />
+              </td>
+
+              <td>{{ row.Id }}</td>
+
+              <td class="fw-semibold">
+                {{ row.MachineCode }}
+              </td>
+
+              <td class="text-end">
+                {{ row.HourlyRate | number:'1.2-2' }}
+              </td>
+
+              <td class="text-end">
+                {{ row.PowerKW | number:'1.2-2' }}
+              </td>
+
+              <td class="text-end">
+                {{ row.StitchPerMinute }}
+              </td>
+
+              <td class="text-end">
+                {{ row.OperatorHourlyRate | number:'1.2-2' }}
+              </td>
+
+              <td class="text-end">
+                {{ row.ElectricityUnitRate | number:'1.2-2' }}
+              </td>
+
+              <td>
+                {{ row.EffectiveFromText || '-' }}
+              </td>
+
+              <td>
+                <span class="badge"
+                      [ngClass]="row.Active ? 'bg-success' : 'bg-secondary'">
+
+                  {{ row.Active ? 'Active' : 'Inactive' }}
+
+                </span>
+              </td>
+                        
+              <td class="text-end text-nowrap">
+
+                <button class="btn btn-sm btn-outline-secondary me-1"
+                       (click)="openProfile(row.Id)" title="360 Profile">
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button class="btn btn-sm btn-outline-primary me-1"
+                        (click)="edit(row)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-sm btn-outline-danger"
+                        (click)="confirmDelete(row.Id)">
+                  <i class="bi bi-trash"></i>
+                </button>
+
+              </td>
+
+            </tr>
+
+            <tr *ngIf="rows.length === 0">
+              <td colspan="10" class="text-center text-muted py-4">
+                No Machine Cost Profiles found
+              </td>
+            </tr>
+
+          </tbody>
+
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ================= PAGINATION ================= -->
+  <div class="card shadow-sm mt-2"
+       *ngIf="totalPages > 1">
+
+    <div class="card-body py-2 d-flex justify-content-between align-items-center">
+
+      <div class="small text-muted">
+        Showing {{ ((page - 1) * pageSize) + 1 }}
+        -
+        {{ (page * pageSize) > totalCount ? totalCount : (page * pageSize) }}
+        of {{ totalCount }}
+      </div>
+
+      <ul class="pagination pagination-sm mb-0">
+
+        <li class="page-item"
+            [class.disabled]="page === 1">
+          <button class="page-link"
+                  (click)="changePage(page - 1)">
+            ‹
+          </button>
+        </li>
+
+        <li class="page-item"
+            *ngFor="let p of [].constructor(totalPages); let i = index"
+            [class.active]="page === i + 1">
+
+          <button class="page-link"
+                  (click)="changePage(i + 1)">
+            {{ i + 1 }}
+          </button>
+
+        </li>
+
+        <li class="page-item"
+            [class.disabled]="page === totalPages">
+          <button class="page-link"
+                  (click)="changePage(page + 1)">
+            ›
+          </button>
+        </li>
+
+      </ul>
+
+    </div>
+  </div>
+
+  <!-- ================= FORM MODAL ================= -->
+  <div class="modal fade" #formModal tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+
+        <!-- HEADER -->
+        <div class="modal-header bg-dark text-white">
+          <h6 class="modal-title">
+            <i class="bi bi-cpu me-1"></i>
+            {{ form.Id ? 'Edit' : 'Add' }} Machine Cost Profile
+          </h6>
+
+          <button type="button"
+                  class="btn-close btn-close-white"
+                  (click)="closeForm()">
+          </button>
+        </div>
+
+        <!-- BODY -->
+        <div class="modal-body">
+
+          <div class="row g-3">
+
+            <!-- MACHINE -->
+            <div class="col-md-6">
+              <label class="form-label small">
+                Machine <span class="text-danger">*</span>
+              </label>
+
+              <select class="form-select form-select-sm"
+                      [(ngModel)]="form.MachineId"
+                      name="MachineId"
+                      [disabled]="form.Id > 0">
+
+                <option [ngValue]="0">-- Select Machine --</option>
+
+                <option *ngFor="let m of machines"
+                        [ngValue]="m.id">
+                  {{ m.name }}
+                </option>
+
+              </select>
+
+              <div class="form-text">
+                Machine cannot be changed after profile creation.
+              </div>
+            </div>
+
+
+            <!-- EFFECTIVE DATE -->
+            <div class="col-md-6">
+              <label class="form-label small">
+                Effective From
+              </label>
+
+              <input type="date"
+                     class="form-control form-control-sm"
+                     [(ngModel)]="form.EffectiveFrom"
+                     name="EffectiveFrom">
+            </div>
+
+
+            <!-- MACHINE HOURLY RATE -->
+            <div class="col-md-4">
+              <label class="form-label small">
+                Machine Hourly Rate
+              </label>
+
+              <input type="number"
+                     step="0.01"
+                     min="0"
+                     class="form-control form-control-sm"
+                     [(ngModel)]="form.HourlyRate"
+                     name="HourlyRate">
+            </div>
+
+
+            <!-- POWER -->
+            <div class="col-md-4">
+              <label class="form-label small">
+                Power (KW)
+              </label>
+
+              <input type="number"
+                     step="0.01"
+                     min="0"
+                     class="form-control form-control-sm"
+                     [(ngModel)]="form.PowerKW"
+                     name="PowerKW">
+            </div>
+
+
+            <!-- STITCH SPEED -->
+            <div class="col-md-4">
+              <label class="form-label small">
+                Stitch / Minute
+              </label>
+
+              <input type="number"
+                     min="0"
+                     class="form-control form-control-sm"
+                     [(ngModel)]="form.StitchPerMinute"
+                     name="StitchPerMinute">
+            </div>
+
+
+            <!-- OPERATOR RATE -->
+            <div class="col-md-6">
+              <label class="form-label small">
+                Operator Hourly Rate
+              </label>
+
+              <input type="number"
+                     step="0.01"
+                     min="0"
+                     class="form-control form-control-sm"
+                     [(ngModel)]="form.OperatorHourlyRate"
+                     name="OperatorHourlyRate">
+            </div>
+
+
+            <!-- ELECTRICITY RATE -->
+            <div class="col-md-6">
+              <label class="form-label small">
+                Electricity Unit Rate
+              </label>
+
+              <input type="number"
+                     step="0.01"
+                     min="0"
+                     class="form-control form-control-sm"
+                     [(ngModel)]="form.ElectricityUnitRate"
+                     name="ElectricityUnitRate">
+            </div>
+
+
+            <!-- ================= RUNNING COST PREVIEW ================= -->
+
+            <div class="col-12">
+
+              <div class="border rounded p-3 bg-light">
+
+                <div class="small fw-semibold mb-2">
+                  Machine Running Cost (Per Hour)
+                </div>
+
+                <div class="row small">
+
+                  <div class="col-md-4">
+                    Electric Cost / Hour
+                  </div>
+
+                  <div class="col-md-8 text-end fw-semibold">
+                    {{ electricCostPerHour | number:'1.2-2' }}
+                  </div>
+
+                  <div class="col-md-4">
+                    Machine Cost / Hour
+                  </div>
+
+                  <div class="col-md-8 text-end fw-semibold">
+                    {{ form.HourlyRate || 0 | number:'1.2-2' }}
+                  </div>
+
+                  <div class="col-md-4">
+                    Operator Cost / Hour
+                  </div>
+
+                  <div class="col-md-8 text-end fw-semibold">
+                    {{ form.OperatorHourlyRate || 0 | number:'1.2-2' }}
+                  </div>
+
+                  <hr class="my-2">
+
+                  <div class="col-md-4 fw-bold">
+                    Total Running Cost
+                  </div>
+
+                  <div class="col-md-8 text-end fw-bold text-success">
+                    {{ totalMachineRunningCost | number:'1.2-2' }}
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <!-- STATUS -->
+            <div class="col-md-6">
+              <label class="form-label small">
+                Status
+              </label>
+
+              <select class="form-select form-select-sm"
+                      [(ngModel)]="form.Active"
+                      name="Active">
+
+                <option [ngValue]="true">Active</option>
+                <option [ngValue]="false">Inactive</option>
+
+              </select>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- FOOTER -->
+        <div class="modal-footer">
+
+          <button class="btn btn-light btn-sm"
+                  (click)="closeForm()">
+            Close
+          </button>
+
+          <button class="btn btn-success btn-sm"
+                  [disabled]="!form.MachineId"
+                  (click)="save()">
+
+            <i class="bi bi-check-circle me-1"></i>
+            Save
+
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" #detailModal tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+
+        <!-- HEADER -->
+        <div class="modal-header bg-dark text-white">
+          <h6 class="modal-title">
+            <i class="bi bi-eye me-1"></i>
+            Machine Cost Profile Detail
+          </h6>
+
+          <button type="button"
+                  class="btn-close btn-close-white"
+                  (click)="closeDetail()">
+          </button>
+        </div>
+
+        <!-- BODY -->
+        <div class="modal-body">
+
+          <ng-container *ngIf="detailData as d">
+
+            <table class="table table-bordered table-sm align-middle">
+
+             
+
+              <tr>
+                <th style="width:220px">Machine</th>
+                <td class="fw-semibold">
+                {{ d.MachineCode }}
+                </td>
+              </tr>
+
+                <tr>
+                  <th>Machine Hourly Rate</th>
+                  <td class="text-end">
+                    {{ d.HourlyRate | number:'1.2-2' }}
+                  </td>
+                </tr>
+
+                <tr>
+                  <th>Power Consumption (KW)</th>
+                  <td class="text-end">
+                    {{ d.PowerKW | number:'1.2-2' }}
+                  </td>
+                </tr>
+
+                <tr>
+                  <th>Stitches Per Minute</th>
+                  <td class="text-end">
+                    {{ d.StitchPerMinute || 0 }}
+                  </td>
+                </tr>
+
+                <tr>
+                  <th>Operator Hourly Rate</th>
+                  <td class="text-end">
+                    {{ d.OperatorHourlyRate | number:'1.2-2' }}
+                  </td>
+                </tr>
+
+                <tr>
+                  <th>Electricity Unit Rate</th>
+                  <td class="text-end">
+                    {{d.ElectricityUnitRate | number:'1.2-2' }}
+                  </td>
+                </tr>
+
+                <!-- ELECTRIC COST PER HOUR -->
+                <tr>
+                  <th>Electric Cost / Hour</th>
+                  <td class="text-end">
+                    {{ (d.PowerKW || 0) * (d.ElectricityUnitRate || 0) | number:'1.2-2' }}
+                  </td>
+                </tr>
+
+                <tr>
+                  <th>Effective From</th>
+                  <td>
+                    {{ d.EffectiveFromText || '-' }}
+                  </td>
+                </tr>
+
+                <tr>
+                  <th>Status</th>
+                  <td>
+
+                    <span class="badge"
+                          [ngClass]="d.Active ? 'bg-success' : 'bg-secondary'">
+
+                      {{ d.Active ? 'Active' : 'Inactive' }}
+
+                    </span>
+
+                  </td>
+                </tr>
+
+             
+
+            </table>
+
+          </ng-container>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="modal-footer">
+
+          <button class="btn btn-sm btn-secondary"
+                  (click)="closeDetail()">
+            Close
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= DELETE MODAL ================= -->
+  <div class="modal fade" #deleteModal tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content">
+
+        <div class="modal-header bg-light">
+          <h6 class="modal-title text-danger">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Confirm Delete
+          </h6>
+          <button type="button"
+                  class="btn-close"
+                  (click)="closeDelete()"></button>
+        </div>
+
+        <div class="modal-body text-center small">
+          Are you sure you want to delete this profile?
+        </div>
+
+        <div class="modal-footer justify-content-center gap-2">
+          <button class="btn btn-sm btn-light"
+                  (click)="closeDelete()">
+            Cancel
+          </button>
+
+          <button class="btn btn-sm btn-danger"
+                  (click)="doDelete()">
+            <i class="bi bi-trash me-1"></i>
+            Delete
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Phase R.6 - 360 PROFILE DRAWER
+       ============================================================ -->
+  <div class="modal mcp-profile-modal" *ngIf="showProfile"
+       [class.show]="showProfile" [class.d-block]="showProfile"
+       (click)="closeProfile()" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title">
+            <i class="bi bi-cash-coin me-2"></i>
+            Machine Cost 360 Profile
+            <span *ngIf="profile?.header?.id" class="badge bg-light text-dark ms-2">#{{ profile.header.id }}</span>
+            <span *ngIf="profile?.header?.machineCode" class="badge bg-primary ms-2">{{ profile.header.machineCode }}</span>
+          </h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeProfile()"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <div *ngIf="profileLoading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="mt-2 text-muted small">Loading profile…</div>
+          </div>
+
+          <ng-container *ngIf="!profileLoading && profile as p">
+
+            <!-- HEADER CARD -->
+            <div class="card mcp-section-card mb-3">
+              <div class="card-header">Header</div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <div class="mcp-label">Machine</div>
+                    <div class="mcp-value">{{ p.header?.machineCode || '-' }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="mcp-label">Brand</div>
+                    <div class="mcp-value">{{ p.header?.brandName || '-' }}</div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="mcp-label">Heads</div>
+                    <div class="mcp-value">{{ p.header?.heads ?? '-' }}</div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="mcp-label">Needles</div>
+                    <div class="mcp-value">{{ p.header?.needles ?? '-' }}</div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="mcp-label">Status</div>
+                    <div class="mcp-value">
+                      <span class="badge" [ngClass]="p.header?.active ? 'bg-success' : 'bg-secondary'">
+                        {{ p.header?.active ? 'Active' : 'Inactive' }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="mcp-label">Effective From</div>
+                    <div class="mcp-value">{{ p.header?.effectiveFromText || '-' }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- KPI TILES -->
+            <div class="row g-3 mcp-kpi-row mb-3">
+              <div class="col-md-2">
+                <div class="card kpi-tile kpi-tile-primary p-3">
+                  <div class="kpi-label">Machine Hourly</div>
+                  <div class="kpi-value">{{ p.kpis?.machineHourly | number:'1.2-2' }}</div>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="card kpi-tile kpi-tile-info p-3">
+                  <div class="kpi-label">Operator Hourly</div>
+                  <div class="kpi-value">{{ p.kpis?.operatorHourly | number:'1.2-2' }}</div>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="card kpi-tile kpi-tile-warning p-3">
+                  <div class="kpi-label">Electric Hourly</div>
+                  <div class="kpi-value">{{ p.kpis?.electricHourly | number:'1.2-2' }}</div>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="card kpi-tile kpi-tile-success p-3">
+                  <div class="kpi-label">Total / Hour</div>
+                  <div class="kpi-value">{{ p.kpis?.totalHourly | number:'1.2-2' }}</div>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="card kpi-tile kpi-tile-primary p-3">
+                  <div class="kpi-label">Per Minute</div>
+                  <div class="kpi-value">{{ p.kpis?.minuteRate | number:'1.2-4' }}</div>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="card kpi-tile kpi-tile-info p-3">
+                  <div class="kpi-label">Per Stitch</div>
+                  <div class="kpi-value">{{ p.kpis?.stitchRate | number:'1.4-6' }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CAPACITY -->
+            <div class="card mcp-section-card mb-3" *ngIf="p.capacity">
+              <div class="card-header"><i class="bi bi-speedometer2 me-1"></i> Capacity Projection</div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <div class="mcp-label">Stitch / Min</div>
+                    <div class="mcp-value">{{ p.kpis?.stitchPerMinute ?? 0 }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="mcp-label">Stitch / Hour</div>
+                    <div class="mcp-value">{{ p.capacity.stitchPerHour | number }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="mcp-label">Per 8-Hour Shift</div>
+                    <div class="mcp-value">{{ p.capacity.stitchPerShift8h | number }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="mcp-label">Per 12-Hour Shift</div>
+                    <div class="mcp-value">{{ p.capacity.stitchPerShift12h | number }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- COST BREAKDOWN -->
+            <div class="card mcp-section-card mb-3">
+              <div class="card-header"><i class="bi bi-cash-stack me-1"></i> Cost Components</div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <div class="mcp-label">Hourly Rate</div>
+                    <div class="mcp-value">{{ p.header?.hourlyRate | number:'1.2-2' }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="mcp-label">Operator Rate</div>
+                    <div class="mcp-value">{{ p.header?.operatorHourlyRate | number:'1.2-2' }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="mcp-label">Power (KW)</div>
+                    <div class="mcp-value">{{ p.header?.powerKW | number:'1.2-2' }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="mcp-label">Electricity / Unit</div>
+                    <div class="mcp-value">{{ p.header?.electricityUnitRate | number:'1.2-2' }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SIBLINGS / HISTORY -->
+            <div class="card mcp-section-card mb-3">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-history me-1"></i> Other Cost Profiles for Same Machine</span>
+                <span class="badge bg-secondary">{{ p.siblings?.length || 0 }}</span>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:70px;">ID</th>
+                      <th class="text-end">Hourly</th>
+                      <th class="text-end">Operator</th>
+                      <th class="text-end">Power KW</th>
+                      <th class="text-end">Elec/Unit</th>
+                      <th class="text-end">Stitch/Min</th>
+                      <th>Effective</th>
+                      <th style="width:90px;">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngIf="!p.siblings || p.siblings.length === 0">
+                      <td colspan="8" class="text-center text-muted py-3">No prior cost profiles for this machine.</td>
+                    </tr>
+                    <tr *ngFor="let s of p.siblings">
+                      <td>{{ s.Id }}</td>
+                      <td class="text-end">{{ s.HourlyRate | number:'1.2-2' }}</td>
+                      <td class="text-end">{{ s.OperatorHourlyRate | number:'1.2-2' }}</td>
+                      <td class="text-end">{{ s.PowerKW | number:'1.2-2' }}</td>
+                      <td class="text-end">{{ s.ElectricityUnitRate | number:'1.2-2' }}</td>
+                      <td class="text-end">{{ s.StitchPerMinute }}</td>
+                      <td>{{ s.effectiveFromText || '-' }}</td>
+                      <td>
+                        <span class="badge" [ngClass]="s.Active ? 'bg-success' : 'bg-secondary'">
+                          {{ s.Active ? 'Active' : 'Inactive' }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </ng-container>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" (click)="closeProfile()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

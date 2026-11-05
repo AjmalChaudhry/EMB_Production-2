@@ -1,0 +1,325 @@
+﻿@model EMB_Production.ViewModels.CategoriesPageViewModel
+@using PagedList.Mvc
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var cf = Model.Search;
+    var af = Model.ActiveFilter;
+    var currentFilter = Model.Search ?? "";
+    var activeFilter = Model.ActiveFilter ?? "";
+    bool showCreate = Model.ShowCreate;
+    bool showEdit = Model.ShowEdit;
+    int? editId = Model.EditId;
+}
+
+<style>
+    /* Toolbar */
+    .toolbar-container {
+        background: #f5f7fa;
+        border-radius: 6px;
+        padding: 0.75rem 1rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+    /* Uniform small inputs */
+    .small-input {
+        height: 2rem;
+        font-size: 0.85rem;
+        padding: .25rem;
+    }
+    /* Table container */
+    .table-responsive {
+        margin-top: 1rem;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- TOOLBAR -->
+    <div class="toolbar-container d-flex align-items-center justify-content-between">
+        <h2 class="mb-0 text-primary">Categories</h2>
+        <div class="d-flex align-items-center">
+            <a class="btn btn-sm @(showCreate ? "btn-secondary" : "btn-success") me-2"
+               href="@Url.Action("Index", "Gen_Catagories", new { showCreate = !showCreate, search = currentFilter, activeFilter })">
+                <i class="bi @(showCreate ? "bi-x-lg" : "bi-plus-lg") me-1"></i>
+                @(showCreate ? "Close" : "Add New")
+            </a>
+
+           @using (Html.BeginForm("Index", "Gen_Catagories", FormMethod.Get, new { @class = "d-flex align-items-center" }))
+            {
+                <input type="text" name="search" value="@currentFilter"
+                       class="form-control form-control-sm small-input me-2"
+                       style="width:140px;" placeholder="Search…" />
+
+                <select name="activeFilter"
+                        class="form-select form-select-sm small-input me-2"
+                        style="width:100px;">
+                    <option value="">All</option>
+                    <option value="Yes" @(activeFilter == "Yes" ? "selected" : "")>Active</option>
+                    <option value="No" @(activeFilter == "No" ? "selected" : "")>Inactive</option>
+                </select>
+
+                <button type="submit" class="btn btn-outline-primary btn-sm me-2">
+                    <i class="bi bi-search"></i>
+                </button>
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm me-2">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+                <button type="button" onclick="location.reload()"
+                        class="btn btn-outline-secondary btn-sm me-2">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <button type="button" onclick="window.print()"
+                        class="btn btn-outline-secondary btn-sm me-2">
+                    <i class="bi bi-printer"></i>
+                </button>
+                <a href="@Url.Action("ExportCategoriesToExcel","Gen_Catagories", new { search=currentFilter, activeFilter })"
+                   class="btn btn-success btn-sm me-2">
+                    <i class="bi bi-file-earmark-spreadsheet"></i>
+                </a>
+                <a href="@Url.Action("ExportCategoriesToPdf","Gen_Catagories", new { search=currentFilter, activeFilter })"
+                   class="btn btn-danger btn-sm">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- INLINE CREATE -->
+   @if (showCreate)
+    {
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+               @using (Html.BeginForm("CreateFromIndex", "Gen_Catagories", FormMethod.Post, new { @class = "row g-2 align-items-end" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <!-- Brand -->
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.NewCategory.BrandId, new { @class = "form-label small mb-0" })
+                        @Html.DropDownListFor(m => m.NewCategory.BrandId, Model.BrandList, "--brand--",
+                            new { @class = "form-select form-select-sm small-input" })
+                        @Html.ValidationMessageFor(m => m.NewCategory.BrandId, "", new { @class = "text-danger small" })
+                    </div>
+                    <!-- Name -->
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.NewCategory.Name, new { @class = "form-label small mb-0" })
+                        @Html.TextBoxFor(m => m.NewCategory.Name, new { @class = "form-control form-control-sm small-input" })
+                        @Html.ValidationMessageFor(m => m.NewCategory.Name, "", new { @class = "text-danger small" })
+                    </div>
+                    <!-- Code -->
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.NewCategory.Code, new { @class = "form-label small mb-0" })
+                        @Html.TextBoxFor(m => m.NewCategory.Code, new { @class = "form-control form-control-sm small-input" })
+                    </div>
+                    <!-- Description -->
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.NewCategory.Description, new { @class = "form-label small mb-0" })
+                        @Html.TextBoxFor(m => m.NewCategory.Description, new { @class = "form-control form-control-sm small-input" })
+                    </div>
+                    <!-- Quantity -->
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.NewCategory.Quantity, new { @class = "form-label small mb-0" })
+                        @Html.TextBoxFor(m => m.NewCategory.Quantity, new { @class = "form-control form-control-sm small-input" })
+                    </div>
+                    <!-- Length -->
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.NewCategory.Length, new { @class = "form-label small mb-0" })
+                        @Html.TextBoxFor(m => m.NewCategory.Length, "{0:0.00}", new { type = "number", step = "0.01", @class = "form-control form-control-sm small-input" })
+                    </div>
+                    <!-- Weight -->
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.NewCategory.Weight, new { @class = "form-label small mb-0" })
+                        @Html.TextBoxFor(m => m.NewCategory.Weight, "", new { type = "number", step = "0.01", @class = "form-control form-control-sm small-input" })
+                    </div>
+                    <!-- Price -->
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.NewCategory.Price, new { @class = "form-label small mb-0" })
+                        @Html.TextBoxFor(m => m.NewCategory.Price, "", new { type = "number", step = "0.01", @class = "form-control form-control-sm small-input" })
+                    </div>
+                    <!-- Branch -->
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.NewCategory.BranchId, new { @class = "form-label small mb-0" })
+                        @Html.DropDownListFor(m => m.NewCategory.BranchId, Model.BranchList, "--branch--",
+                            new { @class = "form-select form-select-sm small-input" })
+                    </div>
+                    <!-- Active toggle -->
+                    <div class="col text-center">
+                        <div class="form-check form-switch">
+                            @Html.CheckBox("NewCategory.Active", Model.NewCategory.Active ?? false,
+                                new { @class = "form-check-input", id = "NewCategory_Active" })
+                            <label class="form-check-label small" for="NewProduct_Active">Active</label>
+                        </div>
+                    </div>
+                    <div class="col text-center">
+                        <div class="form-check form-switch">
+                            @Html.CheckBox("NewCategory.Deleted", Model.NewCategory.Deleted ?? false,
+                                new { @class = "form-check-input", id = "NewCategory_Deleted" })
+                            <label class="form-check-label small" for="NewProduct_Deleted">Deleted</label>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-success btn-sm">Save</button>
+                        <a href="@Url.Action("Index", new { showCreate=false, search=currentFilter, activeFilter })"
+                           class="btn btn-danger btn-sm ms-2">Cancel</a>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- INLINE EDIT -->
+   @if (showEdit && editId.HasValue)
+    {
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                @using (Html.BeginForm("EditFromIndex", "Gen_Catagories",
+                        new { id = Model.EditCategory.Id, search = currentFilter, activeFilter },
+                        FormMethod.Post,
+                        new { @class = "row g-2 align-items-end" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.EditCategory.Id)
+                    <!-- same fields as Create but bound to EditCategory -->
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.EditCategory.BrandId, new { @class = "form-label small mb-0" })
+                        @Html.DropDownListFor(m => m.EditCategory.BrandId, Model.BrandList, "--brand--",
+                            new { @class = "form-select form-select-sm small-input" })
+                    </div>
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.EditCategory.Name, new { @class = "form-label small mb-0" })
+                        @Html.TextBoxFor(m => m.EditCategory.Name, new { @class = "form-control form-control-sm small-input" })
+                    </div>
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.EditCategory.Code, new { @class = "form-label small mb-0" })
+                        @Html.TextBoxFor(m => m.EditCategory.Code, new { @class = "form-control form-control-sm small-input" })
+                    </div>
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.EditCategory.Description, new { @class = "form-label small mb-0" })
+                        @Html.TextBoxFor(m => m.EditCategory.Description, new { @class = "form-control form-control-sm small-input" })
+                    </div>
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.EditCategory.Quantity, new { @class = "form-label small mb-0" })
+                        @Html.TextBoxFor(m => m.EditCategory.Quantity, new { @class = "form-control form-control-sm small-input" })
+                    </div>
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.EditCategory.Length, new { @class = "form-label small mb-0" })
+                        @Html.TextBoxFor(m => m.EditCategory.Length, "", new { type = "number", step = "0.01", @class = "form-control form-control-sm small-input" })
+                    </div>
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.EditCategory.Weight, new { @class = "form-label small mb-0" })
+                        @Html.TextBoxFor(m => m.EditCategory.Weight, "", new { type = "number", step = "0.01", @class = "form-control form-control-sm small-input" })
+                    </div>
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.EditCategory.Price, new { @class = "form-label small mb-0" })
+                        @Html.TextBoxFor(m => m.EditCategory.Price, "", new { type = "number", step = "0.01", @class = "form-control form-control-sm small-input" })
+                    </div>
+                    <div class="col-md-1">
+                        @Html.LabelFor(m => m.EditCategory.BranchId, new { @class = "form-label small mb-0" })
+                        @Html.DropDownListFor(m => m.EditCategory.BranchId, Model.BranchList, "--branch--",
+                            new { @class = "form-select form-select-sm small-input" })
+                    </div>
+                    <div class="col text-center">
+                        <div class="form-check form-switch">
+                            @Html.CheckBox("EditCategory.Active", Model.EditCategory.Active ?? false,
+                                new { @class = "form-check-input", id = "EditCategory_Active" })
+                            <label class="form-check-label small" for="NewProduct_Active">Active</label>
+                        </div>
+                    </div>
+                    <div class="col text-center">
+                        <div class="form-check form-switch">
+                            @Html.CheckBox("EditCategory.Deleted", Model.EditCategory.Deleted ?? false,
+                                new { @class = "form-check-input", id = "EditCategory_Deleted" })
+                            <label class="form-check-label small" for="NewProduct_Deleted">Deleted</label>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-success btn-sm">Save</button>
+                        <a href="@Url.Action("Index", new { showCreate=false, search=currentFilter, activeFilter })"
+                           class="btn btn-danger btn-sm ms-2">Cancel</a>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- DATA GRID -->
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-striped table-hover mb-0 small">
+            <thead class="table-primary text-white">
+                <tr class="align-middle text-center">
+                    <th>Brand</th>
+                    <th>Name</th>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th>Qty</th>
+                    <th>Length</th>
+                    <th>Weight</th>
+                    <th>Price</th>
+                    <th>Branch</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+               @foreach (var cat in Model.Categories)
+                {
+                    <tr class="align-middle text-center">
+                        <td>@(cat.Gen_Brands?.BrandName ?? "—")</td>
+                        <td>@cat.Name</td>
+                        <td>@cat.Code</td>
+                        <td>@cat.Description</td>
+                        <td>@cat.Quantity</td>
+                        <td>@(string.IsNullOrWhiteSpace(cat.Length) ? "" : cat.Length + " m")</td>
+                        <td>@(string.IsNullOrWhiteSpace(cat.Weight) ? "" : cat.Weight + " kg")</td>
+                        <td>@(cat.Price.GetValueOrDefault().ToString("C2"))</td>
+                        <td>@(cat.Branches?.Name ?? "—")</td>
+                        <td>
+                            <span class="badge @(cat.Active.GetValueOrDefault() ? "bg-success" : "bg-secondary")">
+                                @(cat.Active.GetValueOrDefault() ? "Yes" : "No")
+                            </span>
+                        </td>
+                        <td>
+                            <a class="btn btn-outline-primary btn-sm me-1"
+                               href="@Url.Action("Index","Gen_Catagories", new { showEdit=true, editId=cat.Id, search=currentFilter, activeFilter })">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a class="btn btn-outline-info btn-sm me-1"
+                               href="@Url.Action("Details","Gen_Catagories", new { id=cat.Id })">
+                                <i class="bi bi-info-circle"></i>
+                            </a>
+                            <a class="btn btn-outline-danger btn-sm"
+                               href="@Url.Action("Delete","Gen_Catagories", new { id=cat.Id })">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="d-flex justify-content-center mt-3">
+        @Html.PagedListPager(
+            Model.Categories,
+            page => Url.Action("Index", new { page, search = currentFilter, activeFilter }),
+            new PagedListRenderOptions
+                 {
+                UlElementClasses = new[] { "pagination" },
+                LiElementClasses = new[] { "page-item" }
+            }
+        )
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            // highlight focused inputs
+            $('.form-control, .form-select').on('focus', function () {
+                $(this).addClass('border-primary shadow-sm');
+            }).on('blur', function () {
+                $(this).removeClass('border-primary shadow-sm');
+            });
+        });
+    </script>
+}

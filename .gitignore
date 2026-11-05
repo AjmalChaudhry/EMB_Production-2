@@ -1,0 +1,33 @@
+# ===== Visual Studio / MSBuild =====
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.pdb
+
+# ===== NuGet (packages.config restores here; not committed) =====
+packages/
+*.nupkg
+
+# ===== Angular / Node (ClientApp) =====
+ClientApp/**/node_modules/
+ClientApp/**/dist/
+ClientApp/**/.angular/
+npm-debug.log*
+
+# NOTE: Content/emb-products IS committed on purpose — it's the built
+# Angular bundle the MVC app serves directly (see CLAUDE.md). Do not
+# ignore it.
+
+# ===== Runtime user data — never commit =====
+# Contains real uploaded photos/files (e.g. facial-recognition images,
+# user documents). This is production data, not source — keep it local.
+Uploads/
+
+# ===== Misc =====
+*.log
+Thumbs.db
+.DS_Store
