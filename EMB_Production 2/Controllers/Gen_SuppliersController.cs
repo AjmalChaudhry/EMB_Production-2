@@ -520,7 +520,7 @@ SELECT  a.Id, a.SupplierId, a.Action, a.ChangedBy,
             if (exists)
                 return JsonError("A supplier with this name already exists.");
 
-            var empId = GetCurrentEmployeeId();
+            var userId = GetSafeCurrentUserId();
             var now = DateTime.Now;
 
             var entity = new Gen_Suppliers
@@ -536,7 +536,7 @@ SELECT  a.Id, a.SupplierId, a.Action, a.ChangedBy,
                 Active = dto.Active,
                 Deleted = false,
 
-                CreatedBy = empId,
+                CreatedBy = userId,
                 CreatedDate = now
             };
 
@@ -596,7 +596,7 @@ SELECT  a.Id, a.SupplierId, a.Action, a.ChangedBy,
             entity.BranchId = dto.BranchId;
             entity.Active = dto.Active;
 
-            entity.UpdatedBy = GetCurrentEmployeeId();
+            entity.UpdatedBy = GetSafeCurrentUserId();
             entity.UpdatedDate = DateTime.Now;
 
             db.SaveChanges();
@@ -625,7 +625,7 @@ SELECT  a.Id, a.SupplierId, a.Action, a.ChangedBy,
 
             entity.Deleted = true;
             entity.Active = false;
-            entity.UpdatedBy = GetCurrentEmployeeId();
+            entity.UpdatedBy = GetSafeCurrentUserId();
             entity.UpdatedDate = DateTime.Now;
 
             db.SaveChanges();

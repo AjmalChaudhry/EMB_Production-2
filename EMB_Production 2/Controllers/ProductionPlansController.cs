@@ -439,8 +439,9 @@ LEFT JOIN dbo.Adm_Users ua ON ua.Id = p.ApprovedBy
                 // the JO needs posting before Plan Approve regenerates the
                 // Work Orders. Posted JOs are surfaced first (best matches
                 // to schedule) with Drafts trailing.
+                int branchId = GetCurrentBranchId();
                 var list = db.Gen_JobOrders
-                    .Where(j => j.Deleted != true)
+                    .Where(j => j.Deleted != true && j.BranchId == branchId)
                     .OrderByDescending(j => j.IsPosted == true)   // Posted → top
                     .ThenByDescending(j => j.Id)                  // recent → next
                     .Select(j => new

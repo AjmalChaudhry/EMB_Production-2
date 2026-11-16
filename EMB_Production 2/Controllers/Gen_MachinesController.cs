@@ -145,7 +145,7 @@ SELECT  a.Id, a.MachineId, a.Action, a.ChangedBy,
             {
                 if (e.Active == true) return "Already active.";
                 e.Active = true;
-                e.UpdatedBy = GetCurrentEmployeeId();
+                e.UpdatedBy = GetCurrentUserId();
                 e.UpdatedDate = DateTime.Now;
                 e.RecordTimeStamp = DateTime.Now;
                 db.SaveChanges();
@@ -162,7 +162,7 @@ SELECT  a.Id, a.MachineId, a.Action, a.ChangedBy,
             {
                 if (e.Active != true) return "Already inactive.";
                 e.Active = false;
-                e.UpdatedBy = GetCurrentEmployeeId();
+                e.UpdatedBy = GetCurrentUserId();
                 e.UpdatedDate = DateTime.Now;
                 e.RecordTimeStamp = DateTime.Now;
                 db.SaveChanges();
@@ -179,7 +179,7 @@ SELECT  a.Id, a.MachineId, a.Action, a.ChangedBy,
             {
                 e.Deleted = true;
                 e.Active = false;
-                e.UpdatedBy = GetCurrentEmployeeId();
+                e.UpdatedBy = GetCurrentUserId();
                 e.UpdatedDate = DateTime.Now;
                 e.RecordTimeStamp = DateTime.Now;
                 db.SaveChanges();
@@ -564,7 +564,7 @@ SELECT  a.Id, a.MachineId, a.Action, a.ChangedBy,
         {
             try
             {
-                var empId = GetCurrentEmployeeId();
+                var empId = GetCurrentUserId();
 
                 var model = new Gen_Machines
                 {
@@ -622,7 +622,7 @@ SELECT  a.Id, a.MachineId, a.Action, a.ChangedBy,
         {
             try
             {
-                var empId = GetCurrentEmployeeId();
+                var empId = GetCurrentUserId();
 
                 var model = db.Gen_Machines.FirstOrDefault(x => x.Id == dto.Id);
                 if (model == null)
@@ -682,7 +682,7 @@ SELECT  a.Id, a.MachineId, a.Action, a.ChangedBy,
 
                 model.Deleted = true;
                 model.Active = false;
-                model.UpdatedBy = GetCurrentEmployeeId();
+                model.UpdatedBy = GetCurrentUserId();
                 model.UpdatedDate = DateTime.Now;
                 model.RecordTimeStamp = DateTime.Now;
 
@@ -989,7 +989,7 @@ SELECT  a.Id, a.MachineId, a.Action, a.ChangedBy,
             // violate FK constraints from DailyProduction/WorkOrderItems/etc.
             m.Deleted = true;
             m.Active = false;
-            m.UpdatedBy = GetCurrentEmployeeId();
+            m.UpdatedBy = GetCurrentUserId();
             m.UpdatedDate = DateTime.Now;
             m.RecordTimeStamp = DateTime.Now;
 

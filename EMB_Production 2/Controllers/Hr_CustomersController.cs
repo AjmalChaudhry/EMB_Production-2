@@ -376,6 +376,8 @@ SELECT  a.Id, a.CustomerId, a.Action, a.ChangedBy,
                 var c = db.Hr_Customers.Find(id);
                 if (c == null)
                     return JsonError("Customer not found.");
+                if (c.Deleted == true)
+                    return JsonError("Customer not found.");
 
                 c.Customer_Id = model.Customer_Id;
                 c.Customer_Name = model.Customer_Name;
@@ -570,7 +572,7 @@ SELECT  a.Id, a.CustomerId, a.Action, a.ChangedBy,
                 return View("Index", vm);
 
 
-            int uid = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+            int uid = GetCurrentUserId();
             var now = DateTime.UtcNow;
 
             var c = vm.NewCustomer;
@@ -631,7 +633,7 @@ SELECT  a.Id, a.CustomerId, a.Action, a.ChangedBy,
 
             // 3) Audit
             c.RecordTimeStamp = DateTime.UtcNow;
-            c.UpdatedBy = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+            c.UpdatedBy = GetCurrentUserId();
             c.UpdatedDate = DateTime.UtcNow;
 
             db.Entry(c).State = EntityState.Modified;
@@ -732,7 +734,7 @@ SELECT  a.Id, a.CustomerId, a.Action, a.ChangedBy,
                 prop.SetValue(customer, converted);
 
                 // 5) Stamp the update audit fields
-                customer.UpdatedBy = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+                customer.UpdatedBy = GetCurrentUserId();
                 customer.UpdatedDate = DateTime.UtcNow;
 
                 db.SaveChanges();
@@ -780,7 +782,7 @@ SELECT  a.Id, a.CustomerId, a.Action, a.ChangedBy,
 
             // soft-delete
             c.Deleted = true;
-            c.UpdatedBy = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+            c.UpdatedBy = GetCurrentUserId();
             c.UpdatedDate = DateTime.UtcNow;
             db.SaveChanges();
 

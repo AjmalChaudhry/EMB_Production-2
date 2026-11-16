@@ -1,7 +1,8 @@
-import { Component, ViewChild, ElementRef, OnInit, AfterViewInit } from '@angular/core';
+import { Component, ViewChild, ElementRef, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 import {
   PurchaseRowViewModel,
@@ -56,7 +57,13 @@ interface PurchaseFormUI {
   templateUrl: './purchase.component.html',
   styleUrls: ['./purchase.component.css']
 })
-export class PurchaseComponent implements OnInit, AfterViewInit {
+export class PurchaseComponent implements OnInit, AfterViewInit, OnDestroy {
+  private queryParamsSub?: Subscription;
+
+  ngOnDestroy(): void {
+    this.queryParamsSub?.unsubscribe();
+  }
+
   // ===================== DATA =====================
   rows: PurchaseRowViewModel[] = [];
   previewItems: any[] = [];
@@ -196,7 +203,7 @@ export class PurchaseComponent implements OnInit, AfterViewInit {
     this.loadOpenPos();
 
     // Handle ?poId=N — wait until dropdowns are ready, THEN prefill.
-    this.route.queryParams.subscribe(qp => {
+    this.queryParamsSub = this.route.queryParams.subscribe(qp => {
       const poId = Number(qp['poId']);
       if (poId && poId > 0) {
         this.dropdownsReady.then(() => this.openFromPo(poId));

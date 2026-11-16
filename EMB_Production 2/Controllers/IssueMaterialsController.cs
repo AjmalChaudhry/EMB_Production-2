@@ -263,9 +263,12 @@ namespace EMB_Production.Controllers
         {
             try
             {
+                int branchId = GetCurrentBranchId();
+
                 var q = db.Gen_Store
                     .Where(s => s.ReferenceType == "MATERIAL_ISSUE"
                                 && s.Deleted != true
+                                && s.BranchId == branchId
                                 && !string.IsNullOrEmpty(s.ReferenceNo));
 
                 if (workOrderId.HasValue)
@@ -328,10 +331,13 @@ namespace EMB_Production.Controllers
                 if (string.IsNullOrWhiteSpace(issueCode))
                     return JsonError("Issue code is required.");
 
+                int branchId = GetCurrentBranchId();
+
                 var rows = db.Gen_Store
                     .Where(s => s.ReferenceNo == issueCode
                                 && s.ReferenceType == "MATERIAL_ISSUE"
-                                && s.Deleted != true)
+                                && s.Deleted != true
+                                && s.BranchId == branchId)
                     .OrderBy(s => s.Id)
                     .ToList();
 

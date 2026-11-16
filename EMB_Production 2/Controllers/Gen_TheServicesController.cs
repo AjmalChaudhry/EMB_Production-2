@@ -528,7 +528,7 @@ SELECT  a.Id, a.ServiceId, a.Action, a.ChangedBy,
         {
             try
             {
-                var model = db.Gen_TheServices.FirstOrDefault(x => x.Id == dto.id);
+                var model = db.Gen_TheServices.FirstOrDefault(x => x.Id == dto.id && x.Deleted != true);
 
                 if (model == null)
                     return Json(new { success = false, message = "Record not found." });
@@ -582,7 +582,7 @@ SELECT  a.Id, a.ServiceId, a.Action, a.ChangedBy,
             model.Deleted = true;
             model.Active = false;
             model.UpdatedDate = DateTime.Now;
-            model.UpdatedBy = GetCurrentEmployeeId(); // or Session User
+            model.UpdatedBy = GetCurrentUserId();
             model.RecordTimeStamp = DateTime.Now;
 
             db.SaveChanges();
@@ -734,6 +734,25 @@ SELECT  a.Id, a.ServiceId, a.Action, a.ChangedBy,
             }
             return RedirectToAction("Index");
         }
+        // Only these business fields may be touched through the generic
+        // field-update path below. Id, soft-delete, branch and audit
+        // columns (Deleted, Active, BranchId, CreatedBy, CreatedDate,
+        // UpdatedBy, UpdatedDate, RecordTimeStamp) are deliberately left
+        // out — letting a caller set those via raw reflection would bypass
+        // soft-delete, branch scoping and audit trail integrity.
+        private static readonly HashSet<string> AllowedServiceFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Service_Type",
+            "Service_Name",
+            "Service_RateCharge",
+            "Machine_Device",
+            "Max_Range",
+            "Max_Charges",
+            "Min_Charges",
+            "Field1",
+            "Field2"
+        };
+
         [HttpPost]
         [Route("update-field")]
         public JsonResult UpdateGenTheServiceField(int id, string fieldName, string newValue)
@@ -741,6 +760,9 @@ SELECT  a.Id, a.ServiceId, a.Action, a.ChangedBy,
             // 1) Auth check
             if (Session["UserID"] == null)
                 return Json(new { success = false, message = "Not authenticated." });
+
+            if (string.IsNullOrWhiteSpace(fieldName) || !AllowedServiceFields.Contains(fieldName))
+                return Json(new { success = false, message = "Invalid field." });
 
             // 2) Load the Gen_TheServices record
             var entity = db.Gen_TheServices.Find(id);

@@ -95,6 +95,12 @@ namespace EMB_Production.Controllers
         {
             try
             {
+                // Branch scoping: default to the caller's own branch unless
+                // they explicitly asked for another one (consistent with the
+                // branch-scoping convention used across the ERP).
+                if (!branchId.HasValue || branchId.Value <= 0)
+                    branchId = GetCurrentBranchId();
+
                 string deletedClause = string.Equals(showDeleted, "yes", StringComparison.OrdinalIgnoreCase)
                     ? " (e.Deleted = 1) "
                     : " (e.Deleted = 0 OR e.Deleted IS NULL) ";
@@ -609,8 +615,9 @@ WHERE  Id=@id",
             {
                 var hdr = LoadHeader(id);
                 if (hdr == null) return JsonError("Record not found.");
-                if (string.Equals(hdr.Status, "APPROVED", StringComparison.OrdinalIgnoreCase))
-                    return JsonError("Approved requests cannot be deleted — they have already issued stock.");
+                if (!string.Equals(hdr.Status, "DRAFT", StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(hdr.Status, "REJECTED", StringComparison.OrdinalIgnoreCase))
+                    return JsonError("Only DRAFT or REJECTED requests can be deleted. A SUBMITTED request must be rejected first to preserve the audit trail.");
 
                 int userId = GetCurrentUserId();
                 DateTime now = DateTime.Now;

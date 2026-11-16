@@ -1602,6 +1602,7 @@ SELECT  p.Id AS PurchaseId,
                     }
 
                     int linesWritten = 0;
+                    var affectedPoIds = new HashSet<int>();
 
                     foreach (var line in dto.Lines.Where(l => l.ReturnQty > 0))
                     {
@@ -1653,6 +1654,55 @@ SELECT  p.Id AS PurchaseId,
                         });
 
                         linesWritten++;
+
+                        // Keep the originating PO's receipt KPIs/status consistent:
+                        // a return un-receives stock, so roll the returned qty back
+                        // off PurchaseOrderItems.ReceivedQty (never below zero). We
+                        // adjust directly here rather than calling PurchaseOrders'
+                        // /sync-receipts, because that endpoint recomputes ReceivedQty
+                        // by re-summing the full (unreturned) PurchaseItems.Qty per PO
+                        // line — it has no notion of returns, so it would simply undo
+                        // this adjustment back up to the original received quantity.
+                        if (item.PoItemId.HasValue && item.PoItemId.Value > 0)
+                        {
+                            var poItem = db.PurchaseOrderItems.FirstOrDefault(x => x.Id == item.PoItemId.Value);
+                            if (poItem != null)
+                            {
+                                poItem.ReceivedQty = Math.Max(0m, poItem.ReceivedQty - line.ReturnQty);
+                                poItem.UpdatedBy = userId;
+                                poItem.UpdatedDate = now;
+                                affectedPoIds.Add(poItem.PoId);
+                            }
+                        }
+                    }
+
+                    // Re-derive each affected PO's header ReceivedAmount/Status from
+                    // the now-adjusted PurchaseOrderItems rows, mirroring the same
+                    // cap-at-ordered / any-received / all-met rules PurchaseOrders'
+                    // SyncReceipts uses, so the two stay consistent with each other.
+                    foreach (var poId in affectedPoIds)
+                    {
+                        var poItems = db.PurchaseOrderItems
+                            .Where(x => x.PoId == poId && x.Deleted != true)
+                            .ToList();
+
+                        decimal receivedAmount = poItems.Sum(x =>
+                            (x.ReceivedQty > x.OrderedQty ? x.OrderedQty : x.ReceivedQty) * x.Rate);
+                        bool anyReceived = poItems.Any(x => x.ReceivedQty > 0);
+                        bool allMet = poItems.All(x => x.ReceivedQty >= x.OrderedQty);
+
+                        var po = db.PurchaseOrder.FirstOrDefault(x => x.Id == poId);
+                        if (po != null)
+                        {
+                            po.ReceivedAmount = receivedAmount;
+                            if (anyReceived && allMet) po.Status = "FULLY_RECEIVED";
+                            else if (anyReceived) po.Status = "PARTIALLY_RECEIVED";
+                            // If the return zeroed out every line, leave Status as-is —
+                            // same behavior as SyncReceipts when nothing is received.
+                            po.UpdatedBy = userId;
+                            po.UpdatedDate = now;
+                            po.RecordTimeStamp = now;
+                        }
                     }
 
                     db.SaveChanges();
@@ -1757,7 +1807,10 @@ SELECT  p.Id AS PurchaseId,
             {
                 item.Deleted = true;
                 item.Active = false;
-                item.IsPosted = true;
+                // Draft purchases (the only ones Delete allows, per the IsPosted
+                // guard above) never posted a Gen_Store entry, so their lines
+                // must stay IsPosted = false — leave it untouched rather than
+                // marking them posted.
             }
 
             db.SaveChanges();

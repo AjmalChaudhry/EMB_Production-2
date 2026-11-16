@@ -1,7 +1,8 @@
-import { Component, ElementRef, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, ElementRef, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 import * as bootstrap from 'bootstrap';
 
 import { PurchaseRequisitionService, PrAuditEntry } from '../services/purchase-requisition.service';
@@ -28,7 +29,13 @@ interface EditableItem {
   templateUrl: './purchase-requisition.component.html',
   styleUrls: ['./purchase-requisition.component.css']
 })
-export class PurchaseRequisitionComponent implements OnInit, AfterViewInit {
+export class PurchaseRequisitionComponent implements OnInit, AfterViewInit, OnDestroy {
+  private queryParamsSub?: Subscription;
+
+  ngOnDestroy(): void {
+    this.queryParamsSub?.unsubscribe();
+  }
+
   rows: PrRow[] = [];
   summary: PrSummary = { count: 0, draftCount: 0, submittedCount: 0, approvedCount: 0, rejectedCount: 0 };
   loading = false; saving = false;
@@ -118,7 +125,7 @@ export class PurchaseRequisitionComponent implements OnInit, AfterViewInit {
     // reviews supplier/items, then drives Submit + Approve.
     // Done in ngAfterViewInit because openEdit() depends on the modal
     // instance being constructed first.
-    this.route.queryParams.subscribe(qp => {
+    this.queryParamsSub = this.route.queryParams.subscribe(qp => {
       const id = Number(qp['openId']);
       if (id > 0) {
         // Small delay so the loadDropdowns() observables (suppliers,

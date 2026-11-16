@@ -625,7 +625,7 @@ SELECT  a.Id, a.ServiceRateId, a.Action, a.ChangedBy,
                 if (userId <= 0)
                     return JsonError("Session expired.");
 
-                var model = db.Gen_ServiceRates.FirstOrDefault(x => x.Id == dto.Id);
+                var model = db.Gen_ServiceRates.FirstOrDefault(x => x.Id == dto.Id && x.Deleted != true);
                 if (model == null)
                     return JsonError("Record not found");
 
@@ -667,15 +667,15 @@ SELECT  a.Id, a.ServiceRateId, a.Action, a.ChangedBy,
         {
             try
             {
-                var empId = GetCurrentEmployeeId();
+                var userId = GetCurrentUserId();
 
-                var model = db.Gen_ServiceRates.FirstOrDefault(x => x.Id == id);
+                var model = db.Gen_ServiceRates.FirstOrDefault(x => x.Id == id && x.Deleted != true);
                 if (model == null)
                     return JsonError("Record not found");
 
                 model.Deleted = true;
                 model.Active = false;
-                model.UpdatedBy = empId;
+                model.UpdatedBy = userId;
                 model.UpdatedDate = DateTime.Now;
                 model.RecordTimeStamp = DateTime.Now;
 
@@ -809,6 +809,21 @@ SELECT  a.Id, a.ServiceRateId, a.Action, a.ChangedBy,
             }
             return RedirectToAction("Index");
         }
+        // Only these business fields may be touched through the generic
+        // field-update path below. Id, soft-delete, branch and audit
+        // columns (Deleted, Active, BranchId, CreatedBy, CreatedDate,
+        // UpdatedBy, UpdatedDate, RecordTimeStamp) are deliberately left
+        // out — letting a caller set those via raw reflection would bypass
+        // soft-delete, branch scoping and audit trail integrity.
+        private static readonly HashSet<string> AllowedServiceRateFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "CustomerId",
+            "Service_Id",
+            "Charge_Fector",
+            "Remarks",
+            "ProductId"
+        };
+
         [HttpPost]
         [Route("update-field")]
         public JsonResult UpdateServiceRateField(int id, string fieldName, string newValue)
@@ -816,6 +831,9 @@ SELECT  a.Id, a.ServiceRateId, a.Action, a.ChangedBy,
             // make sure the user is authenticated
             if (Session["UserID"] == null)
                 return Json(new { success = false, message = "Not authenticated." });
+
+            if (string.IsNullOrWhiteSpace(fieldName) || !AllowedServiceRateFields.Contains(fieldName))
+                return Json(new { success = false, message = "Invalid field." });
 
             // load the rate
             var entity = db.Gen_ServiceRates.Find(id);

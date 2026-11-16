@@ -317,97 +317,113 @@ namespace EMB_Production.Controllers
             if (qty <= 0)
                 return JsonError("Dispatch quantity must be greater than zero.");
 
-            var dispatch = db.Dispatch.FirstOrDefault(d =>
-                d.Id == dto.DispatchId &&
-                d.Deleted != true);
-
-            if (dispatch == null)
-                return JsonError("Dispatch not found.");
-
-            if (dispatch.IsPosted)
-                return JsonError("Posted dispatch cannot be modified.");
-
-            if (dispatch.IsReversed)
-                return JsonError("Reversed dispatch cannot be modified.");
-
-            string saleType = NormalizeSaleType(dispatch.SaleType);
-
-            decimal available = GetDispatchAvailableQty(
-                dto.ProductId,
-                dispatch.BranchId,
-                saleType,
-                dispatch.Id,
-                dispatch.CustomerId);
-
-            if (qty > available)
+            // Medium-severity fix: the balance check and the write must be
+            // atomic (matches DispatchesController's Create/Update), so a
+            // concurrent dispatch/item can't slip in between the availability
+            // check and SaveChanges and over-commit the same stock.
+            using (var tx = db.Database.BeginTransaction())
             {
-                return JsonError(
-                    saleType == "DIRECT_SALE"
-                        ? "Dispatch quantity exceeds free company stock (pending drafts already reserved)."
-                        : "Dispatch quantity exceeds customer reserved stock (pending drafts already reserved).");
+                try
+                {
+                    var dispatch = db.Dispatch.FirstOrDefault(d =>
+                        d.Id == dto.DispatchId &&
+                        d.Deleted != true);
+
+                    if (dispatch == null)
+                        return JsonError("Dispatch not found.");
+
+                    if (dispatch.IsPosted)
+                        return JsonError("Posted dispatch cannot be modified.");
+
+                    if (dispatch.IsReversed)
+                        return JsonError("Reversed dispatch cannot be modified.");
+
+                    string saleType = NormalizeSaleType(dispatch.SaleType);
+
+                    decimal available = GetDispatchAvailableQty(
+                        dto.ProductId,
+                        dispatch.BranchId,
+                        saleType,
+                        dispatch.Id,
+                        dispatch.CustomerId);
+
+                    if (qty > available)
+                    {
+                        return JsonError(
+                            saleType == "DIRECT_SALE"
+                                ? "Dispatch quantity exceeds free company stock (pending drafts already reserved)."
+                                : "Dispatch quantity exceeds customer reserved stock (pending drafts already reserved).");
+                    }
+
+                    bool exists = db.DispatchItems.Any(x =>
+                        x.DispatchId == dto.DispatchId &&
+                        x.ProductId == dto.ProductId &&
+                        x.Deleted != true);
+
+                    if (exists)
+                        return JsonError("This product is already added.");
+
+                    decimal costPrice = dto.CostPrice > 0m
+                        ? dto.CostPrice
+                        : GetProductCostPrice(dto.ProductId, dispatch.BranchId);
+
+                    decimal baseSalePrice = dto.BaseSalePrice > 0m
+                        ? dto.BaseSalePrice
+                        : GetBaseSalePrice(costPrice);
+
+                    decimal discountPercent = dto.DiscountPercent < 0m ? 0m : dto.DiscountPercent;
+                    decimal discountAmount = dto.DiscountAmount < 0m ? 0m : dto.DiscountAmount;
+
+                    decimal salePrice = dto.SalePrice > 0m
+                        ? dto.SalePrice
+                        : CalculateSalePrice(baseSalePrice, discountPercent, discountAmount);
+
+                    decimal amount = qty * salePrice;
+
+                    int userId = GetCurrentUserId();
+                    DateTime now = DateTime.Now;
+
+                    db.DispatchItems.Add(new DispatchItems
+                    {
+                        DispatchId = dto.DispatchId,
+                        ProductId = dto.ProductId,
+                        BranchId = dispatch.BranchId,
+
+                        DispatchQty = qty,
+                        AvailableQtySnapshot = available,
+
+                        CostPrice = costPrice,
+                        BaseSalePrice = baseSalePrice,
+                        DiscountPercent = discountPercent,
+                        DiscountAmount = discountAmount,
+                        SalePrice = salePrice,
+                        Amount = amount,
+
+                        Unit = string.IsNullOrWhiteSpace(dto.Unit) ? "PCS" : dto.Unit,
+                        Remarks = dto.Remarks ?? "",
+
+                        IsPosted = false,
+                        Active = true,
+                        Deleted = false,
+
+                        CreatedBy = userId,
+                        CreatedDate = now,
+                        UpdatedBy = userId,
+                        UpdatedDate = now,
+                        RecordTimeStamp = now
+                    });
+
+                    db.SaveChanges();
+                    tx.Commit();
+
+                    return JsonSuccess("Dispatch item added successfully.");
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return JsonError("Dispatch item add failed: " + ex.Message);
+                }
             }
-
-            bool exists = db.DispatchItems.Any(x =>
-                x.DispatchId == dto.DispatchId &&
-                x.ProductId == dto.ProductId &&
-                x.Deleted != true);
-
-            if (exists)
-                return JsonError("This product is already added.");
-
-            decimal costPrice = dto.CostPrice > 0m
-                ? dto.CostPrice
-                : GetProductCostPrice(dto.ProductId, dispatch.BranchId);
-
-            decimal baseSalePrice = dto.BaseSalePrice > 0m
-                ? dto.BaseSalePrice
-                : GetBaseSalePrice(costPrice);
-
-            decimal discountPercent = dto.DiscountPercent < 0m ? 0m : dto.DiscountPercent;
-            decimal discountAmount = dto.DiscountAmount < 0m ? 0m : dto.DiscountAmount;
-
-            decimal salePrice = dto.SalePrice > 0m
-                ? dto.SalePrice
-                : CalculateSalePrice(baseSalePrice, discountPercent, discountAmount);
-
-            decimal amount = qty * salePrice;
-
-            int userId = GetCurrentUserId();
-            DateTime now = DateTime.Now;
-
-            db.DispatchItems.Add(new DispatchItems
-            {
-                DispatchId = dto.DispatchId,
-                ProductId = dto.ProductId,
-                BranchId = dispatch.BranchId,
-
-                DispatchQty = qty,
-                AvailableQtySnapshot = available,
-
-                CostPrice = costPrice,
-                BaseSalePrice = baseSalePrice,
-                DiscountPercent = discountPercent,
-                DiscountAmount = discountAmount,
-                SalePrice = salePrice,
-                Amount = amount,
-
-                Unit = string.IsNullOrWhiteSpace(dto.Unit) ? "PCS" : dto.Unit,
-                Remarks = dto.Remarks ?? "",
-
-                IsPosted = false,
-                Active = true,
-                Deleted = false,
-
-                CreatedBy = userId,
-                CreatedDate = now,
-                UpdatedBy = userId,
-                UpdatedDate = now,
-                RecordTimeStamp = now
-            });
-
-            db.SaveChanges();
-
-            return JsonSuccess("Dispatch item added successfully.");
         }
 
         [HttpPost, Route("update")]
@@ -424,91 +440,106 @@ namespace EMB_Production.Controllers
             if (qty <= 0)
                 return JsonError("Dispatch quantity must be greater than zero.");
 
-            var row = db.DispatchItems
-                .Include("Dispatch")
-                .FirstOrDefault(x => x.Id == dto.Id && x.Deleted != true);
-
-            if (row == null)
-                return JsonError("Item not found.");
-
-            if (row.Dispatch == null)
-                return JsonError("Dispatch header not found.");
-
-            if (row.Dispatch.IsPosted)
-                return JsonError("Posted dispatch cannot be modified.");
-
-            if (row.Dispatch.IsReversed)
-                return JsonError("Reversed dispatch cannot be modified.");
-
-            string saleType = NormalizeSaleType(row.Dispatch.SaleType);
-
-            decimal available = GetDispatchAvailableQty(
-                dto.ProductId,
-                row.Dispatch.BranchId,
-                saleType,
-                row.Dispatch.Id,
-                row.Dispatch.CustomerId);
-
-            if (qty > available)
+            // Medium-severity fix: wrap the balance check + write in a
+            // transaction, matching DispatchesController's Create/Update,
+            // so the availability check and SaveChanges commit atomically.
+            using (var tx = db.Database.BeginTransaction())
             {
-                return JsonError(
-                    saleType == "DIRECT_SALE"
-                        ? "Dispatch quantity exceeds free company stock (pending drafts already reserved)."
-                        : "Dispatch quantity exceeds customer reserved stock (pending drafts already reserved).");
+                try
+                {
+                    var row = db.DispatchItems
+                        .Include("Dispatch")
+                        .FirstOrDefault(x => x.Id == dto.Id && x.Deleted != true);
+
+                    if (row == null)
+                        return JsonError("Item not found.");
+
+                    if (row.Dispatch == null)
+                        return JsonError("Dispatch header not found.");
+
+                    if (row.Dispatch.IsPosted)
+                        return JsonError("Posted dispatch cannot be modified.");
+
+                    if (row.Dispatch.IsReversed)
+                        return JsonError("Reversed dispatch cannot be modified.");
+
+                    string saleType = NormalizeSaleType(row.Dispatch.SaleType);
+
+                    decimal available = GetDispatchAvailableQty(
+                        dto.ProductId,
+                        row.Dispatch.BranchId,
+                        saleType,
+                        row.Dispatch.Id,
+                        row.Dispatch.CustomerId);
+
+                    if (qty > available)
+                    {
+                        return JsonError(
+                            saleType == "DIRECT_SALE"
+                                ? "Dispatch quantity exceeds free company stock (pending drafts already reserved)."
+                                : "Dispatch quantity exceeds customer reserved stock (pending drafts already reserved).");
+                    }
+
+                    bool exists = db.DispatchItems.Any(x =>
+                        x.Id != row.Id &&
+                        x.DispatchId == row.DispatchId &&
+                        x.ProductId == dto.ProductId &&
+                        x.Deleted != true);
+
+                    if (exists)
+                        return JsonError("This product is already added.");
+
+                    decimal costPrice = dto.CostPrice > 0m
+                        ? dto.CostPrice
+                        : GetProductCostPrice(dto.ProductId, row.Dispatch.BranchId);
+
+                    decimal baseSalePrice = dto.BaseSalePrice > 0m
+                        ? dto.BaseSalePrice
+                        : GetBaseSalePrice(costPrice);
+
+                    decimal discountPercent = dto.DiscountPercent < 0m ? 0m : dto.DiscountPercent;
+                    decimal discountAmount = dto.DiscountAmount < 0m ? 0m : dto.DiscountAmount;
+
+                    decimal salePrice = dto.SalePrice > 0m
+                        ? dto.SalePrice
+                        : CalculateSalePrice(baseSalePrice, discountPercent, discountAmount);
+
+                    decimal amount = qty * salePrice;
+
+                    int userId = GetCurrentUserId();
+                    DateTime now = DateTime.Now;
+
+                    row.ProductId = dto.ProductId;
+                    row.BranchId = row.Dispatch.BranchId;
+                    row.DispatchQty = qty;
+                    row.AvailableQtySnapshot = available;
+
+                    row.CostPrice = costPrice;
+                    row.BaseSalePrice = baseSalePrice;
+                    row.DiscountPercent = discountPercent;
+                    row.DiscountAmount = discountAmount;
+                    row.SalePrice = salePrice;
+                    row.Amount = amount;
+
+                    row.Unit = string.IsNullOrWhiteSpace(dto.Unit) ? "PCS" : dto.Unit;
+                    row.Remarks = dto.Remarks ?? "";
+                    row.Active = true;
+
+                    row.UpdatedBy = userId;
+                    row.UpdatedDate = now;
+                    row.RecordTimeStamp = now;
+
+                    db.SaveChanges();
+                    tx.Commit();
+
+                    return JsonSuccess("Dispatch item updated successfully.");
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return JsonError("Dispatch item update failed: " + ex.Message);
+                }
             }
-
-            bool exists = db.DispatchItems.Any(x =>
-                x.Id != row.Id &&
-                x.DispatchId == row.DispatchId &&
-                x.ProductId == dto.ProductId &&
-                x.Deleted != true);
-
-            if (exists)
-                return JsonError("This product is already added.");
-
-            decimal costPrice = dto.CostPrice > 0m
-                ? dto.CostPrice
-                : GetProductCostPrice(dto.ProductId, row.Dispatch.BranchId);
-
-            decimal baseSalePrice = dto.BaseSalePrice > 0m
-                ? dto.BaseSalePrice
-                : GetBaseSalePrice(costPrice);
-
-            decimal discountPercent = dto.DiscountPercent < 0m ? 0m : dto.DiscountPercent;
-            decimal discountAmount = dto.DiscountAmount < 0m ? 0m : dto.DiscountAmount;
-
-            decimal salePrice = dto.SalePrice > 0m
-                ? dto.SalePrice
-                : CalculateSalePrice(baseSalePrice, discountPercent, discountAmount);
-
-            decimal amount = qty * salePrice;
-
-            int userId = GetCurrentUserId();
-            DateTime now = DateTime.Now;
-
-            row.ProductId = dto.ProductId;
-            row.BranchId = row.Dispatch.BranchId;
-            row.DispatchQty = qty;
-            row.AvailableQtySnapshot = available;
-
-            row.CostPrice = costPrice;
-            row.BaseSalePrice = baseSalePrice;
-            row.DiscountPercent = discountPercent;
-            row.DiscountAmount = discountAmount;
-            row.SalePrice = salePrice;
-            row.Amount = amount;
-
-            row.Unit = string.IsNullOrWhiteSpace(dto.Unit) ? "PCS" : dto.Unit;
-            row.Remarks = dto.Remarks ?? "";
-            row.Active = true;
-
-            row.UpdatedBy = userId;
-            row.UpdatedDate = now;
-            row.RecordTimeStamp = now;
-
-            db.SaveChanges();
-
-            return JsonSuccess("Dispatch item updated successfully.");
         }
 
         [HttpPost, Route("delete/{id:int}")]

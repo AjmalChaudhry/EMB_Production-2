@@ -531,7 +531,10 @@ namespace EMB_Production.Controllers
             t.BranchId = vm.EditThread.BranchId;
             t.Active = vm.EditThread.Active;
             t.Deleted = vm.EditThread.Deleted;
-            t.UpdatedBy = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+            // UpdatedBy must hold an Adm_Users.Id, consistent with the rest of
+            // this controller (GetSafeCurrentUserId()) and with Detail()'s join
+            // against Adm_Users - not a raw EmployeeId/UserID session read.
+            t.UpdatedBy = GetSafeCurrentUserId();
             t.UpdatedDate = DateTime.UtcNow;
 
             db.Entry(t).State = EntityState.Modified;
@@ -616,8 +619,11 @@ namespace EMB_Production.Controllers
                 }
 
                 // set the value and audit
+                // UpdatedBy must hold an Adm_Users.Id, consistent with the rest of
+                // this controller (GetSafeCurrentUserId()) - not a raw
+                // EmployeeId/UserID session read.
                 prop.SetValue(entity, converted);
-                entity.UpdatedBy = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+                entity.UpdatedBy = GetSafeCurrentUserId();
                 entity.UpdatedDate = DateTime.Now;
 
                 db.SaveChanges();

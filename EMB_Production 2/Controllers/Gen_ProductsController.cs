@@ -507,21 +507,17 @@ namespace EMB_Production.Controllers
                 return View("Index", vm);
 
             // audit & save
+            // CreatedBy/UpdatedBy must hold an Adm_Users.Id (per Detail(), which
+            // joins p.CreatedBy/p.UpdatedBy against Adm_Users.Id), not an
+            // EmployeeId, so resolve via the same helper the rest of this
+            // controller uses.
             var now = DateTime.UtcNow;
-            int empId = 0;
-            if (Session["EmployeeId"] != null)
-                empId = Convert.ToInt32(Session["EmployeeId"]);
-            else
-            {
-                var username = User.Identity?.Name ?? "";
-                var user = db.Adm_Users.FirstOrDefault(u => u.UserName == username);
-                empId = user?.EmployeeId ?? 0;
-            }
+            int userId = GetCurrentUserId();
 
             var p = vm.NewProduct;
-            p.CreatedBy = empId;
+            p.CreatedBy = userId;
             p.CreatedDate = now;
-            p.UpdatedBy = empId;
+            p.UpdatedBy = userId;
             p.UpdatedDate = now;
             p.RecordTimeStamp = now;
             p.Deleted = false;
@@ -567,7 +563,7 @@ namespace EMB_Production.Controllers
             p.BranchId = vm.EditProduct.BranchId;
             p.Active = vm.EditProduct.Active;
             p.Deleted = vm.EditProduct.Deleted;
-            p.UpdatedBy = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+            p.UpdatedBy = GetCurrentUserId();
             p.UpdatedDate = DateTime.UtcNow;
             p.RecordTimeStamp = DateTime.UtcNow;
 

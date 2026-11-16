@@ -217,12 +217,16 @@ SELECT  a.Id,
                 string statusUp   = (status ?? "").Trim().ToUpper();
                 string shiftUp    = (shift ?? "").Trim().ToUpper();
 
+                int branchId = GetCurrentBranchId();
+
                 var prodQ = db.DailyProduction
                     .Include("WorkOrderItems.WorkOrders")
                     .Include("WorkOrderItems.Gen_Design")
                     .Include("WorkOrderItems.Gen_Products")
                     .Include("Gen_Machines")
-                    .Where(p => p.Deleted != true);
+                    .Where(p => p.Deleted != true
+                             && p.WorkOrderItems != null
+                             && p.WorkOrderItems.BranchId == branchId);
 
                 if (fromDt.HasValue) prodQ = prodQ.Where(p => p.StartTime >= fromDt.Value);
                 if (toDt.HasValue)   prodQ = prodQ.Where(p => p.StartTime <= toDt.Value);
@@ -585,12 +589,16 @@ SELECT  a.Id,
         {
             try
             {
+                int branchId = GetCurrentBranchId();
+
                 var entity = db.DailyProduction
                     .Include("WorkOrderItems.WorkOrders")
                     .Include("WorkOrderItems.Gen_Design")
                     .Include("WorkOrderItems.Gen_Products")
                     .Include("Gen_Machines")
-                    .FirstOrDefault(x => x.Id == id && x.Deleted != true);
+                    .FirstOrDefault(x => x.Id == id && x.Deleted != true
+                                       && x.WorkOrderItems != null
+                                       && x.WorkOrderItems.BranchId == branchId);
 
                 if (entity == null)
                     return JsonError("Not found.");
@@ -1071,13 +1079,17 @@ SELECT  a.Id,
         {
             try
             {
+                int branchId = GetCurrentBranchId();
+
                 var p = db.DailyProduction
                     .Include("WorkOrderItems.WorkOrders")
                     .Include("WorkOrderItems.Gen_Design")
                     .Include("WorkOrderItems.Gen_Products")
                     .Include("WorkOrderItems.Gen_Components")
                     .Include("Gen_Machines")
-                    .FirstOrDefault(x => x.Id == id && x.Deleted != true);
+                    .FirstOrDefault(x => x.Id == id && x.Deleted != true
+                                       && x.WorkOrderItems != null
+                                       && x.WorkOrderItems.BranchId == branchId);
 
                 if (p == null) return JsonError("Daily production not found.");
 
