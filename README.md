@@ -2,6 +2,8 @@
 
 An ERP system for apparel/garment production — covering work orders, production tracking, quality control, inventory, purchasing, and dispatch — built as an ASP.NET MVC 5 backend hosting an Angular single-page application.
 
+> **Note:** This repository is public so the source can be viewed and reviewed, but it is **not open source** — see [License](#license) below. No license is granted to copy, modify, distribute, or otherwise use this code without prior written permission from the copyright holder.
+
 ## Tech stack
 
 | Layer | Technology |
@@ -75,4 +77,4 @@ For full-stack development, run `ng serve` on port 4200 alongside the MVC site (
 
 ## License
 
-Proprietary — all rights reserved.
+**Source-available — all rights reserved.** This repository is public for visibility/review purposes only. Viewing the code does not grant any license to use, copy, modify, merge, publish, distribute, sublicense, or sell copies of this software, in whole or in part. All rights are reserved by the copyright holder. For permission requests, contact the repository owner.
