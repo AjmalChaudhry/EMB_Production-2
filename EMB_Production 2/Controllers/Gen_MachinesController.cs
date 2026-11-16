@@ -863,12 +863,38 @@ SELECT  a.Id, a.MachineId, a.Action, a.ChangedBy,
             ViewBag.ServiceList = new SelectList(services, "Id", "Service_Name", selectedServiceId);
         }
 
+        // Explicit whitelist of business fields this endpoint may edit via
+        // reflection. Anything not listed here is refused — in particular
+        // Id, Deleted, Active, BranchId, CreatedBy, CreatedDate, UpdatedBy,
+        // UpdatedDate (and RecordTimeStamp) must never be settable through
+        // this generic field-update path, since that would let a caller
+        // bypass soft-delete, branch scoping and audit trail integrity.
+        private static readonly HashSet<string> AllowedMachineFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Code",
+            "BrandId",
+            "ServiceId",
+            "HeadtoHead",
+            "FrameHeight",
+            "HeadsNum",
+            "NeedlesNum",
+            "Serial_Number",
+            "Calling_Number",
+            "PurchaseDate",
+            "Warranty",
+            "ServiceEnd",
+            "ServiceNext"
+        };
+
         [HttpPost]
         [Route("update-field")]
         public JsonResult UpdateMachineField(int machineId, string fieldName, string newValue)
         {
             if (Session["UserID"] == null)
                 return Json(new { success = false, message = "Not authenticated." });
+
+            if (string.IsNullOrWhiteSpace(fieldName) || !AllowedMachineFields.Contains(fieldName))
+                return Json(new { success = false, message = "Invalid field." });
 
             // 1) Load the machine
             var machine = db.Gen_Machines.Find(machineId);
@@ -956,8 +982,23 @@ SELECT  a.Id, a.MachineId, a.Action, a.ChangedBy,
         public ActionResult DeleteConfirmed(int id)
         {
             var m = db.Gen_Machines.Find(id);
-            db.Gen_Machines.Remove(m);
+            if (m == null) return HttpNotFound();
+
+            // Soft delete — matches the Delete(int id) JSON action above;
+            // a hard delete here would bypass the audit trail and could
+            // violate FK constraints from DailyProduction/WorkOrderItems/etc.
+            m.Deleted = true;
+            m.Active = false;
+            m.UpdatedBy = GetCurrentEmployeeId();
+            m.UpdatedDate = DateTime.Now;
+            m.RecordTimeStamp = DateTime.Now;
+
             db.SaveChanges();
+
+            LogMachineAudit(id, "DELETED",
+                oldValue: "Active", newValue: "Deleted",
+                detail: m.Code);
+
             return RedirectToAction("Index");
         }
 

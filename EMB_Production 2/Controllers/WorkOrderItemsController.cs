@@ -567,12 +567,26 @@ namespace EMB_Production.Controllers
         {
             try
             {
-                var entity = db.WorkOrderItems                    
+                var entity = db.WorkOrderItems
                     .FirstOrDefault(x => x.Id == id);
 
                 if (entity == null || entity.Deleted == true)
                     return JsonError("Record not found.");
-               
+
+                bool hasProduction = db.DailyProduction.Any(x =>
+                    x.WorkOrderItemId == id &&
+                    x.Deleted != true);
+
+                if (hasProduction)
+                    return JsonError("This Work Order Item is already used in production and cannot be deleted.");
+
+                bool hasQc = db.QC_Inspection.Any(x =>
+                    x.WorkOrderItemId == id &&
+                    x.Deleted != true);
+
+                if (hasQc)
+                    return JsonError("This Work Order Item already has a QC Inspection and cannot be deleted.");
+
                 entity.Deleted = true;
                 entity.UpdatedBy = GetCurrentUserId();
                 entity.UpdatedDate = DateTime.Now;

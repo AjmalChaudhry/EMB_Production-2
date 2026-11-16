@@ -812,6 +812,37 @@ SELECT  p.Id AS PurchaseId,
                                 return JsonError("Selected fabric does not exist or is not a FABRIC raw item.");
                         }
 
+                        // Cap the GRN line against the linked PO line's outstanding
+                        // quantity (OrderedQty - ReceivedQty). Without this, a GRN
+                        // can over-receive a PO line, which drives SyncReceipts'
+                        // outstanding figure negative and hides the over-receipt
+                        // instead of flagging it. No existing "allow over-receipt"
+                        // override flow exists in this codebase, so this is a hard block.
+                        if (i.PoItemId.HasValue && i.PoItemId.Value > 0)
+                        {
+                            var poLine = db.PurchaseOrderItems
+                                .FirstOrDefault(x => x.Id == i.PoItemId.Value && x.Deleted != true);
+                            if (poLine == null)
+                                return JsonError("Linked purchase order line not found.");
+
+                            decimal outstanding = poLine.OrderedQty - poLine.ReceivedQty;
+
+                            // Multiple GRN lines in this same submission can reference
+                            // the same PO line; account for quantity already claimed
+                            // earlier in this request before checking this one.
+                            decimal alreadyQueuedInThisRequest = dto.Items
+                                .TakeWhile(x => !ReferenceEquals(x, i))
+                                .Where(x => x.PoItemId.HasValue && x.PoItemId.Value == i.PoItemId.Value)
+                                .Sum(x => x.Qty);
+
+                            decimal remainingOutstanding = outstanding - alreadyQueuedInThisRequest;
+
+                            if (i.Qty > remainingOutstanding)
+                                return JsonError(string.Format(
+                                    "Quantity {0} exceeds the outstanding PO quantity ({1}) for this line.",
+                                    i.Qty, Math.Max(remainingOutstanding, 0m)));
+                        }
+
                         var purchaseItem = new PurchaseItems
                         {
                             PurchaseId = purchase.Id,
@@ -2273,8 +2304,12 @@ SELECT  p.Id AS PurchaseId,
 
         private string GetRawItemUnit(int itemId)
         {
+            var unitCode = db.Gen_RawItems
+                .Where(r => r.Id == itemId)
+                .Select(r => r.Gen_Units.UnitCode)
+                .FirstOrDefault();
 
-            return "PCS";
+            return string.IsNullOrWhiteSpace(unitCode) ? "PCS" : unitCode;
         }
 
         // FABRIC: balance computed from Gen_Stocks rows tagged ItemType="FABRIC"

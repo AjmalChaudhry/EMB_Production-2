@@ -386,10 +386,10 @@ namespace EMB_Production.Controllers
             {
                 html += "<tr>" +
                         $"<td>{x.Id}</td>" +
-                        $"<td>{x.Status}</td>" +
+                        $"<td>{System.Net.WebUtility.HtmlEncode(x.Status)}</td>" +
                         $"<td>{x.StatusDate:yyyy-MM-dd HH:mm}</td>" +
-                        $"<td>{x.Remarks}</td>" +
-                        $"<td>{(x.Branches != null ? x.Branches.Name : "")}</td>" +
+                        $"<td>{System.Net.WebUtility.HtmlEncode(x.Remarks)}</td>" +
+                        $"<td>{System.Net.WebUtility.HtmlEncode(x.Branches != null ? x.Branches.Name : "")}</td>" +
                         $"<td>{(x.Active == true ? "Yes" : "No")}</td>" +
                         "</tr>";
             }

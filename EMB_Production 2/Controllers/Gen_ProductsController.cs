@@ -724,7 +724,17 @@ namespace EMB_Production.Controllers
         public ActionResult DeleteConfirmed(int id)
         {
             var p = db.Gen_Products.Find(id);
-            db.Gen_Products.Remove(p);
+            if (p == null)
+                return HttpNotFound();
+
+            var now = DateTime.UtcNow;
+            int userId = GetCurrentUserId();
+
+            p.Deleted = true;
+            p.UpdatedBy = userId;
+            p.UpdatedDate = now;
+            p.RecordTimeStamp = now;
+
             db.SaveChanges();
             return RedirectToAction("Index");
         }

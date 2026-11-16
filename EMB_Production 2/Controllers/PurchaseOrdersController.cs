@@ -706,21 +706,28 @@ WHERE  Id = @prId
                     {
                         // Recompute ReceivedQty per PO line by summing the linked
                         // GRN (PurchaseItems.Qty) rows. UPDATE-from-SELECT keeps
-                        // this single-statement and atomic.
+                        // this single-statement and atomic. The summed quantity is
+                        // capped at OrderedQty so an over-received line can never
+                        // push ReceivedQty past OrderedQty and hide the over-receipt
+                        // as a negative "outstanding" figure elsewhere (e.g. prefill-from-po).
                         db.Database.ExecuteSqlCommand(@"
 UPDATE poi
-SET    poi.ReceivedQty = ISNULL((
-           SELECT SUM(pi.Qty)
-           FROM   dbo.PurchaseItems pi
-           INNER JOIN dbo.Purchase p ON p.Id = pi.PurchaseId
-           WHERE  pi.PoItemId = poi.Id
-             AND  (pi.Deleted = 0 OR pi.Deleted IS NULL)
-             AND  (p.Deleted  = 0 OR p.Deleted  IS NULL)
-             AND  p.PurchaseOrderId = @poId
-       ), 0),
+SET    poi.ReceivedQty = CASE
+           WHEN ISNULL(s.SumQty, 0) > poi.OrderedQty THEN poi.OrderedQty
+           ELSE ISNULL(s.SumQty, 0)
+       END,
        poi.UpdatedBy   = @uid,
        poi.UpdatedDate = @now
 FROM   dbo.PurchaseOrderItems poi
+CROSS APPLY (
+    SELECT SUM(pi.Qty) AS SumQty
+    FROM   dbo.PurchaseItems pi
+    INNER JOIN dbo.Purchase p ON p.Id = pi.PurchaseId
+    WHERE  pi.PoItemId = poi.Id
+      AND  (pi.Deleted = 0 OR pi.Deleted IS NULL)
+      AND  (p.Deleted  = 0 OR p.Deleted  IS NULL)
+      AND  p.PurchaseOrderId = @poId
+) s
 WHERE  poi.PoId = @poId",
                             new SqlParameter("@poId", id),
                             new SqlParameter("@uid",  userId),

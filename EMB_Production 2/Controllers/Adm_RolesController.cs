@@ -6,12 +6,14 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+using EMB_Production.Infrastructure;
 using EMB_Production.Models;
 
 
 namespace EMB_Production.Controllers
 {
     [RoutePrefix("api/adm-roles")]
+    [SessionAuthorize]
     public class Adm_RolesController : Controller
     {
         private EMB_ProductionEntities1 db = new EMB_ProductionEntities1();

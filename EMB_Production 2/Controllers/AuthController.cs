@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Web.Mvc;
 using System.Web.Security;
+using EMB_Production.Infrastructure;
 using EMB_Production.Models;
 using EMB_Production.ViewModels;
 
@@ -362,10 +363,18 @@ namespace EMB_Production.Controllers
                         JsonRequestBehavior.AllowGet);
 
                 var user = db.Adm_Users.SingleOrDefault(u =>
-                    u.EmailAddress == model.Email && u.Password == model.Password);
+                    u.EmailAddress == model.Email);
 
-                if (user == null)
+                if (user == null || !PasswordHasher.Verify(model.Password, user.Password))
                     return Json(new { success = false, message = "Invalid credentials." }, JsonRequestBehavior.AllowGet);
+
+                // Lazy migration: the stored value was still legacy plaintext (that's
+                // why Verify had to fall back to a direct comparison above) — upgrade
+                // it to a proper PBKDF2 hash now that we know the password is correct.
+                if (!PasswordHasher.IsHashed(user.Password))
+                {
+                    user.Password = PasswordHasher.Hash(model.Password);
+                }
 
                 // Update last login
                 user.LastLoginDate = DateTime.UtcNow;
@@ -428,14 +437,12 @@ namespace EMB_Production.Controllers
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Trace.TraceError("Login failed: " + ex);
+
                 return Json(new
                 {
                     success = false,
-                    message = "Login failed",
-                    error = ex.Message,
-                    inner = ex.InnerException?.Message,
-                    inner2 = ex.InnerException?.InnerException?.Message,
-                    stack = ex.StackTrace
+                    message = "Login failed. Please try again."
                 }, JsonRequestBehavior.AllowGet);
             }
         }
@@ -514,10 +521,12 @@ namespace EMB_Production.Controllers
                 if (user == null)
                     return Json(new { success = false, message = "User not found." });
 
-                if (user.Password != vm.OldPassword)
+                if (!PasswordHasher.Verify(vm.OldPassword, user.Password))
                     return Json(new { success = false, message = "Old password incorrect." });
 
-                user.Password = vm.NewPassword;
+                // Always store the new password hashed — never plaintext, regardless
+                // of whether the old value was still a legacy plaintext password.
+                user.Password = PasswordHasher.Hash(vm.NewPassword);
                 db.SaveChanges();
 
                 return Json(new { success = true, message = "Password changed successfully." },

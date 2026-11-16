@@ -926,7 +926,15 @@ export class DispatchComponent implements OnInit {
 
     this.svc.post(id).subscribe({
       next: (res: any) => {
-        alert(res.message || 'Dispatch posted successfully.');
+        const success = res?.success ?? res?.Success ?? false;
+        const message = res?.message ?? res?.Message ?? 'Dispatch posted successfully.';
+
+        if (!success) {
+          alert(message);
+          return;
+        }
+
+        alert(message);
 
         // Auto-open the Sale Bill (Invoice) PDF after a successful post.
         this.openSaleBill(id);

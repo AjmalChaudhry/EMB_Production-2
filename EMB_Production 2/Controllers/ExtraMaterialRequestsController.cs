@@ -472,6 +472,19 @@ WHERE  Id=@id",
                                     "Item line missing a raw item linkage (line id " + i.Id + ").");
 
                             decimal opening = GetCurrentStoreBalance(rawItemId, branchId);
+
+                            // Same guard Submit() already performs — re-checked here
+                            // because stock can move between Submit and Approve, and
+                            // this is the step that actually writes the Gen_Store OUT
+                            // row. Without it, approval could drive CurrentQty negative.
+                            if (i.Qty > opening)
+                            {
+                                throw new InvalidOperationException(
+                                    "Insufficient stock for " + (i.ItemName ?? ("Item #" + rawItemId))
+                                    + ". Available: " + Math.Round(opening, 2)
+                                    + ", Requested: " + Math.Round(i.Qty, 2) + ".");
+                            }
+
                             decimal rate    = i.Rate ?? GetRawItemLatestRate(rawItemId, branchId);
                             decimal amount  = i.Qty * rate;
                             string unit     = string.IsNullOrWhiteSpace(i.UnitOfMeasure) ? "" : i.UnitOfMeasure;
@@ -1159,16 +1172,21 @@ VALUES (@emrId, @itype, @raw, @thr, @uom, @qty, @rate, @amt, @rmk,
             return 0;
         }
 
+        // Sum InQty - OutQty over non-deleted rows — matches
+        // IssueMaterialsController.GetCurrentStoreBalance so both
+        // controllers agree on the same Gen_Store ledger balance.
+        // (Previously this read the last inserted row's CurrentQty,
+        // a different and more fragile algorithm, and filtered with
+        // `Deleted == false` instead of the nullable-safe `!= true`.)
         private decimal GetCurrentStoreBalance(int rawItemId, int branchId)
         {
-            var last = db.Gen_Store
-                .Where(s => s.ItemId == rawItemId
-                         && s.BranchId == branchId
-                         && s.Deleted == false)
-                .OrderByDescending(s => s.Id)
-                .Select(s => (decimal?)s.CurrentQty)
-                .FirstOrDefault();
-            return last ?? 0m;
+            var q = db.Gen_Store.Where(s => s.ItemId == rawItemId
+                                          && s.BranchId == branchId
+                                          && s.Deleted != true);
+
+            decimal totalIn = q.Sum(s => (decimal?)s.InQty) ?? 0m;
+            decimal totalOut = q.Sum(s => (decimal?)s.OutQty) ?? 0m;
+            return totalIn - totalOut;
         }
     }
 }

@@ -19,7 +19,8 @@ namespace EMB_Production.Controllers
             DateTime? to = null)
         {
             var query = db.Gen_Stocks
-                .Where(x => x.Deleted == false || x.Deleted == null);
+                .Where(x => x.Deleted == false || x.Deleted == null)
+                .Where(x => x.BranchId == GetCurrentBranchId());
 
             if (itemId.HasValue)
                 query = query.Where(x => x.ItemId == itemId.Value);

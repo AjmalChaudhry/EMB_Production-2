@@ -508,7 +508,6 @@ SELECT  a.Id, a.ComponentId AS CompId, a.Action, a.ChangedBy,
         }
 
 
-        [AllowAnonymous]
         [HttpPost, Route("create")]
         public ActionResult Create(ComponentCreateUpdateDto dto)
         {
@@ -575,7 +574,6 @@ SELECT  a.Id, a.ComponentId AS CompId, a.Action, a.ChangedBy,
             return JsonSuccess("Component created successfully.", new { id = entity.Id });
         }
 
-        [AllowAnonymous]
         [HttpPost, Route("update")]
         public ActionResult Update(ComponentCreateUpdateDto dto)
         {
@@ -896,6 +894,18 @@ SELECT  a.Id, a.ComponentId AS CompId, a.Action, a.ChangedBy,
             return RedirectToAction("Index");
         }
 
+        // Explicit whitelist of client-editable business fields for the inline
+        // "update-field" grid endpoint. Anything not listed here — including
+        // Id, Deleted, BranchId and the audit columns — can never be set
+        // through this reflection-based endpoint.
+        private static readonly HashSet<string> ComponentEditableFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Code",
+            "D_Code",
+            "Name",
+            "Active"
+        };
+
         [HttpPost]
         [Route("update-field")]
         public JsonResult UpdateComponentField(int componentId, string fieldName, string newValue)
@@ -906,6 +916,9 @@ SELECT  a.Id, a.ComponentId AS CompId, a.Action, a.ChangedBy,
             var comp = db.Gen_Components.Find(componentId);
             if (comp == null)
                 return Json(new { success = false, message = "Component not found." });
+
+            if (string.IsNullOrWhiteSpace(fieldName) || !ComponentEditableFields.Contains(fieldName))
+                return Json(new { success = false, message = "Field is not allowed to be updated." });
 
             var prop = typeof(Gen_Components).GetProperty(fieldName);
             if (prop == null)
@@ -984,7 +997,14 @@ SELECT  a.Id, a.ComponentId AS CompId, a.Action, a.ChangedBy,
         public ActionResult DeleteConfirmed(int id)
         {
             var comp = db.Gen_Components.Find(id);
-            db.Gen_Components.Remove(comp);
+            if (comp == null)
+                return HttpNotFound();
+
+            comp.Deleted = true;
+            comp.Active = false;
+            comp.UpdatedBy = GetCurrentUserId();
+            comp.UpdatedDate = DateTime.Now;
+
             db.SaveChanges();
             return RedirectToAction("Index");
         }

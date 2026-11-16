@@ -865,7 +865,6 @@ namespace EMB_Production.Controllers
                 .ToList();
 
             decimal inQty = 0m;
-            decimal outQty = 0m;
 
             foreach (var s in stockRows)
             {
@@ -897,9 +896,42 @@ namespace EMB_Production.Controllers
                 if (jo == null)
                     continue;
 
+                // QC_INSPECTION.OutQty is NOT accumulated here — it is a
+                // stale field on the QC-sourced stock-in row itself and is
+                // never updated when a dispatch later posts against this
+                // reservation (dispatch OUT rows are separate Gen_Stocks
+                // ledger entries keyed by ReferenceType = "DISPATCH"). Using
+                // it here made the reserved balance never actually shrink
+                // after a dispatch posted, allowing repeat over-dispatch.
                 inQty += s.InQty ?? 0m;
-                outQty += s.OutQty ?? 0m;
             }
+
+            // Net out POSTED dispatch OUT rows already drawn against this
+            // same customer's reservation for this product+branch. Mirrors
+            // BaseController.ComputeStockBuckets' customer-drain bucketing
+            // (ReferenceType == "DISPATCH" + Dispatch.SaleType ==
+            // CUSTOMER_DEMAND), additionally scoped to this specific
+            // customer since this overload is per-customer.
+            decimal outQty = db.Gen_Stocks
+                .Where(gs =>
+                    gs.Deleted != true &&
+                    gs.StockStage == "FINISHED" &&
+                    gs.BranchId == branchId &&
+                    (gs.ItemType == "PRODUCT" || gs.ItemType == "FINISHED") &&
+                    (
+                        gs.ProdId == productId ||
+                        (!gs.ProdId.HasValue && gs.ItemId == productId)
+                    ) &&
+                    gs.ReferenceType == "DISPATCH" &&
+                    gs.ReferenceId.HasValue &&
+                    db.Dispatch.Any(d =>
+                        d.Id == gs.ReferenceId.Value &&
+                        d.Deleted != true &&
+                        d.CustomerId == customerId &&
+                        d.BranchId == branchId &&
+                        d.SaleType == "CUSTOMER_DEMAND"))
+                .Select(gs => (decimal?)gs.OutQty)
+                .Sum() ?? 0m;
 
             decimal balance = inQty - outQty;
             return balance < 0m ? 0m : balance;

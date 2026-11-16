@@ -49,10 +49,20 @@ namespace EMB_Production.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Id,JobOrderId,CompId,ReqRepeats,ReqHead,Panni,Solving,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Active,Deleted,BranchId")] Gen_JobOrderItems gen_JobOrderItems)
+        public ActionResult Create([Bind(Include = "Id,JobOrderId,CompId,ReqRepeats,ReqHead,Panni,Solving,Active")] Gen_JobOrderItems gen_JobOrderItems)
         {
             if (ModelState.IsValid)
             {
+                int uid = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+
+                // Server-controlled fields: never trust these from client-posted form data.
+                gen_JobOrderItems.CreatedBy = uid;
+                gen_JobOrderItems.CreatedDate = DateTime.UtcNow;
+                gen_JobOrderItems.UpdatedBy = null;
+                gen_JobOrderItems.UpdatedDate = null;
+                gen_JobOrderItems.Deleted = false;
+                gen_JobOrderItems.BranchId = Convert.ToInt32(Session["BranchId"] ?? 0);
+
                 db.Gen_JobOrderItems.Add(gen_JobOrderItems);
                 db.SaveChanges();
                 return RedirectToAction("Index");
@@ -85,10 +95,25 @@ namespace EMB_Production.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "Id,JobOrderId,CompId,ReqRepeats,ReqHead,Panni,Solving,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Active,Deleted,BranchId")] Gen_JobOrderItems gen_JobOrderItems)
+        public ActionResult Edit([Bind(Include = "Id,JobOrderId,CompId,ReqRepeats,ReqHead,Panni,Solving,Active")] Gen_JobOrderItems gen_JobOrderItems)
         {
             if (ModelState.IsValid)
             {
+                // CreatedBy/CreatedDate/Deleted/BranchId must not be overwritten from
+                // client-posted form data; load the existing row's values first.
+                var existing = db.Gen_JobOrderItems.AsNoTracking().FirstOrDefault(x => x.Id == gen_JobOrderItems.Id);
+                if (existing == null)
+                    return HttpNotFound();
+
+                gen_JobOrderItems.CreatedBy = existing.CreatedBy;
+                gen_JobOrderItems.CreatedDate = existing.CreatedDate;
+                gen_JobOrderItems.Deleted = existing.Deleted;
+                gen_JobOrderItems.BranchId = existing.BranchId;
+
+                int uid = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+                gen_JobOrderItems.UpdatedBy = uid;
+                gen_JobOrderItems.UpdatedDate = DateTime.UtcNow;
+
                 db.Entry(gen_JobOrderItems).State = EntityState.Modified;
                 db.SaveChanges();
                 return RedirectToAction("Index");

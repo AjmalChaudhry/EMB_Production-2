@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Net;
@@ -539,6 +540,28 @@ namespace EMB_Production.Controllers
             return RedirectToAction("Index", new { search, activeFilter, page, pageSize });
         }
 
+        // Explicit whitelist of Gen_Threads business fields that may be edited
+        // through this reflective endpoint. Anything not listed here is
+        // rejected, including Id, Deleted, BranchId, RawItemId (the stock
+        // ledger link) and the audit columns, which must never be
+        // mass-assignable from client input.
+        private static readonly HashSet<string> AllowedThreadFields = new HashSet<string>(
+            StringComparer.OrdinalIgnoreCase)
+        {
+            "Code",
+            "Name",
+            "Material",
+            "YarnCount",
+            "Color",
+            "ColorCode",
+            "UnitLength",
+            "UnitOfMeasure",
+            "UnitCost",
+            "SupplierId",
+            "Type",
+            "Active"
+        };
+
         [HttpPost]
         [Route("update-field")]
         public JsonResult UpdateThreadField(int threadId, string fieldName, string newValue)
@@ -546,6 +569,9 @@ namespace EMB_Production.Controllers
             // ensure user is authenticated
             if (Session["UserID"] == null)
                 return Json(new { success = false, message = "Not authenticated." });
+
+            if (string.IsNullOrWhiteSpace(fieldName) || !AllowedThreadFields.Contains(fieldName.Trim()))
+                return Json(new { success = false, message = "Field is not editable." });
 
             // load the thread record
             var entity = db.Gen_Threads.Find(threadId);

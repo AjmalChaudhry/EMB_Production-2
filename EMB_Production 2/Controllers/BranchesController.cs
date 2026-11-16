@@ -13,12 +13,14 @@ using iTextSharp.text;
 using iTextSharp.text.pdf;
 using System.Data.Entity.Infrastructure;
 using System.Diagnostics;
+using EMB_Production.Infrastructure;
 using EMB_Production_2.Models;
 
 namespace EMB_Production.Controllers
     {
         [RoutePrefix("emb-products/branches")]
-        public class Adm_BranchController : BaseController   
+        [SessionAuthorize]
+        public class Adm_BranchController : BaseController
         {
             private const int PageSize = 10;
 

@@ -682,7 +682,13 @@ namespace EMB_Production.Controllers
         public ActionResult DeleteConfirmed(int id)
         {
             Gen_Brands gen_Brands = db.Gen_Brands.Find(id);
-            db.Gen_Brands.Remove(gen_Brands);
+            if (gen_Brands == null)
+                return HttpNotFound();
+
+            gen_Brands.Deleted = true;
+            gen_Brands.UpdatedBy = GetCurrentUserId();
+            gen_Brands.UpdatedDate = DateTime.Now;
+
             db.SaveChanges();
             return RedirectToAction("Index");
         }

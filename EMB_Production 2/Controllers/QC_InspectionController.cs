@@ -826,8 +826,63 @@ SELECT  a.Id,
             public bool     AndPost      { get; set; }
         }
 
+        // Sprint-N fix: ProcessQc used to open its own transaction with
+        // `using (var tx = db.Database.BeginTransaction())` and then, while
+        // STILL inside that using block (tx committed but not yet
+        // Dispose()'d), call Post(qc.Id) directly for the AndPost=true
+        // case. Post() itself opens a fresh `db.Database.BeginTransaction()`
+        // — but EF6 considers a transaction "current" on a DbContext until
+        // Dispose() actually runs, so that second BeginTransaction() threw.
+        // Fix: the entire original method body (including every early
+        // validation return) now lives in ProcessQcCore, still wrapped in
+        // its own `using (tx)` exactly as before — so it keeps committing/
+        // rolling back and disposing exactly as it always did. ProcessQc
+        // itself only calls Post() AFTER ProcessQcCore has returned, i.e.
+        // after that `using` block has fully exited and tx.Dispose() has
+        // already run, so Post()'s own BeginTransaction() starts clean.
+        private class ProcessQcResult
+        {
+            public bool Success;
+            public ActionResult ErrorResult;
+            public int QcId;
+            public string Status;
+            public decimal InspectedQty;
+            public decimal PassedQty;
+            public decimal FailedQty;
+            public decimal ReworkQty;
+            public bool AndPost;
+        }
+
         [HttpPost, Route("process/{id:int}")]
         public ActionResult ProcessQc(int id, QcProcessDto dto = null)
+        {
+            var result = ProcessQcCore(id, dto);
+            if (!result.Success)
+                return result.ErrorResult;
+
+            // If the operator asked for a one-shot Process+Post, chain into
+            // Post() now that the QC has the right counts and
+            // ProcessQcCore's transaction has already committed AND been
+            // disposed. Reuse the same transaction-aware endpoint so the
+            // stock posting + DP rework loop still fire.
+            if (result.AndPost)
+            {
+                var postRes = Post(result.QcId) as JsonResult;
+                return postRes ?? JsonSuccess("QC processed.", new { id = result.QcId, status = result.Status });
+            }
+
+            return JsonSuccess("QC processed.", new
+            {
+                id = result.QcId,
+                status = result.Status,
+                inspectedQty = result.InspectedQty,
+                passedQty = result.PassedQty,
+                failedQty = result.FailedQty,
+                reworkQty = result.ReworkQty
+            });
+        }
+
+        private ProcessQcResult ProcessQcCore(int id, QcProcessDto dto)
         {
             using (var tx = db.Database.BeginTransaction())
             {
@@ -839,16 +894,16 @@ SELECT  a.Id,
 
                     var qc = db.QC_Inspection
                         .FirstOrDefault(x => x.Id == id && x.Deleted != true);
-                    if (qc == null) return JsonError("QC record not found.");
+                    if (qc == null) return new ProcessQcResult { ErrorResult = JsonError("QC record not found.") };
 
                     if (qc.IsPosted)
-                        return JsonError("Posted QC cannot be re-processed. Use Reverse first.");
+                        return new ProcessQcResult { ErrorResult = JsonError("Posted QC cannot be re-processed. Use Reverse first.") };
                     if (string.Equals(qc.Status, QCInspectionStatus.REVERSED, StringComparison.OrdinalIgnoreCase)
                      || string.Equals(qc.Status, QCInspectionStatus.CANCELLED, StringComparison.OrdinalIgnoreCase))
-                        return JsonError("Reversed or cancelled QC cannot be processed.");
+                        return new ProcessQcResult { ErrorResult = JsonError("Reversed or cancelled QC cannot be processed.") };
 
                     decimal batchQty = qc.BatchQty ?? 0m;
-                    if (batchQty <= 0) return JsonError("QC batch quantity is invalid.");
+                    if (batchQty <= 0) return new ProcessQcResult { ErrorResult = JsonError("QC batch quantity is invalid.") };
 
                     // Resolve defaults — auto-fill when the buyer didn't
                     // override (the quick-action button posts an empty
@@ -859,13 +914,13 @@ SELECT  a.Id,
                     decimal passed    = dto?.PassedQty    ?? Math.Max(0m, inspected - failed - rework);
 
                     if (inspected < 0 || passed < 0 || failed < 0 || rework < 0)
-                        return JsonError("Quantities cannot be negative.");
+                        return new ProcessQcResult { ErrorResult = JsonError("Quantities cannot be negative.") };
                     if (inspected > batchQty)
-                        return JsonError("Inspected quantity cannot exceed batch quantity.");
+                        return new ProcessQcResult { ErrorResult = JsonError("Inspected quantity cannot exceed batch quantity.") };
                     if ((passed + failed + rework) > batchQty)
-                        return JsonError("Passed + Failed + Rework cannot exceed batch quantity.");
+                        return new ProcessQcResult { ErrorResult = JsonError("Passed + Failed + Rework cannot exceed batch quantity.") };
                     if (inspected > 0 && (passed + failed + rework) != inspected)
-                        return JsonError("Passed + Failed + Rework must equal inspected quantity.");
+                        return new ProcessQcResult { ErrorResult = JsonError("Passed + Failed + Rework must equal inspected quantity.") };
 
                     qc.InspectedQty = inspected;
                     qc.PassedQty    = passed;
@@ -894,30 +949,22 @@ SELECT  a.Id,
 
                     tx.Commit();
 
-                    // If the operator asked for a one-shot Process+Post,
-                    // chain into Post() now that the QC has the right
-                    // counts. Reuse the same transaction-aware endpoint
-                    // so the stock posting + DP rework loop still fire.
-                    if (dto != null && dto.AndPost && rework == 0)
+                    return new ProcessQcResult
                     {
-                        var postRes = Post(qc.Id) as JsonResult;
-                        return postRes ?? JsonSuccess("QC processed.", new { id = qc.Id, status = qc.Status });
-                    }
-
-                    return JsonSuccess("QC processed.", new
-                    {
-                        id = qc.Id,
-                        status = qc.Status,
-                        inspectedQty = inspected,
-                        passedQty = passed,
-                        failedQty = failed,
-                        reworkQty = rework
-                    });
+                        Success = true,
+                        QcId = qc.Id,
+                        Status = qc.Status,
+                        InspectedQty = inspected,
+                        PassedQty = passed,
+                        FailedQty = failed,
+                        ReworkQty = rework,
+                        AndPost = dto != null && dto.AndPost && rework == 0
+                    };
                 }
                 catch (Exception ex)
                 {
                     tx.Rollback();
-                    return JsonError("Failed to process QC. " + DescribeQcError(ex));
+                    return new ProcessQcResult { ErrorResult = JsonError("Failed to process QC. " + DescribeQcError(ex)) };
                 }
             }
         }
@@ -1761,6 +1808,39 @@ SELECT  a.Id,
             if (qc == null || !qc.WorkOrderId.HasValue || !qc.DesignId.HasValue || !qc.ProductId.HasValue)
                 return;
 
+            // QC review High finding #3 — this used to match EVERY
+            // DailyProduction row for the WorkOrder/Design/Product combo,
+            // so reversing/cancelling one QC batch could also reset rows
+            // that actually belong to a different, unrelated (e.g. already
+            // completed) QC batch for the same combo.
+            //
+            // DailyProduction has no QcInspectionId FK, so there is no
+            // guaranteed, schema-level way to say "these rows belong to
+            // THIS QC batch". The tightest link available without a schema
+            // change comes from how rows actually get attached to a QC
+            // batch today:
+            //   1) Ordinary batch rows: DailyProductionsController.SendToQc
+            //      flips every matching, not-yet-sent row's IsSentToQC to
+            //      true and stamps its SentToQCDate with the very same
+            //      DateTime instance it uses as this QC's CreatedDate (one
+            //      `now` local reused for both in that single transaction).
+            //      A later QC batch for the same combo only picks up rows
+            //      that were still IsSentToQC == false/null at that later
+            //      moment, so its rows carry a different SentToQCDate —
+            //      requiring an exact match disambiguates between batches.
+            //   2) Rework-round rows: DailyProductionsController tags
+            //      Remarks with "[QC:<id>]" (see BuildDpRemarks /
+            //      ExtractQcIdFromRemarks) pointing at the exact QC that
+            //      produced the rework. These rows never go through
+            //      SendToQc (it explicitly rejects tagged rows), so they
+            //      must be matched on the tag instead.
+            // This is still a best-effort correlation, not an FK — a
+            // genuinely reliable fix needs a schema change (e.g. a
+            // DailyProduction.QcInspectionId column, or tagging the
+            // original sent rows with the same "[QC:n]" marker rework rows
+            // already use). Flagged as a follow-up.
+            string qcTag = "[QC:" + qc.Id + "]";
+
             var productions = db.DailyProduction
                 .Include(x => x.WorkOrderItems)
                 .Where(x =>
@@ -1768,7 +1848,12 @@ SELECT  a.Id,
                     x.WorkOrderItems != null &&
                     x.WorkOrderItems.WorkOrderId == qc.WorkOrderId.Value &&
                     x.WorkOrderItems.DesignId == qc.DesignId.Value &&
-                    x.WorkOrderItems.ProductId == qc.ProductId.Value)
+                    x.WorkOrderItems.ProductId == qc.ProductId.Value &&
+                    (
+                        (x.IsSentToQC == true &&
+                            (!qc.CreatedDate.HasValue || x.SentToQCDate == qc.CreatedDate.Value)) ||
+                        (x.Remarks != null && x.Remarks.Contains(qcTag))
+                    ))
                 .ToList();
 
             var affectedItemIds = new List<int>();
@@ -1876,14 +1961,23 @@ SELECT  a.Id,
             // first Post pushed N1 pieces; this Post should only push the
             // delta (N2 - N1). If the inspector revised pass→fail in this
             // round (delta < 0), we pull stock back via an OUT row.
+            // Sprint-N QC fix: TransactionType must stay "IN"/"OUT" — the same
+            // convention every other stock writer in the codebase uses
+            // (DispatchesController, Gen_StoreController, PurchasesController,
+            // IssueMaterialsController all write exactly "IN"/"OUT"). The old
+            // "QC-POST-FINISHED*" values broke BaseController.
+            // ValidateQcApprovalForDispatch, which filters Gen_Stocks on
+            // TransactionType == "IN" and never matched a QC-posted row.
+            // ReferenceType == "QC_INSPECTION" + ReferenceId == qc.Id already
+            // scopes these rows to this QC batch, so "IN"/"OUT" is enough here.
             decimal alreadyPosted = db.Gen_Stocks
                 .Where(s =>
                     s.ReferenceType == "QC_INSPECTION" &&
                     s.ReferenceId == qc.Id &&
                     s.StockStage == "FINISHED" &&
                     (s.Deleted == false || s.Deleted == null) &&
-                    (s.TransactionType == "QC-POST-FINISHED" ||
-                     s.TransactionType == "QC-POST-FINISHED-DELTA"))
+                    (s.TransactionType == "IN" ||
+                     s.TransactionType == "OUT"))
                 .Sum(s => (decimal?)(s.InQty - s.OutQty)) ?? 0m;
 
             decimal delta = passedQtyCumulative - alreadyPosted;
@@ -1901,7 +1995,7 @@ SELECT  a.Id,
                     delta,
                     0,
                     "FINISHED",
-                    alreadyPosted > 0m ? "QC-POST-FINISHED-DELTA" : "QC-POST-FINISHED",
+                    "IN",
                     alreadyPosted > 0m
                         ? "QC re-inspection delta: +" + delta + " passed"
                         : "QC passed quantity posted to finished stock",
@@ -1920,7 +2014,7 @@ SELECT  a.Id,
                     0,
                     pullBack,
                     "FINISHED",
-                    "QC-POST-FINISHED-DELTA",
+                    "OUT",
                     "QC re-inspection delta: -" + pullBack + " (downgraded)",
                     userId,
                     now
@@ -1942,23 +2036,31 @@ SELECT  a.Id,
             // Reverse the net amount actually pushed by all post rounds
             // (initial + any delta rounds). Using the cumulative net IN-OUT
             // here keeps reversal symmetric with PostStockFromQc.
+            // Sprint-N QC fix: TransactionType stays "IN"/"OUT" (see
+            // PostStockFromQc). Since TransactionType can no longer tell a
+            // "posting" row apart from this "reversal" row (both are now
+            // just "OUT" when they pull stock), the already-reversed guard
+            // below matches on StockDescription instead, which AddStock
+            // still sets to the fixed text passed for this call.
             decimal netPosted = db.Gen_Stocks
                 .Where(s =>
                     s.ReferenceType == "QC_INSPECTION" &&
                     s.ReferenceId == qc.Id &&
                     s.StockStage == "FINISHED" &&
                     (s.Deleted == false || s.Deleted == null) &&
-                    (s.TransactionType == "QC-POST-FINISHED" ||
-                     s.TransactionType == "QC-POST-FINISHED-DELTA"))
+                    (s.TransactionType == "IN" ||
+                     s.TransactionType == "OUT"))
                 .Sum(s => (decimal?)(s.InQty - s.OutQty)) ?? 0m;
 
             if (netPosted <= 0)
                 return;
 
+            const string reversalDescription = "QC finished stock reversed";
+
             bool alreadyReversed = db.Gen_Stocks.Any(s =>
                 s.ReferenceType == "QC_INSPECTION" &&
                 s.ReferenceId == qc.Id &&
-                s.TransactionType == "QC-REV-FINISHED" &&
+                s.StockDescription == reversalDescription &&
                 s.StockStage == "FINISHED" &&
                 (s.Deleted == false || s.Deleted == null));
 
@@ -1973,8 +2075,8 @@ SELECT  a.Id,
                 0,
                 netPosted,
                 "FINISHED",
-                "QC-REV-FINISHED",
-                "QC finished stock reversed",
+                "OUT",
+                reversalDescription,
                 userId,
                 now,
                 reason

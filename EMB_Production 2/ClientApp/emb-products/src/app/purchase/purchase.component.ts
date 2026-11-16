@@ -721,6 +721,11 @@ export class PurchaseComponent implements OnInit, AfterViewInit {
 
     req$.subscribe({
       next: r => {
+        if (r?.success === false) {
+          this.toast.error(r?.message || 'Save failed.');
+          return;
+        }
+
         this.toast.success(r?.message || 'Saved.');
         this.formModalRef?.hide();
 

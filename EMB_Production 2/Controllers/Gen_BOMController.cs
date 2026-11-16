@@ -1304,14 +1304,14 @@ tbody tr:nth-child(even) { background: #f6f8fb; }
             {
                 html += "<tr>"
                     + "<td>" + b.Id + "</td>"
-                    + "<td>" + b.Design + "</td>"
-                    + "<td>" + b.Component + "</td>"
+                    + "<td>" + System.Net.WebUtility.HtmlEncode(b.Design) + "</td>"
+                    + "<td>" + System.Net.WebUtility.HtmlEncode(b.Component) + "</td>"
                     + "<td style='text-align:right;'>" + (b.ReqRepeats ?? 0) + "</td>"
                     + "<td style='text-align:right;'>" + (b.ReqHead ?? 0) + "</td>"
                     + "<td style='text-align:right;'>" + (b.Panni ?? 0) + "</td>"
                     + "<td style='text-align:right;'>" + (b.Solving ?? 0) + "</td>"
-                    + "<td>" + b.Remarks + "</td>"
-                    + "<td>" + b.Status + "</td>"
+                    + "<td>" + System.Net.WebUtility.HtmlEncode(b.Remarks) + "</td>"
+                    + "<td>" + System.Net.WebUtility.HtmlEncode(b.Status) + "</td>"
                     + "</tr>";
             }
 
