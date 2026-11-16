@@ -182,6 +182,26 @@ SELECT  a.Id,
                 "SELECT 1 FROM dbo.QC_Inspection WITH (UPDLOCK, ROWLOCK) WHERE Id = @id",
                 new SqlParameter("@id", qcId));
         }
+
+        // Medium-QC fix: Create() checks for an already-open QC batch for a
+        // WorkOrder/Design/Product combination before inserting a new row.
+        // Unlike Post/Reverse/ProcessQcCore (which lock an existing row by
+        // Id via LockQcRow), there is no existing row to lock here — the
+        // whole point is to guard the *absence* of a duplicate while a new
+        // row is being inserted. HOLDLOCK promotes the shared lock taken by
+        // the SELECT into a range/key lock held until the transaction
+        // commits, so two concurrent Create calls for the same combination
+        // serialise instead of both passing the duplicate check and both
+        // inserting.
+        private void LockQcDuplicateCheckRange(int workOrderId, int designId, int productId)
+        {
+            db.Database.ExecuteSqlCommand(
+                "SELECT 1 FROM dbo.QC_Inspection WITH (UPDLOCK, HOLDLOCK) " +
+                "WHERE WorkOrderId = @wo AND DesignId = @d AND ProductId = @p",
+                new SqlParameter("@wo", workOrderId),
+                new SqlParameter("@d", designId),
+                new SqlParameter("@p", productId));
+        }
         [HttpGet]
         [Route("list")]
         public ActionResult List(
@@ -392,7 +412,7 @@ SELECT  a.Id,
                     .Include(x => x.WorkOrderItems)
                     .Include(x => x.QC_InspectionItems)
                     .Include(x => x.QC_InspectionItems.Select(i => i.WorkOrderItems))
-                    .FirstOrDefault(x => x.Id == id && (x.Deleted == false || x.Deleted == null));
+                    .FirstOrDefault(x => x.Id == id && x.BranchId == GetCurrentBranchId() && (x.Deleted == false || x.Deleted == null));
 
                 if (qc == null)
                     return JsonError("QC record not found.");
@@ -643,6 +663,13 @@ SELECT  a.Id,
                     if (!productExists)
                         return JsonError("Product not found.");
 
+                    // Sprint-4 TOCTOU fix (Medium QC finding): take a range
+                    // lock on this WorkOrder/Design/Product combination
+                    // before checking for a duplicate open batch, so two
+                    // concurrent Create calls can't both see "no duplicate"
+                    // and both insert. Held until tx.Commit()/Rollback().
+                    LockQcDuplicateCheckRange(dto.WorkOrderId.Value, dto.DesignId.Value, dto.ProductId.Value);
+
                     bool alreadyOpen = db.QC_Inspection.Any(x =>
                         x.WorkOrderId == dto.WorkOrderId &&
                         x.DesignId == dto.DesignId &&
@@ -725,80 +752,90 @@ SELECT  a.Id,
         [Route("update")]
         public ActionResult Update(QCInspectionUpdateViewModel dto)
         {
-            try
+            using (var tx = db.Database.BeginTransaction())
             {
-                if (dto == null)
-                    return JsonError("Invalid payload.");
+                try
+                {
+                    if (dto == null)
+                        return JsonError("Invalid payload.");
 
-                var qc = db.QC_Inspection.FirstOrDefault(x =>
-                    x.Id == dto.Id &&
-                    (x.Deleted == false || x.Deleted == null));
+                    // Medium QC fix: same TOCTOU guard as Post/Reverse — lock
+                    // the row before reading PassedQty/FailedQty/ReworkQty so
+                    // a concurrent Post can't read mid-edit values.
+                    LockQcRow(dto.Id);
 
-                if (qc == null)
-                    return JsonError("QC record not found.");
+                    var qc = db.QC_Inspection.FirstOrDefault(x =>
+                        x.Id == dto.Id &&
+                        (x.Deleted == false || x.Deleted == null));
 
-                if (qc.IsPosted)
-                    return JsonError("Posted QC inspection cannot be updated.");
+                    if (qc == null)
+                        return JsonError("QC record not found.");
 
-                decimal batchQty = qc.BatchQty ?? 0m;
-                if (batchQty <= 0)
-                    return JsonError("QC batch quantity is invalid.");
+                    if (qc.IsPosted)
+                        return JsonError("Posted QC inspection cannot be updated.");
 
-                if (dto.InspectedQty < 0 || dto.PassedQty < 0 || dto.FailedQty < 0 || dto.ReworkQty < 0)
-                    return JsonError("Quantities cannot be negative.");
+                    decimal batchQty = qc.BatchQty ?? 0m;
+                    if (batchQty <= 0)
+                        return JsonError("QC batch quantity is invalid.");
 
-                if (dto.InspectedQty > batchQty)
-                    return JsonError("Inspected quantity cannot exceed batch quantity.");
+                    if (dto.InspectedQty < 0 || dto.PassedQty < 0 || dto.FailedQty < 0 || dto.ReworkQty < 0)
+                        return JsonError("Quantities cannot be negative.");
 
-                if ((dto.PassedQty + dto.FailedQty + dto.ReworkQty) > batchQty)
-                    return JsonError("Passed + Failed + Rework cannot exceed batch quantity.");
+                    if (dto.InspectedQty > batchQty)
+                        return JsonError("Inspected quantity cannot exceed batch quantity.");
 
-                if (dto.InspectedQty > 0 &&
-                    (dto.PassedQty + dto.FailedQty + dto.ReworkQty) != dto.InspectedQty)
-                    return JsonError("Passed + Failed + Rework must equal inspected quantity.");
+                    if ((dto.PassedQty + dto.FailedQty + dto.ReworkQty) > batchQty)
+                        return JsonError("Passed + Failed + Rework cannot exceed batch quantity.");
 
-                qc.InspectedQty = dto.InspectedQty;
-                qc.PassedQty = dto.PassedQty;
-                qc.FailedQty = dto.FailedQty;
-                qc.ReworkQty = dto.ReworkQty;
+                    if (dto.InspectedQty > 0 &&
+                        (dto.PassedQty + dto.FailedQty + dto.ReworkQty) != dto.InspectedQty)
+                        return JsonError("Passed + Failed + Rework must equal inspected quantity.");
 
-                qc.IssuesFound = string.IsNullOrWhiteSpace(dto.IssuesFound) ? null : dto.IssuesFound.Trim();
-                qc.Remarks = string.IsNullOrWhiteSpace(dto.Remarks) ? null : dto.Remarks.Trim();
+                    qc.InspectedQty = dto.InspectedQty;
+                    qc.PassedQty = dto.PassedQty;
+                    qc.FailedQty = dto.FailedQty;
+                    qc.ReworkQty = dto.ReworkQty;
 
-                qc.Status = string.IsNullOrWhiteSpace(dto.Status)
-                    ? (dto.InspectedQty > 0 ? "InProgress" : "Pending")
-                    : dto.Status.Trim();
+                    qc.IssuesFound = string.IsNullOrWhiteSpace(dto.IssuesFound) ? null : dto.IssuesFound.Trim();
+                    qc.Remarks = string.IsNullOrWhiteSpace(dto.Remarks) ? null : dto.Remarks.Trim();
 
-                qc.InspectorId = dto.InspectorId;
+                    qc.Status = string.IsNullOrWhiteSpace(dto.Status)
+                        ? (dto.InspectedQty > 0 ? "InProgress" : "Pending")
+                        : dto.Status.Trim();
 
-                if (dto.InspectionDate.HasValue)
-                    qc.InspectionDate = dto.InspectionDate.Value;
+                    qc.InspectorId = dto.InspectorId;
 
-                qc.InspectionType = string.IsNullOrWhiteSpace(dto.InspectionType)
-                    ? qc.InspectionType
-                    : dto.InspectionType.Trim();
+                    if (dto.InspectionDate.HasValue)
+                        qc.InspectionDate = dto.InspectionDate.Value;
 
-                qc.SourceType = string.IsNullOrWhiteSpace(dto.SourceType)
-                    ? qc.SourceType
-                    : dto.SourceType.Trim();
+                    qc.InspectionType = string.IsNullOrWhiteSpace(dto.InspectionType)
+                        ? qc.InspectionType
+                        : dto.InspectionType.Trim();
 
-                qc.UpdatedBy = GetCurrentUserId();
-                qc.UpdatedDate = DateTime.Now;
-                qc.RecordTimeStamp = DateTime.Now;
+                    qc.SourceType = string.IsNullOrWhiteSpace(dto.SourceType)
+                        ? qc.SourceType
+                        : dto.SourceType.Trim();
 
-                db.SaveChanges();
+                    qc.UpdatedBy = GetCurrentUserId();
+                    qc.UpdatedDate = DateTime.Now;
+                    qc.RecordTimeStamp = DateTime.Now;
 
-                LogQcAudit(qc.Id, "EDITED",
-                    oldValue: null,
-                    newValue: qc.Status,
-                    detail: "Inspected " + qc.InspectedQty + " / Pass " + qc.PassedQty
-                          + " / Fail " + qc.FailedQty + " / Rework " + qc.ReworkQty);
+                    db.SaveChanges();
+                    tx.Commit();
 
-                return JsonSuccess("QC inspection updated successfully.");
-            }
-            catch (Exception ex)
-            {
-                return JsonError("Failed to update QC inspection. " + DescribeQcError(ex));
+                    LogQcAudit(qc.Id, "EDITED",
+                        oldValue: null,
+                        newValue: qc.Status,
+                        detail: "Inspected " + qc.InspectedQty + " / Pass " + qc.PassedQty
+                              + " / Fail " + qc.FailedQty + " / Rework " + qc.ReworkQty);
+
+                    return JsonSuccess("QC inspection updated successfully.");
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return JsonError("Failed to update QC inspection. " + DescribeQcError(ex));
+                }
             }
         }
 
@@ -826,8 +863,63 @@ SELECT  a.Id,
             public bool     AndPost      { get; set; }
         }
 
+        // Sprint-N fix: ProcessQc used to open its own transaction with
+        // `using (var tx = db.Database.BeginTransaction())` and then, while
+        // STILL inside that using block (tx committed but not yet
+        // Dispose()'d), call Post(qc.Id) directly for the AndPost=true
+        // case. Post() itself opens a fresh `db.Database.BeginTransaction()`
+        // — but EF6 considers a transaction "current" on a DbContext until
+        // Dispose() actually runs, so that second BeginTransaction() threw.
+        // Fix: the entire original method body (including every early
+        // validation return) now lives in ProcessQcCore, still wrapped in
+        // its own `using (tx)` exactly as before — so it keeps committing/
+        // rolling back and disposing exactly as it always did. ProcessQc
+        // itself only calls Post() AFTER ProcessQcCore has returned, i.e.
+        // after that `using` block has fully exited and tx.Dispose() has
+        // already run, so Post()'s own BeginTransaction() starts clean.
+        private class ProcessQcResult
+        {
+            public bool Success;
+            public ActionResult ErrorResult;
+            public int QcId;
+            public string Status;
+            public decimal InspectedQty;
+            public decimal PassedQty;
+            public decimal FailedQty;
+            public decimal ReworkQty;
+            public bool AndPost;
+        }
+
         [HttpPost, Route("process/{id:int}")]
         public ActionResult ProcessQc(int id, QcProcessDto dto = null)
+        {
+            var result = ProcessQcCore(id, dto);
+            if (!result.Success)
+                return result.ErrorResult;
+
+            // If the operator asked for a one-shot Process+Post, chain into
+            // Post() now that the QC has the right counts and
+            // ProcessQcCore's transaction has already committed AND been
+            // disposed. Reuse the same transaction-aware endpoint so the
+            // stock posting + DP rework loop still fire.
+            if (result.AndPost)
+            {
+                var postRes = Post(result.QcId) as JsonResult;
+                return postRes ?? JsonSuccess("QC processed.", new { id = result.QcId, status = result.Status });
+            }
+
+            return JsonSuccess("QC processed.", new
+            {
+                id = result.QcId,
+                status = result.Status,
+                inspectedQty = result.InspectedQty,
+                passedQty = result.PassedQty,
+                failedQty = result.FailedQty,
+                reworkQty = result.ReworkQty
+            });
+        }
+
+        private ProcessQcResult ProcessQcCore(int id, QcProcessDto dto)
         {
             using (var tx = db.Database.BeginTransaction())
             {
@@ -839,16 +931,16 @@ SELECT  a.Id,
 
                     var qc = db.QC_Inspection
                         .FirstOrDefault(x => x.Id == id && x.Deleted != true);
-                    if (qc == null) return JsonError("QC record not found.");
+                    if (qc == null) return new ProcessQcResult { ErrorResult = JsonError("QC record not found.") };
 
                     if (qc.IsPosted)
-                        return JsonError("Posted QC cannot be re-processed. Use Reverse first.");
+                        return new ProcessQcResult { ErrorResult = JsonError("Posted QC cannot be re-processed. Use Reverse first.") };
                     if (string.Equals(qc.Status, QCInspectionStatus.REVERSED, StringComparison.OrdinalIgnoreCase)
                      || string.Equals(qc.Status, QCInspectionStatus.CANCELLED, StringComparison.OrdinalIgnoreCase))
-                        return JsonError("Reversed or cancelled QC cannot be processed.");
+                        return new ProcessQcResult { ErrorResult = JsonError("Reversed or cancelled QC cannot be processed.") };
 
                     decimal batchQty = qc.BatchQty ?? 0m;
-                    if (batchQty <= 0) return JsonError("QC batch quantity is invalid.");
+                    if (batchQty <= 0) return new ProcessQcResult { ErrorResult = JsonError("QC batch quantity is invalid.") };
 
                     // Resolve defaults — auto-fill when the buyer didn't
                     // override (the quick-action button posts an empty
@@ -859,13 +951,13 @@ SELECT  a.Id,
                     decimal passed    = dto?.PassedQty    ?? Math.Max(0m, inspected - failed - rework);
 
                     if (inspected < 0 || passed < 0 || failed < 0 || rework < 0)
-                        return JsonError("Quantities cannot be negative.");
+                        return new ProcessQcResult { ErrorResult = JsonError("Quantities cannot be negative.") };
                     if (inspected > batchQty)
-                        return JsonError("Inspected quantity cannot exceed batch quantity.");
+                        return new ProcessQcResult { ErrorResult = JsonError("Inspected quantity cannot exceed batch quantity.") };
                     if ((passed + failed + rework) > batchQty)
-                        return JsonError("Passed + Failed + Rework cannot exceed batch quantity.");
+                        return new ProcessQcResult { ErrorResult = JsonError("Passed + Failed + Rework cannot exceed batch quantity.") };
                     if (inspected > 0 && (passed + failed + rework) != inspected)
-                        return JsonError("Passed + Failed + Rework must equal inspected quantity.");
+                        return new ProcessQcResult { ErrorResult = JsonError("Passed + Failed + Rework must equal inspected quantity.") };
 
                     qc.InspectedQty = inspected;
                     qc.PassedQty    = passed;
@@ -894,30 +986,22 @@ SELECT  a.Id,
 
                     tx.Commit();
 
-                    // If the operator asked for a one-shot Process+Post,
-                    // chain into Post() now that the QC has the right
-                    // counts. Reuse the same transaction-aware endpoint
-                    // so the stock posting + DP rework loop still fire.
-                    if (dto != null && dto.AndPost && rework == 0)
+                    return new ProcessQcResult
                     {
-                        var postRes = Post(qc.Id) as JsonResult;
-                        return postRes ?? JsonSuccess("QC processed.", new { id = qc.Id, status = qc.Status });
-                    }
-
-                    return JsonSuccess("QC processed.", new
-                    {
-                        id = qc.Id,
-                        status = qc.Status,
-                        inspectedQty = inspected,
-                        passedQty = passed,
-                        failedQty = failed,
-                        reworkQty = rework
-                    });
+                        Success = true,
+                        QcId = qc.Id,
+                        Status = qc.Status,
+                        InspectedQty = inspected,
+                        PassedQty = passed,
+                        FailedQty = failed,
+                        ReworkQty = rework,
+                        AndPost = dto != null && dto.AndPost && rework == 0
+                    };
                 }
                 catch (Exception ex)
                 {
                     tx.Rollback();
-                    return JsonError("Failed to process QC. " + DescribeQcError(ex));
+                    return new ProcessQcResult { ErrorResult = JsonError("Failed to process QC. " + DescribeQcError(ex)) };
                 }
             }
         }
@@ -1164,6 +1248,7 @@ SELECT  a.Id,
                         .Include(x => x.QC_InspectionItems)
                         .FirstOrDefault(x =>
                             x.Id == id &&
+                            x.BranchId == GetCurrentBranchId() &&
                             x.Deleted != true);
 
                     if (qc == null)
@@ -1299,6 +1384,7 @@ SELECT  a.Id,
                         .Include(x => x.QC_InspectionItems)
                         .FirstOrDefault(x =>
                             x.Id == id &&
+                            x.BranchId == GetCurrentBranchId() &&
                             x.Deleted != true);
 
                     if (qc == null)
@@ -1439,65 +1525,77 @@ SELECT  a.Id,
         [Route("continue/{id:int}")]
         public ActionResult ContinueQc(int id, QcContinueInputViewModel dto)
         {
-            try
+            using (var tx = db.Database.BeginTransaction())
             {
-                int userId = GetCurrentUserId();
-                DateTime now = DateTime.Now;
+                try
+                {
+                    int userId = GetCurrentUserId();
+                    DateTime now = DateTime.Now;
 
-                var qc = db.QC_Inspection.FirstOrDefault(x =>
-                    x.Id == id &&
-                    (x.Deleted == false || x.Deleted == null));
+                    // Medium QC fix: same TOCTOU guard as Post/Reverse/Update
+                    // — lock the row before reading PassedQty/FailedQty/
+                    // ReworkQty so a concurrent Post can't read mid-edit
+                    // values.
+                    LockQcRow(id);
 
-                if (qc == null)
-                    return JsonError("QC record not found.");
+                    var qc = db.QC_Inspection.FirstOrDefault(x =>
+                        x.Id == id &&
+                        x.BranchId == GetCurrentBranchId() &&
+                        (x.Deleted == false || x.Deleted == null));
 
-                if (qc.IsPosted == true)
-                    return JsonError("Posted QC cannot be continued. Reverse it first if changes are required.");
+                    if (qc == null)
+                        return JsonError("QC record not found.");
 
-                if (string.Equals(qc.Status, "Reversed", StringComparison.OrdinalIgnoreCase))
-                    return JsonError("Reversed QC cannot be continued.");
+                    if (qc.IsPosted == true)
+                        return JsonError("Posted QC cannot be continued. Reverse it first if changes are required.");
 
-                if (dto == null)
-                    return JsonError("Invalid payload.");
+                    if (string.Equals(qc.Status, "Reversed", StringComparison.OrdinalIgnoreCase))
+                        return JsonError("Reversed QC cannot be continued.");
 
-                decimal batchQty = qc.BatchQty ?? 0m;
+                    if (dto == null)
+                        return JsonError("Invalid payload.");
 
-                if (batchQty <= 0)
-                    return JsonError("Invalid batch quantity.");
+                    decimal batchQty = qc.BatchQty ?? 0m;
 
-                if (dto.InspectedQty < 0 || dto.PassedQty < 0 || dto.FailedQty < 0 || dto.ReworkQty < 0)
-                    return JsonError("Quantities cannot be negative.");
+                    if (batchQty <= 0)
+                        return JsonError("Invalid batch quantity.");
 
-                if (dto.InspectedQty > batchQty)
-                    return JsonError("Inspected quantity cannot exceed batch quantity.");
+                    if (dto.InspectedQty < 0 || dto.PassedQty < 0 || dto.FailedQty < 0 || dto.ReworkQty < 0)
+                        return JsonError("Quantities cannot be negative.");
 
-                if ((dto.PassedQty + dto.FailedQty + dto.ReworkQty) != dto.InspectedQty)
-                    return JsonError("Passed + Failed + Rework must equal inspected quantity.");
+                    if (dto.InspectedQty > batchQty)
+                        return JsonError("Inspected quantity cannot exceed batch quantity.");
 
-                qc.InspectedQty = dto.InspectedQty;
-                qc.PassedQty = dto.PassedQty;
-                qc.FailedQty = dto.FailedQty;
-                qc.ReworkQty = dto.ReworkQty;
+                    if ((dto.PassedQty + dto.FailedQty + dto.ReworkQty) != dto.InspectedQty)
+                        return JsonError("Passed + Failed + Rework must equal inspected quantity.");
 
-                qc.IssuesFound = string.IsNullOrWhiteSpace(dto.IssuesFound) ? null : dto.IssuesFound.Trim();
-                qc.Remarks = string.IsNullOrWhiteSpace(dto.Remarks) ? qc.Remarks : dto.Remarks.Trim();
+                    qc.InspectedQty = dto.InspectedQty;
+                    qc.PassedQty = dto.PassedQty;
+                    qc.FailedQty = dto.FailedQty;
+                    qc.ReworkQty = dto.ReworkQty;
 
-                if (dto.InspectionDate.HasValue)
-                    qc.InspectionDate = dto.InspectionDate.Value;
+                    qc.IssuesFound = string.IsNullOrWhiteSpace(dto.IssuesFound) ? null : dto.IssuesFound.Trim();
+                    qc.Remarks = string.IsNullOrWhiteSpace(dto.Remarks) ? qc.Remarks : dto.Remarks.Trim();
 
-                qc.Status = dto.InspectedQty > 0 ? "InProgress" : "Pending";
+                    if (dto.InspectionDate.HasValue)
+                        qc.InspectionDate = dto.InspectionDate.Value;
 
-                qc.UpdatedBy = userId;
-                qc.UpdatedDate = now;
-                qc.RecordTimeStamp = now;
+                    qc.Status = dto.InspectedQty > 0 ? "InProgress" : "Pending";
 
-                db.SaveChanges();
+                    qc.UpdatedBy = userId;
+                    qc.UpdatedDate = now;
+                    qc.RecordTimeStamp = now;
 
-                return JsonSuccess("QC updated successfully.");
-            }
-            catch (Exception ex)
-            {
-                return JsonError("Failed to continue QC.", ex);
+                    db.SaveChanges();
+                    tx.Commit();
+
+                    return JsonSuccess("QC updated successfully.");
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return JsonError("Failed to continue QC.", ex);
+                }
             }
         }
 
@@ -1522,6 +1620,7 @@ SELECT  a.Id,
 
                     var qc = db.QC_Inspection.FirstOrDefault(x =>
                         x.Id == id &&
+                        x.BranchId == GetCurrentBranchId() &&
                         (x.Deleted == false || x.Deleted == null));
 
                     if (qc == null)
@@ -1761,6 +1860,39 @@ SELECT  a.Id,
             if (qc == null || !qc.WorkOrderId.HasValue || !qc.DesignId.HasValue || !qc.ProductId.HasValue)
                 return;
 
+            // QC review High finding #3 — this used to match EVERY
+            // DailyProduction row for the WorkOrder/Design/Product combo,
+            // so reversing/cancelling one QC batch could also reset rows
+            // that actually belong to a different, unrelated (e.g. already
+            // completed) QC batch for the same combo.
+            //
+            // DailyProduction has no QcInspectionId FK, so there is no
+            // guaranteed, schema-level way to say "these rows belong to
+            // THIS QC batch". The tightest link available without a schema
+            // change comes from how rows actually get attached to a QC
+            // batch today:
+            //   1) Ordinary batch rows: DailyProductionsController.SendToQc
+            //      flips every matching, not-yet-sent row's IsSentToQC to
+            //      true and stamps its SentToQCDate with the very same
+            //      DateTime instance it uses as this QC's CreatedDate (one
+            //      `now` local reused for both in that single transaction).
+            //      A later QC batch for the same combo only picks up rows
+            //      that were still IsSentToQC == false/null at that later
+            //      moment, so its rows carry a different SentToQCDate —
+            //      requiring an exact match disambiguates between batches.
+            //   2) Rework-round rows: DailyProductionsController tags
+            //      Remarks with "[QC:<id>]" (see BuildDpRemarks /
+            //      ExtractQcIdFromRemarks) pointing at the exact QC that
+            //      produced the rework. These rows never go through
+            //      SendToQc (it explicitly rejects tagged rows), so they
+            //      must be matched on the tag instead.
+            // This is still a best-effort correlation, not an FK — a
+            // genuinely reliable fix needs a schema change (e.g. a
+            // DailyProduction.QcInspectionId column, or tagging the
+            // original sent rows with the same "[QC:n]" marker rework rows
+            // already use). Flagged as a follow-up.
+            string qcTag = "[QC:" + qc.Id + "]";
+
             var productions = db.DailyProduction
                 .Include(x => x.WorkOrderItems)
                 .Where(x =>
@@ -1768,7 +1900,12 @@ SELECT  a.Id,
                     x.WorkOrderItems != null &&
                     x.WorkOrderItems.WorkOrderId == qc.WorkOrderId.Value &&
                     x.WorkOrderItems.DesignId == qc.DesignId.Value &&
-                    x.WorkOrderItems.ProductId == qc.ProductId.Value)
+                    x.WorkOrderItems.ProductId == qc.ProductId.Value &&
+                    (
+                        (x.IsSentToQC == true &&
+                            (!qc.CreatedDate.HasValue || x.SentToQCDate == qc.CreatedDate.Value)) ||
+                        (x.Remarks != null && x.Remarks.Contains(qcTag))
+                    ))
                 .ToList();
 
             var affectedItemIds = new List<int>();
@@ -1876,14 +2013,23 @@ SELECT  a.Id,
             // first Post pushed N1 pieces; this Post should only push the
             // delta (N2 - N1). If the inspector revised pass→fail in this
             // round (delta < 0), we pull stock back via an OUT row.
+            // Sprint-N QC fix: TransactionType must stay "IN"/"OUT" — the same
+            // convention every other stock writer in the codebase uses
+            // (DispatchesController, Gen_StoreController, PurchasesController,
+            // IssueMaterialsController all write exactly "IN"/"OUT"). The old
+            // "QC-POST-FINISHED*" values broke BaseController.
+            // ValidateQcApprovalForDispatch, which filters Gen_Stocks on
+            // TransactionType == "IN" and never matched a QC-posted row.
+            // ReferenceType == "QC_INSPECTION" + ReferenceId == qc.Id already
+            // scopes these rows to this QC batch, so "IN"/"OUT" is enough here.
             decimal alreadyPosted = db.Gen_Stocks
                 .Where(s =>
                     s.ReferenceType == "QC_INSPECTION" &&
                     s.ReferenceId == qc.Id &&
                     s.StockStage == "FINISHED" &&
                     (s.Deleted == false || s.Deleted == null) &&
-                    (s.TransactionType == "QC-POST-FINISHED" ||
-                     s.TransactionType == "QC-POST-FINISHED-DELTA"))
+                    (s.TransactionType == "IN" ||
+                     s.TransactionType == "OUT"))
                 .Sum(s => (decimal?)(s.InQty - s.OutQty)) ?? 0m;
 
             decimal delta = passedQtyCumulative - alreadyPosted;
@@ -1901,7 +2047,7 @@ SELECT  a.Id,
                     delta,
                     0,
                     "FINISHED",
-                    alreadyPosted > 0m ? "QC-POST-FINISHED-DELTA" : "QC-POST-FINISHED",
+                    "IN",
                     alreadyPosted > 0m
                         ? "QC re-inspection delta: +" + delta + " passed"
                         : "QC passed quantity posted to finished stock",
@@ -1920,7 +2066,7 @@ SELECT  a.Id,
                     0,
                     pullBack,
                     "FINISHED",
-                    "QC-POST-FINISHED-DELTA",
+                    "OUT",
                     "QC re-inspection delta: -" + pullBack + " (downgraded)",
                     userId,
                     now
@@ -1942,23 +2088,31 @@ SELECT  a.Id,
             // Reverse the net amount actually pushed by all post rounds
             // (initial + any delta rounds). Using the cumulative net IN-OUT
             // here keeps reversal symmetric with PostStockFromQc.
+            // Sprint-N QC fix: TransactionType stays "IN"/"OUT" (see
+            // PostStockFromQc). Since TransactionType can no longer tell a
+            // "posting" row apart from this "reversal" row (both are now
+            // just "OUT" when they pull stock), the already-reversed guard
+            // below matches on StockDescription instead, which AddStock
+            // still sets to the fixed text passed for this call.
             decimal netPosted = db.Gen_Stocks
                 .Where(s =>
                     s.ReferenceType == "QC_INSPECTION" &&
                     s.ReferenceId == qc.Id &&
                     s.StockStage == "FINISHED" &&
                     (s.Deleted == false || s.Deleted == null) &&
-                    (s.TransactionType == "QC-POST-FINISHED" ||
-                     s.TransactionType == "QC-POST-FINISHED-DELTA"))
+                    (s.TransactionType == "IN" ||
+                     s.TransactionType == "OUT"))
                 .Sum(s => (decimal?)(s.InQty - s.OutQty)) ?? 0m;
 
             if (netPosted <= 0)
                 return;
 
+            const string reversalDescription = "QC finished stock reversed";
+
             bool alreadyReversed = db.Gen_Stocks.Any(s =>
                 s.ReferenceType == "QC_INSPECTION" &&
                 s.ReferenceId == qc.Id &&
-                s.TransactionType == "QC-REV-FINISHED" &&
+                s.StockDescription == reversalDescription &&
                 s.StockStage == "FINISHED" &&
                 (s.Deleted == false || s.Deleted == null));
 
@@ -1973,8 +2127,8 @@ SELECT  a.Id,
                 0,
                 netPosted,
                 "FINISHED",
-                "QC-REV-FINISHED",
-                "QC finished stock reversed",
+                "OUT",
+                reversalDescription,
                 userId,
                 now,
                 reason

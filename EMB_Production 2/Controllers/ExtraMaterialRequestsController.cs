@@ -95,6 +95,12 @@ namespace EMB_Production.Controllers
         {
             try
             {
+                // Branch scoping: default to the caller's own branch unless
+                // they explicitly asked for another one (consistent with the
+                // branch-scoping convention used across the ERP).
+                if (!branchId.HasValue || branchId.Value <= 0)
+                    branchId = GetCurrentBranchId();
+
                 string deletedClause = string.Equals(showDeleted, "yes", StringComparison.OrdinalIgnoreCase)
                     ? " (e.Deleted = 1) "
                     : " (e.Deleted = 0 OR e.Deleted IS NULL) ";
@@ -472,6 +478,19 @@ WHERE  Id=@id",
                                     "Item line missing a raw item linkage (line id " + i.Id + ").");
 
                             decimal opening = GetCurrentStoreBalance(rawItemId, branchId);
+
+                            // Same guard Submit() already performs — re-checked here
+                            // because stock can move between Submit and Approve, and
+                            // this is the step that actually writes the Gen_Store OUT
+                            // row. Without it, approval could drive CurrentQty negative.
+                            if (i.Qty > opening)
+                            {
+                                throw new InvalidOperationException(
+                                    "Insufficient stock for " + (i.ItemName ?? ("Item #" + rawItemId))
+                                    + ". Available: " + Math.Round(opening, 2)
+                                    + ", Requested: " + Math.Round(i.Qty, 2) + ".");
+                            }
+
                             decimal rate    = i.Rate ?? GetRawItemLatestRate(rawItemId, branchId);
                             decimal amount  = i.Qty * rate;
                             string unit     = string.IsNullOrWhiteSpace(i.UnitOfMeasure) ? "" : i.UnitOfMeasure;
@@ -596,8 +615,9 @@ WHERE  Id=@id",
             {
                 var hdr = LoadHeader(id);
                 if (hdr == null) return JsonError("Record not found.");
-                if (string.Equals(hdr.Status, "APPROVED", StringComparison.OrdinalIgnoreCase))
-                    return JsonError("Approved requests cannot be deleted — they have already issued stock.");
+                if (!string.Equals(hdr.Status, "DRAFT", StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(hdr.Status, "REJECTED", StringComparison.OrdinalIgnoreCase))
+                    return JsonError("Only DRAFT or REJECTED requests can be deleted. A SUBMITTED request must be rejected first to preserve the audit trail.");
 
                 int userId = GetCurrentUserId();
                 DateTime now = DateTime.Now;
@@ -1159,16 +1179,21 @@ VALUES (@emrId, @itype, @raw, @thr, @uom, @qty, @rate, @amt, @rmk,
             return 0;
         }
 
+        // Sum InQty - OutQty over non-deleted rows — matches
+        // IssueMaterialsController.GetCurrentStoreBalance so both
+        // controllers agree on the same Gen_Store ledger balance.
+        // (Previously this read the last inserted row's CurrentQty,
+        // a different and more fragile algorithm, and filtered with
+        // `Deleted == false` instead of the nullable-safe `!= true`.)
         private decimal GetCurrentStoreBalance(int rawItemId, int branchId)
         {
-            var last = db.Gen_Store
-                .Where(s => s.ItemId == rawItemId
-                         && s.BranchId == branchId
-                         && s.Deleted == false)
-                .OrderByDescending(s => s.Id)
-                .Select(s => (decimal?)s.CurrentQty)
-                .FirstOrDefault();
-            return last ?? 0m;
+            var q = db.Gen_Store.Where(s => s.ItemId == rawItemId
+                                          && s.BranchId == branchId
+                                          && s.Deleted != true);
+
+            decimal totalIn = q.Sum(s => (decimal?)s.InQty) ?? 0m;
+            decimal totalOut = q.Sum(s => (decimal?)s.OutQty) ?? 0m;
+            return totalIn - totalOut;
         }
     }
 }

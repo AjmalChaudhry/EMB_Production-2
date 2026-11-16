@@ -146,6 +146,8 @@ SELECT  a.Id, a.MpId, a.Action, a.ChangedBy,
             {
                 if (e.Active == true) return "Already active.";
                 e.Active = true;
+                e.UpdatedBy = GetCurrentUserId();
+                e.UpdatedDate = DateTime.Now;
                 db.SaveChanges();
                 LogMpAudit(id, "ACTIVATED", "Inactive", "Active");
                 return null;
@@ -160,6 +162,8 @@ SELECT  a.Id, a.MpId, a.Action, a.ChangedBy,
             {
                 if (e.Active != true) return "Already inactive.";
                 e.Active = false;
+                e.UpdatedBy = GetCurrentUserId();
+                e.UpdatedDate = DateTime.Now;
                 db.SaveChanges();
                 LogMpAudit(id, "DEACTIVATED", "Active", "Inactive");
                 return null;
@@ -174,6 +178,8 @@ SELECT  a.Id, a.MpId, a.Action, a.ChangedBy,
             {
                 e.Deleted = true;
                 e.Active = false;
+                e.UpdatedBy = GetCurrentUserId();
+                e.UpdatedDate = DateTime.Now;
                 db.SaveChanges();
                 LogMpAudit(id, "DELETED", "Active", "Deleted");
                 return null;
@@ -409,6 +415,9 @@ SELECT  a.Id, a.MpId, a.Action, a.ChangedBy,
         [Route("create")]
         public ActionResult Create(MachineParameterDto dto)
         {
+            if (dto == null)
+                return JsonError("Invalid request.");
+
             if (dto.MachineId == null)
                 return JsonError("Machine is required.");
 
@@ -477,7 +486,7 @@ SELECT  a.Id, a.MpId, a.Action, a.ChangedBy,
 
             m.Deleted = true;
             m.Active = false;
-            m.UpdatedBy = GetCurrentEmployeeId();
+            m.UpdatedBy = GetCurrentUserId();
             m.UpdatedDate = DateTime.Now;
             db.SaveChanges();
 
@@ -656,8 +665,22 @@ SELECT  a.Id, a.MpId, a.Action, a.ChangedBy,
         public ActionResult DeleteConfirmed(int id)
         {
             var p = db.Gen_MachineParameters.Find(id);
-            db.Gen_MachineParameters.Remove(p);
+            if (p == null)
+                return HttpNotFound();
+
+            // Soft delete — matches the Delete(int id) JSON action and the
+            // Create/Update audit convention in this controller; a hard
+            // delete here would bypass the audit trail and could violate
+            // FK constraints from other tables referencing this row.
+            p.Deleted = true;
+            p.Active = false;
+            p.UpdatedBy = GetCurrentUserId();
+            p.UpdatedDate = DateTime.Now;
+
             db.SaveChanges();
+
+            LogMpAudit(id, "DELETED", oldValue: "Active", newValue: "Deleted");
+
             return RedirectToAction("Index");
         }
         protected override void Dispose(bool disposing)

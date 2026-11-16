@@ -439,8 +439,9 @@ LEFT JOIN dbo.Adm_Users ua ON ua.Id = p.ApprovedBy
                 // the JO needs posting before Plan Approve regenerates the
                 // Work Orders. Posted JOs are surfaced first (best matches
                 // to schedule) with Drafts trailing.
+                int branchId = GetCurrentBranchId();
                 var list = db.Gen_JobOrders
-                    .Where(j => j.Deleted != true)
+                    .Where(j => j.Deleted != true && j.BranchId == branchId)
                     .OrderByDescending(j => j.IsPosted == true)   // Posted → top
                     .ThenByDescending(j => j.Id)                  // recent → next
                     .Select(j => new
@@ -2041,6 +2042,8 @@ ORDER BY Id DESC";
 
         private PlanRow LoadPlanHeader(int id)
         {
+            // Branch-scoped: a user must not be able to act on another
+            // branch's Production Plan simply by guessing/passing its id.
             string sql = @"
 SELECT  p.Id, p.PlanCode, p.BranchId,
         b.Name AS BranchName,
@@ -2051,8 +2054,10 @@ SELECT  p.Id, p.PlanCode, p.BranchId,
 FROM    dbo.ProductionPlan p
 LEFT JOIN dbo.Branches b  ON b.Id  = p.BranchId
 LEFT JOIN dbo.Adm_Users ua ON ua.Id = p.ApprovedBy
-WHERE   p.Id = @id";
-            return db.Database.SqlQuery<PlanRow>(sql, new SqlParameter("@id", id)).FirstOrDefault();
+WHERE   p.Id = @id AND p.BranchId = @branchId";
+            return db.Database.SqlQuery<PlanRow>(sql,
+                new SqlParameter("@id", id),
+                new SqlParameter("@branchId", GetCurrentBranchId())).FirstOrDefault();
         }
 
         private List<PlanItemRow> LoadPlanItems(int planId)

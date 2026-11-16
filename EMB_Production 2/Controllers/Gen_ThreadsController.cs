@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Net;
@@ -530,7 +531,10 @@ namespace EMB_Production.Controllers
             t.BranchId = vm.EditThread.BranchId;
             t.Active = vm.EditThread.Active;
             t.Deleted = vm.EditThread.Deleted;
-            t.UpdatedBy = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+            // UpdatedBy must hold an Adm_Users.Id, consistent with the rest of
+            // this controller (GetSafeCurrentUserId()) and with Detail()'s join
+            // against Adm_Users - not a raw EmployeeId/UserID session read.
+            t.UpdatedBy = GetSafeCurrentUserId();
             t.UpdatedDate = DateTime.UtcNow;
 
             db.Entry(t).State = EntityState.Modified;
@@ -539,6 +543,28 @@ namespace EMB_Production.Controllers
             return RedirectToAction("Index", new { search, activeFilter, page, pageSize });
         }
 
+        // Explicit whitelist of Gen_Threads business fields that may be edited
+        // through this reflective endpoint. Anything not listed here is
+        // rejected, including Id, Deleted, BranchId, RawItemId (the stock
+        // ledger link) and the audit columns, which must never be
+        // mass-assignable from client input.
+        private static readonly HashSet<string> AllowedThreadFields = new HashSet<string>(
+            StringComparer.OrdinalIgnoreCase)
+        {
+            "Code",
+            "Name",
+            "Material",
+            "YarnCount",
+            "Color",
+            "ColorCode",
+            "UnitLength",
+            "UnitOfMeasure",
+            "UnitCost",
+            "SupplierId",
+            "Type",
+            "Active"
+        };
+
         [HttpPost]
         [Route("update-field")]
         public JsonResult UpdateThreadField(int threadId, string fieldName, string newValue)
@@ -546,6 +572,9 @@ namespace EMB_Production.Controllers
             // ensure user is authenticated
             if (Session["UserID"] == null)
                 return Json(new { success = false, message = "Not authenticated." });
+
+            if (string.IsNullOrWhiteSpace(fieldName) || !AllowedThreadFields.Contains(fieldName.Trim()))
+                return Json(new { success = false, message = "Field is not editable." });
 
             // load the thread record
             var entity = db.Gen_Threads.Find(threadId);
@@ -590,8 +619,11 @@ namespace EMB_Production.Controllers
                 }
 
                 // set the value and audit
+                // UpdatedBy must hold an Adm_Users.Id, consistent with the rest of
+                // this controller (GetSafeCurrentUserId()) - not a raw
+                // EmployeeId/UserID session read.
                 prop.SetValue(entity, converted);
-                entity.UpdatedBy = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+                entity.UpdatedBy = GetSafeCurrentUserId();
                 entity.UpdatedDate = DateTime.Now;
 
                 db.SaveChanges();

@@ -917,7 +917,17 @@ namespace EMB_Production.Controllers
         public ActionResult DeleteConfirmed(int id)
         {
             Gen_Catagories gen_Catagories = db.Gen_Catagories.Find(id);
-            db.Gen_Catagories.Remove(gen_Catagories);
+            if (gen_Catagories == null)
+                return HttpNotFound();
+
+            var now = DateTime.UtcNow;
+            int userId = GetCurrentUserId();
+
+            gen_Catagories.Deleted = true;
+            gen_Catagories.UpdatedBy = userId;
+            gen_Catagories.UpdatedDate = now;
+            gen_Catagories.RecordTimeStamp = now;
+
             db.SaveChanges();
             return RedirectToAction("Index");
         }

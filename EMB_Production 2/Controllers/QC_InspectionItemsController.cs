@@ -717,6 +717,9 @@ namespace EMB_Production.Controllers
                     if (header == null)
                         return JsonError("QC header not found.");
 
+                    if (header.IsPosted == true)
+                        return JsonError("Posted QC Inspection cannot be modified.");
+
                     bool isReversed = header.Status == "Reversed";
                     if (isReversed)
                         return JsonError("Reversed QC cannot be modified.");

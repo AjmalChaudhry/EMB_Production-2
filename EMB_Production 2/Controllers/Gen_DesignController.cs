@@ -1393,6 +1393,21 @@ namespace EMB_Production.Controllers.Api
         }
 
 
+        // Explicit whitelist of client-editable business fields for the inline
+        // "update-field" grid endpoint. Anything not listed here — including
+        // Id, Deleted, BranchId and the audit columns — can never be set
+        // through this reflection-based endpoint.
+        private static readonly HashSet<string> DesignEditableFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "D_Code",
+            "DNo",
+            "CollectionName",
+            "CustomerId",
+            "Active",
+            "ProductId",
+            "MachineId"
+        };
+
         [HttpPost]
         [Route("update-field")]
         public JsonResult UpdateDesignField(int designId, string fieldName, string newValue)
@@ -1403,6 +1418,9 @@ namespace EMB_Production.Controllers.Api
             var design = db.Gen_Design.Find(designId);
             if (design == null)
                 return Json(new { success = false, message = "Design not found." });
+
+            if (string.IsNullOrWhiteSpace(fieldName) || !DesignEditableFields.Contains(fieldName))
+                return Json(new { success = false, message = "Field is not allowed to be updated." });
 
             var prop = typeof(Gen_Design).GetProperty(fieldName);
             if (prop == null)

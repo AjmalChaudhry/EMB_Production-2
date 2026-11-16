@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Web.Mvc;
 using EMB_Production.Models;
@@ -64,7 +65,7 @@ namespace EMB_Production.Controllers
                     where compIds.Contains(cm.CompId)
                           && cm.Deleted != true
                           && (cm.Active == true)
-                          && r.Deleted == false
+                          && r.Deleted != true
                           && (t == null || t.Deleted != true)
                     select new
                     {
@@ -179,7 +180,22 @@ namespace EMB_Production.Controllers
                         {
                             var thread = threadMap[i.ThreadId];
                             int rawItemId = thread.RawItemId.Value;
+
+                            // Sprint-4 TOCTOU guard: the pre-validation loop above
+                            // read the balance before this transaction/lock existed,
+                            // so a concurrent Save() for the same item could still
+                            // slip in between. Serialise on the (item, branch)
+                            // ledger slice, then re-check the balance against the
+                            // true current state before writing the OUT row.
+                            LockBalanceSlice(rawItemId, branchId);
+
                             decimal opening = GetCurrentStoreBalance(rawItemId, branchId, null);
+                            if (i.Qty > opening)
+                            {
+                                tx.Rollback();
+                                return JsonError($"Insufficient stock for {thread.Code} {thread.Name}. Available: {opening}, Requested: {i.Qty}.");
+                            }
+
                             decimal rate = i.Rate ?? (thread.UnitCost ?? 0m);
 
                             db.Gen_Store.Add(new Gen_Store
@@ -247,9 +263,12 @@ namespace EMB_Production.Controllers
         {
             try
             {
+                int branchId = GetCurrentBranchId();
+
                 var q = db.Gen_Store
                     .Where(s => s.ReferenceType == "MATERIAL_ISSUE"
-                                && s.Deleted == false
+                                && s.Deleted != true
+                                && s.BranchId == branchId
                                 && !string.IsNullOrEmpty(s.ReferenceNo));
 
                 if (workOrderId.HasValue)
@@ -312,10 +331,13 @@ namespace EMB_Production.Controllers
                 if (string.IsNullOrWhiteSpace(issueCode))
                     return JsonError("Issue code is required.");
 
+                int branchId = GetCurrentBranchId();
+
                 var rows = db.Gen_Store
                     .Where(s => s.ReferenceNo == issueCode
                                 && s.ReferenceType == "MATERIAL_ISSUE"
-                                && s.Deleted == false)
+                                && s.Deleted != true
+                                && s.BranchId == branchId)
                     .OrderBy(s => s.Id)
                     .ToList();
 
@@ -399,7 +421,7 @@ namespace EMB_Production.Controllers
                 var rows = db.Gen_Store
                     .Where(s => s.ReferenceNo == issueCode
                                 && s.ReferenceType == "MATERIAL_ISSUE"
-                                && s.Deleted == false)
+                                && s.Deleted != true)
                     .ToList();
 
                 if (!rows.Any())
@@ -497,10 +519,29 @@ namespace EMB_Production.Controllers
             return prefix + next.ToString("D4");
         }
 
+        // ─────────────────────────────────────────────────────────────
+        //  TOCTOU LOCK on (ItemId, BranchId) — mirrors
+        //  Gen_StoreController.LockBalanceSlice. Holds a row-range
+        //  UPDLOCK on the item+branch slice of the Gen_Store ledger
+        //  until the surrounding transaction commits, so a concurrent
+        //  Save() for the same thread/raw item serialises instead of
+        //  reading the same stale balance and double-issuing stock.
+        //  Call this immediately BEFORE GetCurrentStoreBalance inside
+        //  any transaction that writes a new ledger row.
+        // ─────────────────────────────────────────────────────────────
+        private void LockBalanceSlice(int itemId, int branchId)
+        {
+            db.Database.ExecuteSqlCommand(
+                "SELECT TOP 1 1 FROM dbo.Gen_Store WITH (UPDLOCK, HOLDLOCK) " +
+                "WHERE ItemId = @itemId AND BranchId = @branchId",
+                new SqlParameter("@itemId", itemId),
+                new SqlParameter("@branchId", branchId));
+        }
+
         // Local helper mirroring PurchaseController's GetCurrentStoreBalance
         private decimal GetCurrentStoreBalance(int itemId, int branchId, int? warehouseId)
         {
-            var q = db.Gen_Store.Where(x => x.ItemId == itemId && x.Deleted == false && x.BranchId == branchId);
+            var q = db.Gen_Store.Where(x => x.ItemId == itemId && x.Deleted != true && x.BranchId == branchId);
             if (warehouseId.HasValue)
                 q = q.Where(x => x.WarehouseId == warehouseId.Value);
 

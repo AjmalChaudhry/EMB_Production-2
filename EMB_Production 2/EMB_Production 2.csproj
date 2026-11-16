@@ -511,6 +511,8 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Infrastructure\JsonNetResult.cs" />
+    <Compile Include="Infrastructure\PasswordHasher.cs" />
+    <Compile Include="Infrastructure\SessionAuthorizeAttribute.cs" />
     <Compile Include="Models\Adm_CompanyProfile.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>

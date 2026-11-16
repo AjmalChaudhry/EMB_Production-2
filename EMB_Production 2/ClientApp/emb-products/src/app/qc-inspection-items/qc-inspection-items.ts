@@ -1,7 +1,8 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 import { QCInspectionItemsService } from '../services/qc-inspection-items.service';
 
@@ -23,7 +24,13 @@ interface DropdownOption {
   templateUrl: './qc-inspection-items.html',
   styleUrls: ['./qc-inspection-items.css']
 })
-export class QcInspectionItemsComponent implements OnInit {
+export class QcInspectionItemsComponent implements OnInit, OnDestroy {
+  private queryParamsSub?: Subscription;
+
+  ngOnDestroy(): void {
+    this.queryParamsSub?.unsubscribe();
+  }
+
 
   items: QCInspectionItemRowViewModel[] = [];
   loading = false;
@@ -64,7 +71,7 @@ export class QcInspectionItemsComponent implements OnInit {
   ngOnInit(): void {
     this.loadQcInspectionOptions();
 
-    this.route.queryParams.subscribe(params => {
+    this.queryParamsSub = this.route.queryParams.subscribe(params => {
       const qcInspectionId = Number(params['qcInspectionId'] ?? 0);
 
       if (qcInspectionId > 0) {

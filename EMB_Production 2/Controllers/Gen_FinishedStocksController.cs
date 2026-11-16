@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Data.Entity;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Web.Mvc;
 using EMB_Production.ViewModels;
@@ -120,20 +122,52 @@ namespace EMB_Production.Controllers
             if (string.IsNullOrWhiteSpace(reason))
                 return JsonError("Adjustment reason is required.");
 
-            var stock = db.Gen_FinishedStocks
-                .FirstOrDefault(x => x.Id == id && x.Deleted != true);
+            using (var tx = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    // Take a row lock on this Gen_FinishedStocks row before reading
+                    // Qty so two concurrent Adjust calls on the same row can't both
+                    // read the same stale value (lost-update race).
+                    db.Database.ExecuteSqlCommand(
+                        "SELECT TOP 1 1 FROM dbo.Gen_FinishedStocks WITH (UPDLOCK, ROWLOCK) WHERE Id = @id",
+                        new SqlParameter("@id", id));
 
-            if (stock == null)
-                return JsonError("Stock not found.");
+                    var stock = db.Gen_FinishedStocks
+                        .FirstOrDefault(x => x.Id == id && x.Deleted != true);
 
-            stock.Qty += qty;
-            stock.SourceType = "ADJUSTMENT";
-            stock.UpdatedBy = GetSafeCurrentUserId();
-            stock.UpdatedDate = DateTime.Now;
+                    if (stock == null)
+                    {
+                        tx.Rollback();
+                        return JsonError("Stock not found.");
+                    }
 
-            db.SaveChanges();
+                    decimal newQty = stock.Qty + qty;
 
-            return JsonSuccess("Stock adjusted successfully.");
+                    if (newQty < 0)
+                    {
+                        tx.Rollback();
+                        return JsonError(
+                            "Adjustment would result in negative stock. Current: " +
+                            stock.Qty + ", Adjustment: " + qty + ".");
+                    }
+
+                    stock.Qty = newQty;
+                    stock.SourceType = "ADJUSTMENT";
+                    stock.UpdatedBy = GetSafeCurrentUserId();
+                    stock.UpdatedDate = DateTime.Now;
+
+                    db.SaveChanges();
+                    tx.Commit();
+
+                    return JsonSuccess("Stock adjusted successfully.");
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return JsonError("Failed to adjust stock.", ex);
+                }
+            }
         }
     }
 }

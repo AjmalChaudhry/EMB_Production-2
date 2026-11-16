@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+using EMB_Production.Infrastructure;
 using EMB_Production.Models;
 using EMB_Production.ViewModels;
 using iTextSharp.text;
@@ -20,6 +21,7 @@ using Rotativa;
 namespace EMB_Production.Controllers
 {
     [RoutePrefix("emb-products/companies")]
+    [SessionAuthorize]
     public class Adm_CompanyProfileController : Controller
     {
         private readonly EMB_ProductionEntities1 db = new EMB_ProductionEntities1();
@@ -284,7 +286,6 @@ SELECT  a.Id, a.CompanyId, a.Action, a.ChangedBy,
                 c.LicenseKey,
                 c.NTN,
                 c.STRN,
-                c.MasterPassword,
                 c.CultureCode,
                 c.CalendarCode,
                 c.Theme,
@@ -429,7 +430,6 @@ SELECT  a.Id, a.CompanyId, a.Action, a.ChangedBy,
                     licenseKey = entity.LicenseKey,
                     ntn = entity.NTN,
                     strn = entity.STRN,
-                    masterPassword = entity.MasterPassword,
                     cultureCode = entity.CultureCode,
                     calendarCode = entity.CalendarCode,
                     theme = entity.Theme,
@@ -576,7 +576,6 @@ SELECT  a.Id, a.CompanyId, a.Action, a.ChangedBy,
                 LicenseKey = c.LicenseKey,
                 NTN = c.NTN,
                 STRN = c.STRN,
-                MasterPassword = c.MasterPassword,
                 CultureCode = c.CultureCode,
                 CalendarCode = c.CalendarCode,
                 Theme = c.Theme,

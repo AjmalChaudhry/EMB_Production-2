@@ -979,6 +979,11 @@ SELECT  a.Id,
 
                         string fixedUnit = GetFixedRawItemUnit(rawItem);
 
+                        // Sprint-4: serialise concurrent issues on the same item-
+                        // branch slice before trusting the balance we're about to
+                        // read, the same way Adjustment() does.
+                        LockBalanceSlice(group.ItemId, dto.BranchId);
+
                         decimal availableStock = GetCurrentBalance(
                             group.ItemId,
                             dto.BranchId,
@@ -1890,19 +1895,30 @@ SELECT  a.Id,
 
             string fixedUnit = GetFixedRawItemUnit(item);
 
-            decimal sourceBalance = GetCurrentBalance(dto.ItemId, dto.FromBranchId, null, fixedUnit);
-            if (sourceBalance < dto.Qty)
-                return JsonError(
-                    "Insufficient balance at " + fromBranch.Name + ". Available: " +
-                    Math.Round(sourceBalance, 2) + " " + fixedUnit + ", requested: " +
-                    Math.Round(dto.Qty, 2) + " " + fixedUnit + ".");
-
             decimal rate = dto.Rate ?? GetLastRate(dto.ItemId, dto.FromBranchId, fixedUnit);
 
             using (var tx = db.Database.BeginTransaction())
             {
                 try
                 {
+                    // Sprint-4: serialise concurrent transfers on the same item-
+                    // branch slice before trusting the balance we're about to
+                    // read, the same way Adjustment() does. The balance check
+                    // must happen after the lock, inside the transaction, or
+                    // two concurrent transfers can both read the same stale
+                    // sourceBalance and both pass the sufficiency check.
+                    LockBalanceSlice(dto.ItemId, dto.FromBranchId);
+
+                    decimal sourceBalance = GetCurrentBalance(dto.ItemId, dto.FromBranchId, null, fixedUnit);
+                    if (sourceBalance < dto.Qty)
+                    {
+                        tx.Rollback();
+                        return JsonError(
+                            "Insufficient balance at " + fromBranch.Name + ". Available: " +
+                            Math.Round(sourceBalance, 2) + " " + fixedUnit + ", requested: " +
+                            Math.Round(dto.Qty, 2) + " " + fixedUnit + ".");
+                    }
+
                     int userId = GetCurrentUserId();
                     DateTime now = DateTime.Now;
 
@@ -1922,6 +1938,10 @@ SELECT  a.Id,
                         .DefaultIfEmpty(0)
                         .Max();
                     string transferNo = yearPrefix + (lastNum + 1).ToString("D4");
+
+                    // Lock the destination item-branch slice too before computing
+                    // destBalance, since its CurrentQty is also used below.
+                    LockBalanceSlice(dto.ItemId, dto.ToBranchId);
 
                     decimal destBalance = GetCurrentBalance(dto.ItemId, dto.ToBranchId, null, fixedUnit);
 

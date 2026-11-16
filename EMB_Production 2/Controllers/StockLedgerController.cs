@@ -19,10 +19,15 @@ namespace EMB_Production.Controllers
             DateTime? to = null)
         {
             var query = db.Gen_Stocks
-                .Where(x => x.Deleted == false || x.Deleted == null);
+                .Where(x => x.Deleted == false || x.Deleted == null)
+                .Where(x => x.BranchId == GetCurrentBranchId());
 
+            // Finished/product stock rows (Gen_StocksController's own mapping,
+            // e.g. ProductId = s.ProdId ?? s.ItemId) key off ProdId rather than
+            // ItemId, so filtering on ItemId alone returns an empty ledger for
+            // a finished/produced item even though matching rows exist.
             if (itemId.HasValue)
-                query = query.Where(x => x.ItemId == itemId.Value);
+                query = query.Where(x => x.ItemId == itemId.Value || x.ProdId == itemId.Value);
 
             if (!string.IsNullOrWhiteSpace(itemType))
                 query = query.Where(x => x.ItemType == itemType);

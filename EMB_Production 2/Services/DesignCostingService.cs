@@ -203,7 +203,7 @@ public partial class DesignCostingService
         decimal laborRate = profile.OperatorHourlyRate ?? 0m;
         decimal electricRatePerHour = (profile.PowerKW ?? 0m) * (profile.ElectricityUnitRate ?? 0m);
 
-        decimal machineCost = totalHours * (machineRate / heads);
+        decimal machineCost = totalHours * machineRate;
         decimal laborCost = totalHours * laborRate;
         decimal electricityCost = totalHours * electricRatePerHour;
 

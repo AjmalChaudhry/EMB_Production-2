@@ -18,11 +18,13 @@ using iTextSharp.text.pdf;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Globalization;
+using EMB_Production.Infrastructure;
 
 
 namespace EMB_Production.Controllers
 {
     [RoutePrefix("emb-products/users")]
+    [SessionAuthorize]
     public class Adm_UsersController : BaseController
     {
         // ─────────────────────────────────────────────────────────────
@@ -592,7 +594,6 @@ SELECT  a.Id, a.UserId, a.Action, a.ChangedBy,
                     u.EmailAddress,
                     u.MobilePrimary,
                     u.Landline,
-                    u.Password,
 
                     u.BranchId,
                     BranchName = br.Name,
@@ -640,7 +641,6 @@ SELECT  a.Id, a.UserId, a.Action, a.ChangedBy,
                 raw.EmailAddress,
                 raw.MobilePrimary,
                 raw.Landline,
-                raw.Password,
 
                 raw.BranchId,
                 raw.BranchName,
@@ -715,7 +715,7 @@ SELECT  a.Id, a.UserId, a.Action, a.ChangedBy,
                     EmailAddress = f["EmailAddress"]?.Trim(),
                     MobilePrimary = f["MobilePrimary"]?.Trim(),
                     Landline = f["Landline"]?.Trim(),
-                    Password = f["Password"],
+                    Password = PasswordHasher.Hash(f["Password"]),
                     BranchId = branchId,
                     RoleId = roleId,
                     CompanyId = companyId,
@@ -799,7 +799,7 @@ SELECT  a.Id, a.UserId, a.Action, a.ChangedBy,
                 user.Landline = f["Landline"]?.Trim();
 
                 if (!string.IsNullOrWhiteSpace(f["Password"]))
-                    user.Password = f["Password"];
+                    user.Password = PasswordHasher.Hash(f["Password"]);
 
                 user.Active = ToBool(f["Active"]);
                 user.DashboardAccess = ToBool(f["DashboardAccess"]);
@@ -921,7 +921,23 @@ SELECT  a.Id, a.UserId, a.Action, a.ChangedBy,
         [HttpGet, Route("uploads/facialrecognition/{fileName}")]
         public ActionResult GetUserPhoto(string fileName)
         {
-            var path = Path.Combine(Server.MapPath("~/Uploads/FacialRecognition/"), fileName);
+            // Strip any directory component so a value like "..\..\Web.config" or
+            // an absolute path can't escape the intended upload folder.
+            var safeFileName = Path.GetFileName(fileName ?? string.Empty);
+            if (string.IsNullOrWhiteSpace(safeFileName))
+                return HttpNotFound();
+
+            var baseDir = Path.GetFullPath(Server.MapPath("~/Uploads/FacialRecognition/"));
+            if (!baseDir.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                baseDir += Path.DirectorySeparatorChar;
+
+            var path = Path.GetFullPath(Path.Combine(baseDir, safeFileName));
+
+            // Belt-and-braces: confirm the resolved path still lives under the
+            // upload directory before ever touching the filesystem with it.
+            if (!path.StartsWith(baseDir, StringComparison.OrdinalIgnoreCase))
+                return HttpNotFound();
+
             if (!System.IO.File.Exists(path))
                 return HttpNotFound();
 
@@ -1119,8 +1135,18 @@ SELECT  a.Id, a.UserId, a.Action, a.ChangedBy,
                 return HttpNotFound();
             }
 
-            db.Adm_Users.Remove(user);
+            // Soft delete — consistent with the Delete(int id) action's pattern
+            // in this same controller. A hard Remove() here would also throw if
+            // the user is referenced by CreatedBy/UpdatedBy FKs elsewhere.
+            user.Deleted = true;
+            user.Active = false;
+            user.UpdatedBy = GetCurrentEmployeeId();
+            user.UpdatedDate = DateTime.Now;
             db.SaveChanges();
+
+            LogUserAudit(id, "DELETED",
+                oldValue: "Active", newValue: "Deleted",
+                detail: user.UserName ?? "-");
 
             if (Request.IsAjaxRequest())
             {
@@ -1197,7 +1223,6 @@ SELECT  a.Id, a.UserId, a.Action, a.ChangedBy,
                             LandlineExt = u.LandlineExt,
                             MobilePrimary = u.MobilePrimary,
                             MobileSecondary = u.MobileSecondary,
-                            Password = u.Password,
                             LastLoginDate = u.LastLoginDate,
                             LastPasswordChangeDate = u.LastPasswordChangeDate,
                             DashboardAccess = u.DashboardAccess,
@@ -1273,7 +1298,6 @@ SELECT  a.Id, a.UserId, a.Action, a.ChangedBy,
                     Add("Landline", u.Landline);
                     Add("Landline Ext", u.LandlineExt);
                     Add("Mobile Secondary", u.MobileSecondary);
-                    Add("Password", u.Password);
                     Add("Branch", u.Branches?.Name);
                     Add("Company", u.Adm_CompanyProfile?.CompanyName);
                     Add("Active", u.Active == true ? "Yes" : "No");
@@ -1328,7 +1352,7 @@ SELECT  a.Id, a.UserId, a.Action, a.ChangedBy,
                     var headers = new[]
                     {
                 "ID","EmpID","Role","Username","Name",
-                "Email","Mobile","Landline","LandlineExt","MobileSecondary","Password",
+                "Email","Mobile","Landline","LandlineExt","MobileSecondary",
                 "Branch","Company","Active","Deleted",
                 "DashboardAccess","SalesmanLinked","SalesmanCode","DesignationID","Approval",
                 "LoginTicket","DeviceTicket","FacialRecognition","Biometric",
@@ -1373,7 +1397,6 @@ SELECT  a.Id, a.UserId, a.Action, a.ChangedBy,
                         ws.Cells[r, 27].Value = x.CreatedDate?.ToString("yyyy-MM-dd HH:mm:ss");
                         ws.Cells[r, 28].Value = x.UpdatedBy;
                         ws.Cells[r, 29].Value = x.UpdatedDate?.ToString("yyyy-MM-dd HH:mm:ss");
-                        ws.Cells[r, 30].Value = x.Password;
                     }
                  
                     ws.Cells[ws.Dimension.Address].AutoFitColumns();
@@ -1428,7 +1451,6 @@ SELECT  a.Id, a.UserId, a.Action, a.ChangedBy,
                     Row("Landline", u.Landline);
                     Row("Landline Ext", u.LandlineExt);
                     Row("Mobile Secondary", u.MobileSecondary);
-                    Row("Password", u.Password);
                     Row("Branch", u.Branches?.Name);
                     Row("Company", u.Adm_CompanyProfile?.CompanyName);
                     Row("Active", u.Active == true ? "Yes" : "No");
@@ -1482,7 +1504,6 @@ SELECT  a.Id, a.UserId, a.Action, a.ChangedBy,
                                 FullName = x.FirstName + " " + x.LastName,
                                 EmailAddress = x.EmailAddress,
                                 MobilePrimary = x.MobilePrimary,
-                                Password=x.Password,
                                 BranchName = x.Branches.Name,
                                 CompanyName = x.Adm_CompanyProfile.CompanyName,
                                 Active = x.Active ?? false,
@@ -1558,7 +1579,7 @@ SELECT  a.Id, a.UserId, a.Action, a.ChangedBy,
                 return HttpNotFound();
 
             // 3. Verify old password:
-            if (u.Password != m.OldPassword)
+            if (!PasswordHasher.Verify(m.OldPassword, u.Password))
             {
                 ModelState.AddModelError(
                     nameof(m.OldPassword),
@@ -1567,8 +1588,8 @@ SELECT  a.Id, a.UserId, a.Action, a.ChangedBy,
                 return View(m);
             }
 
-            // 4. Stamp and swap in the new one:
-            u.Password = m.NewPassword;
+            // 4. Stamp and swap in the new one (always stored hashed):
+            u.Password = PasswordHasher.Hash(m.NewPassword);
             u.LastPasswordChangeDate = DateTime.UtcNow;
             u.UpdatedBy = currentUserId;
             u.UpdatedDate = DateTime.UtcNow;

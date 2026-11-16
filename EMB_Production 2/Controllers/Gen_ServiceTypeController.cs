@@ -469,7 +469,7 @@ SELECT  a.Id, a.ServiceTypeId, a.Action, a.ChangedBy,
             {
                 var userId = GetCurrentUserId(); // ✔ Correct UserId
 
-                var entity = db.Gen_ServiceType.FirstOrDefault(x => x.Id == dto.Id);
+                var entity = db.Gen_ServiceType.FirstOrDefault(x => x.Id == dto.Id && x.Deleted != true);
 
                 if (entity == null)
                 {
@@ -640,6 +640,18 @@ SELECT  a.Id, a.ServiceTypeId, a.Action, a.ChangedBy,
             }
             return RedirectToAction("Index");
         }
+        // Only these business fields may be touched through the generic
+        // field-update path below. Id, soft-delete, branch and audit
+        // columns (Deleted, Active, BranchId, CreatedBy, CreatedDate,
+        // UpdatedBy, UpdatedDate, RecordTimeStamp) are deliberately left
+        // out — letting a caller set those via raw reflection would bypass
+        // soft-delete, branch scoping and audit trail integrity.
+        private static readonly HashSet<string> AllowedServiceTypeFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Service_Type",
+            "Service_TypeDescription"
+        };
+
         [HttpPost]
         [Route("update-field")]
         public JsonResult UpdateServiceTypeField(int id, string fieldName, string newValue)
@@ -647,6 +659,9 @@ SELECT  a.Id, a.ServiceTypeId, a.Action, a.ChangedBy,
             // ensure user is logged in
             if (Session["UserID"] == null)
                 return Json(new { success = false, message = "Not authenticated." });
+
+            if (string.IsNullOrWhiteSpace(fieldName) || !AllowedServiceTypeFields.Contains(fieldName))
+                return Json(new { success = false, message = "Invalid field." });
 
             // load the service‐type record
             var entity = db.Gen_ServiceType.Find(id);

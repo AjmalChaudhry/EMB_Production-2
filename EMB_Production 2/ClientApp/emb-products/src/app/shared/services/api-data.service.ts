@@ -17,6 +17,18 @@ export class ApiDataService {
 
   constructor() { }
 
+  private escapeHtml(value: any): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   exportToExcel(data: any[], fileName: string, columns: ExportColumn[]): void {
     if (!data?.length) {
       alert('No data to export.');
@@ -65,17 +77,19 @@ export class ApiDataService {
       return;
     }
 
+    const safeTitle = this.escapeHtml(title);
+
     const tableHtml = `
       <table border="1" style="width:100%; border-collapse: collapse;">
         <thead>
           <tr style="background-color:#343a40; color:white;">
-            ${columns.map(c => `<th>${c.header}</th>`).join('')}
+            ${columns.map(c => `<th>${this.escapeHtml(c.header)}</th>`).join('')}
           </tr>
         </thead>
         <tbody>
           ${data.map(item => `
             <tr>
-              ${columns.map(c => `<td>${item[c.field] ?? ''}</td>`).join('')}
+              ${columns.map(c => `<td>${this.escapeHtml(item[c.field] ?? '')}</td>`).join('')}
             </tr>
           `).join('')}
         </tbody>
@@ -85,10 +99,10 @@ export class ApiDataService {
     const w = window.open('', '', 'width=1000,height=600');
     if (!w) return;
 
-    w.document.write('<html><head><title>' + title + '</title>');
+    w.document.write('<html><head><title>' + safeTitle + '</title>');
     w.document.write('<style>table {width:100%; border-collapse: collapse;} th, td {border:1px solid #ddd; padding:6px; text-align:left;} th {background-color:#343a40; color:white;}</style>');
     w.document.write('</head><body>');
-    w.document.write('<h4>' + title + '</h4>');
+    w.document.write('<h4>' + safeTitle + '</h4>');
     w.document.write(tableHtml);
     w.document.write('</body></html>');
     w.document.close();

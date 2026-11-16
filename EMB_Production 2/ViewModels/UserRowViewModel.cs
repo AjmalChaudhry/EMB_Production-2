@@ -28,7 +28,6 @@ namespace EMB_Production.ViewModels
         public string MobileSecondary { get; set; }
 
         // Authentication
-        public string Password { get; set; }
         public DateTime? LastLoginDate { get; set; }
         public DateTime? LastPasswordChangeDate { get; set; }
         public bool? DashboardAccess { get; set; }

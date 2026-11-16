@@ -812,6 +812,37 @@ SELECT  p.Id AS PurchaseId,
                                 return JsonError("Selected fabric does not exist or is not a FABRIC raw item.");
                         }
 
+                        // Cap the GRN line against the linked PO line's outstanding
+                        // quantity (OrderedQty - ReceivedQty). Without this, a GRN
+                        // can over-receive a PO line, which drives SyncReceipts'
+                        // outstanding figure negative and hides the over-receipt
+                        // instead of flagging it. No existing "allow over-receipt"
+                        // override flow exists in this codebase, so this is a hard block.
+                        if (i.PoItemId.HasValue && i.PoItemId.Value > 0)
+                        {
+                            var poLine = db.PurchaseOrderItems
+                                .FirstOrDefault(x => x.Id == i.PoItemId.Value && x.Deleted != true);
+                            if (poLine == null)
+                                return JsonError("Linked purchase order line not found.");
+
+                            decimal outstanding = poLine.OrderedQty - poLine.ReceivedQty;
+
+                            // Multiple GRN lines in this same submission can reference
+                            // the same PO line; account for quantity already claimed
+                            // earlier in this request before checking this one.
+                            decimal alreadyQueuedInThisRequest = dto.Items
+                                .TakeWhile(x => !ReferenceEquals(x, i))
+                                .Where(x => x.PoItemId.HasValue && x.PoItemId.Value == i.PoItemId.Value)
+                                .Sum(x => x.Qty);
+
+                            decimal remainingOutstanding = outstanding - alreadyQueuedInThisRequest;
+
+                            if (i.Qty > remainingOutstanding)
+                                return JsonError(string.Format(
+                                    "Quantity {0} exceeds the outstanding PO quantity ({1}) for this line.",
+                                    i.Qty, Math.Max(remainingOutstanding, 0m)));
+                        }
+
                         var purchaseItem = new PurchaseItems
                         {
                             PurchaseId = purchase.Id,
@@ -1571,6 +1602,7 @@ SELECT  p.Id AS PurchaseId,
                     }
 
                     int linesWritten = 0;
+                    var affectedPoIds = new HashSet<int>();
 
                     foreach (var line in dto.Lines.Where(l => l.ReturnQty > 0))
                     {
@@ -1622,6 +1654,55 @@ SELECT  p.Id AS PurchaseId,
                         });
 
                         linesWritten++;
+
+                        // Keep the originating PO's receipt KPIs/status consistent:
+                        // a return un-receives stock, so roll the returned qty back
+                        // off PurchaseOrderItems.ReceivedQty (never below zero). We
+                        // adjust directly here rather than calling PurchaseOrders'
+                        // /sync-receipts, because that endpoint recomputes ReceivedQty
+                        // by re-summing the full (unreturned) PurchaseItems.Qty per PO
+                        // line — it has no notion of returns, so it would simply undo
+                        // this adjustment back up to the original received quantity.
+                        if (item.PoItemId.HasValue && item.PoItemId.Value > 0)
+                        {
+                            var poItem = db.PurchaseOrderItems.FirstOrDefault(x => x.Id == item.PoItemId.Value);
+                            if (poItem != null)
+                            {
+                                poItem.ReceivedQty = Math.Max(0m, poItem.ReceivedQty - line.ReturnQty);
+                                poItem.UpdatedBy = userId;
+                                poItem.UpdatedDate = now;
+                                affectedPoIds.Add(poItem.PoId);
+                            }
+                        }
+                    }
+
+                    // Re-derive each affected PO's header ReceivedAmount/Status from
+                    // the now-adjusted PurchaseOrderItems rows, mirroring the same
+                    // cap-at-ordered / any-received / all-met rules PurchaseOrders'
+                    // SyncReceipts uses, so the two stay consistent with each other.
+                    foreach (var poId in affectedPoIds)
+                    {
+                        var poItems = db.PurchaseOrderItems
+                            .Where(x => x.PoId == poId && x.Deleted != true)
+                            .ToList();
+
+                        decimal receivedAmount = poItems.Sum(x =>
+                            (x.ReceivedQty > x.OrderedQty ? x.OrderedQty : x.ReceivedQty) * x.Rate);
+                        bool anyReceived = poItems.Any(x => x.ReceivedQty > 0);
+                        bool allMet = poItems.All(x => x.ReceivedQty >= x.OrderedQty);
+
+                        var po = db.PurchaseOrder.FirstOrDefault(x => x.Id == poId);
+                        if (po != null)
+                        {
+                            po.ReceivedAmount = receivedAmount;
+                            if (anyReceived && allMet) po.Status = "FULLY_RECEIVED";
+                            else if (anyReceived) po.Status = "PARTIALLY_RECEIVED";
+                            // If the return zeroed out every line, leave Status as-is —
+                            // same behavior as SyncReceipts when nothing is received.
+                            po.UpdatedBy = userId;
+                            po.UpdatedDate = now;
+                            po.RecordTimeStamp = now;
+                        }
                     }
 
                     db.SaveChanges();
@@ -1726,7 +1807,10 @@ SELECT  p.Id AS PurchaseId,
             {
                 item.Deleted = true;
                 item.Active = false;
-                item.IsPosted = true;
+                // Draft purchases (the only ones Delete allows, per the IsPosted
+                // guard above) never posted a Gen_Store entry, so their lines
+                // must stay IsPosted = false — leave it untouched rather than
+                // marking them posted.
             }
 
             db.SaveChanges();
@@ -2273,8 +2357,12 @@ SELECT  p.Id AS PurchaseId,
 
         private string GetRawItemUnit(int itemId)
         {
+            var unitCode = db.Gen_RawItems
+                .Where(r => r.Id == itemId)
+                .Select(r => r.Gen_Units.UnitCode)
+                .FirstOrDefault();
 
-            return "PCS";
+            return string.IsNullOrWhiteSpace(unitCode) ? "PCS" : unitCode;
         }
 
         // FABRIC: balance computed from Gen_Stocks rows tagged ItemType="FABRIC"

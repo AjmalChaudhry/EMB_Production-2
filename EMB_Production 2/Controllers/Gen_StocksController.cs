@@ -16,6 +16,27 @@ namespace EMB_Production.Controllers
     [RoutePrefix("emb-products/gen-stocks")]
     public class Gen_StocksController : BaseController
     {        
+        // ------------------------------------------------------------------
+        // IMPORTANT - this query is a DISPLAY/UI query, not the balance source
+        // of truth. It applies filters that BaseController's balance helpers
+        // (ComputeStockBuckets / GetFreeCompanyStockBalance /
+        // GetCustomerReservedStockBalance) do NOT apply:
+        //   - restricts ItemType to "PRODUCT" only (Base helpers also accept
+        //     ItemType == "FINISHED")
+        //   - requires the joined Gen_Products row to be Active == true
+        //   - requires Gen_Products.Prod_Code to start with "PRD-"
+        // These extra filters exist so the UI only lists "real" sellable
+        // products, but they mean a product/row that is excluded here can
+        // still be counted by the Base balance helpers (and vice versa for
+        // ItemType == "FINISHED" rows). Any screen or export in this
+        // controller that reports CustomerReservedStock / FreeCompanyStock /
+        // TotalFinishedStock numbers must get those numbers from
+        // GetCustomerReservedStockBalance / GetFreeCompanyStockBalance (see
+        // BuildFinishedGroupedRows, List, Detail below) rather than
+        // recomputing them from rows pulled out of this query, otherwise the
+        // UI and dispatch-validation (which calls the Base helpers directly)
+        // can disagree on available quantity.
+        // ------------------------------------------------------------------
         private IQueryable<Gen_Stocks> FinishedStockQuery()
         {
             return db.Gen_Stocks
@@ -187,11 +208,29 @@ namespace EMB_Production.Controllers
                         }
                     }
 
-                    decimal customerReserved = customerIn - customerOut;
-                    decimal freeCompany = freeIn - freeOut;
+                    // Balance numbers must come from the same Base helpers that
+                    // dispatch-validation uses (ComputeStockBuckets via
+                    // GetCustomerReservedStockBalance/GetFreeCompanyStockBalance),
+                    // not from a local re-derivation of this (filtered) row set,
+                    // so the UI and dispatch validation can never drift apart.
+                    // Fall back to the local split only when the group has no
+                    // resolvable product/branch (should not normally happen).
+                    decimal customerReserved;
+                    decimal freeCompany;
 
-                    if (customerReserved < 0) customerReserved = 0;
-                    if (freeCompany < 0) freeCompany = 0;
+                    int? groupProductId = g.Key.ProductId;
+                    int? groupBranchId = g.Key.BranchId;
+
+                    if (groupProductId.HasValue && groupBranchId.HasValue)
+                    {
+                        customerReserved = GetCustomerReservedStockBalance(groupProductId.Value, groupBranchId.Value);
+                        freeCompany = GetFreeCompanyStockBalance(groupProductId.Value, groupBranchId.Value);
+                    }
+                    else
+                    {
+                        customerReserved = Math.Max(0m, customerIn - customerOut);
+                        freeCompany = Math.Max(0m, freeIn - freeOut);
+                    }
 
                     decimal totalFinished = customerReserved + freeCompany;
                     decimal totalOut = customerOut + freeOut;
@@ -348,8 +387,13 @@ namespace EMB_Production.Controllers
 
                 var stockRows = FinishedStockQuery();
 
-                if (branchId.HasValue && branchId.Value > 0)
-                    stockRows = stockRows.Where(s => s.BranchId == branchId.Value);
+                // Default to the caller's own branch when none is supplied, instead
+                // of silently returning every branch's stock.
+                int effectiveBranchId = (branchId.HasValue && branchId.Value > 0)
+                    ? branchId.Value
+                    : GetCurrentBranchId();
+
+                stockRows = stockRows.Where(s => s.BranchId == effectiveBranchId);
 
                 // Phase P.0 - product filter (used by per-item history)
                 if (productIdFilter.HasValue && productIdFilter.Value > 0)
@@ -478,8 +522,12 @@ namespace EMB_Production.Controllers
                             }
                         }
 
-                        decimal reservedStock = Math.Max(0m, customerIn - customerOut);
-                        decimal freeStock = Math.Max(0m, freeIn - freeOut);
+                        // Use the same Base balance helpers dispatch-validation relies on
+                        // (GetCustomerReservedStockBalance / GetFreeCompanyStockBalance)
+                        // instead of re-deriving the split from this (filtered) row set,
+                        // so the dashboard figures can never drift from dispatch validation.
+                        decimal reservedStock = GetCustomerReservedStockBalance(productId, bId);
+                        decimal freeStock = GetFreeCompanyStockBalance(productId, bId);
 
                         string aggKey = productId + "|" + bId;
                         if (draftDispatchAgg.ContainsKey(aggKey))
@@ -721,8 +769,12 @@ namespace EMB_Production.Controllers
                              && (s.StockStage ?? "").ToUpper() == "FINISHED"
                              && (s.ItemType ?? "").ToUpper() == "PRODUCT");
 
-                if (branchId.HasValue && branchId.Value > 0)
-                    q = q.Where(s => s.BranchId == branchId.Value);
+                // Default to the caller's own branch when none is supplied.
+                int effectiveBranchId = (branchId.HasValue && branchId.Value > 0)
+                    ? branchId.Value
+                    : GetCurrentBranchId();
+
+                q = q.Where(s => s.BranchId == effectiveBranchId);
 
                 var rows = q
                     .OrderBy(s => s.CreatedDate)
@@ -764,7 +816,7 @@ namespace EMB_Production.Controllers
                     productId,
                     productName = product.Prod_Name,
                     productCode = product.Prod_Code,
-                    branchId = branchId ?? 0,
+                    branchId = effectiveBranchId,
                     branchName,
                     totalIn = ledger.Sum(x => x.inQty),
                     totalOut = ledger.Sum(x => x.outQty),
@@ -823,8 +875,12 @@ namespace EMB_Production.Controllers
             {
                 var query = FinishedStockQuery();
 
-                if (branchId.HasValue)
-                    query = query.Where(x => x.BranchId == branchId.Value);
+                // Default to the caller's own branch when none is supplied.
+                int effectiveBranchId = (branchId.HasValue && branchId.Value > 0)
+                    ? branchId.Value
+                    : GetCurrentBranchId();
+
+                query = query.Where(x => x.BranchId == effectiveBranchId);
 
                 var groupedRows = BuildFinishedGroupedRows(query);
                 var rows = ApplySearch(groupedRows, search).ToList();
@@ -876,6 +932,11 @@ namespace EMB_Production.Controllers
                     .FirstOrDefault(x => x.Id == id);
 
                 if (seed == null)
+                    return JsonError("Finished stock record not found.");
+
+                // Hard branch check - a record belonging to another branch must
+                // behave like it doesn't exist for this caller.
+                if (seed.BranchId != GetCurrentBranchId())
                     return JsonError("Finished stock record not found.");
 
                 var relatedRows = FinishedStockQuery()
@@ -1049,12 +1110,15 @@ namespace EMB_Production.Controllers
                               && di.Dispatch.BranchId == branchId)
                     .Sum(di => (decimal?)di.DispatchQty) ?? 0m;
 
-                decimal customerReservedDisplay = Math.Max(
-                    0m,
-                    customerReservations.Sum(x => x.RemainingQty)
-                );
+                // Headline balance numbers must come from the same Base helpers that
+                // dispatch-validation uses, not from a local re-derivation against
+                // this (FinishedStockQuery-filtered) row set, so Detail can never
+                // disagree with the List dashboard or with dispatch validation.
+                // (customerReservations above remains a supplementary per-customer
+                // breakdown and is not used for the headline totals.)
+                decimal customerReservedDisplay = GetCustomerReservedStockBalance(productId, branchId);
+                decimal freeStockDisplay = GetFreeCompanyStockBalance(productId, branchId);
 
-                decimal freeStockDisplay = Math.Max(0m, current - customerReservedDisplay);
                 if (pendingDirectDrafts > 0m)
                     freeStockDisplay = Math.Max(0m, freeStockDisplay - pendingDirectDrafts);
 
@@ -1155,8 +1219,12 @@ namespace EMB_Production.Controllers
         {
             var query = FinishedStockQuery();
 
-            if (branchId.HasValue)
-                query = query.Where(s => s.BranchId == branchId.Value);
+            // Default to the caller's own branch when none is supplied.
+            int effectiveBranchId = (branchId.HasValue && branchId.Value > 0)
+                ? branchId.Value
+                : GetCurrentBranchId();
+
+            query = query.Where(s => s.BranchId == effectiveBranchId);
 
             var list = ApplySearch(BuildFinishedGroupedRows(query), search)
                 .OrderBy(x => x.BranchName)
@@ -1216,8 +1284,12 @@ namespace EMB_Production.Controllers
         {
             var query = FinishedStockQuery();
 
-            if (branchId.HasValue)
-                query = query.Where(s => s.BranchId == branchId.Value);
+            // Default to the caller's own branch when none is supplied.
+            int effectiveBranchId = (branchId.HasValue && branchId.Value > 0)
+                ? branchId.Value
+                : GetCurrentBranchId();
+
+            query = query.Where(s => s.BranchId == effectiveBranchId);
 
             var list = ApplySearch(BuildFinishedGroupedRows(query), search)
                 .OrderBy(x => x.BranchName)

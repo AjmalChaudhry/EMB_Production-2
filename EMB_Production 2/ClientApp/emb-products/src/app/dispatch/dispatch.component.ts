@@ -926,7 +926,15 @@ export class DispatchComponent implements OnInit {
 
     this.svc.post(id).subscribe({
       next: (res: any) => {
-        alert(res.message || 'Dispatch posted successfully.');
+        const success = res?.success ?? res?.Success ?? false;
+        const message = res?.message ?? res?.Message ?? 'Dispatch posted successfully.';
+
+        if (!success) {
+          alert(message);
+          return;
+        }
+
+        alert(message);
 
         // Auto-open the Sale Bill (Invoice) PDF after a successful post.
         this.openSaleBill(id);
@@ -1025,9 +1033,20 @@ export class DispatchComponent implements OnInit {
     if (!this.deleteId) return;
 
     this.svc.delete(this.deleteId).subscribe({
-      next: () => {
+      next: (res: any) => {
+        const success = res?.success ?? res?.Success ?? true;
+        const message = res?.message ?? res?.Message ?? 'Delete failed.';
+
+        if (!success) {
+          alert(message);
+          return;
+        }
+
         this.closeDelete();
         this.loadData();
+      },
+      error: err => {
+        alert(err?.error?.message || 'Delete failed.');
       }
     });
   }
@@ -1046,9 +1065,20 @@ export class DispatchComponent implements OnInit {
     if (!this.reverseId) return;
 
     this.svc.reverse(this.reverseId).subscribe({
-      next: () => {
+      next: (res: any) => {
+        const success = res?.success ?? res?.Success ?? true;
+        const message = res?.message ?? res?.Message ?? 'Reverse failed.';
+
+        if (!success) {
+          alert(message);
+          return;
+        }
+
         this.closeReverse();
         this.loadData();
+      },
+      error: err => {
+        alert(err?.error?.message || 'Reverse failed.');
       }
     });
   }

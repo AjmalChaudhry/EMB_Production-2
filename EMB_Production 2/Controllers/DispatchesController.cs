@@ -180,6 +180,44 @@ SELECT  a.Id,
                 "SELECT 1 FROM dbo.Dispatch WITH (UPDLOCK, ROWLOCK) WHERE Id = @id",
                 new SqlParameter("@id", dispatchId));
         }
+
+        // ─────────────────────────────────────────────────────────────
+        //  High-severity fix — shared stock-pool lock.
+        //  LockDispatchRow() above only serialises concurrent Post/Reverse
+        //  calls against the SAME Dispatch header row. It does nothing for
+        //  two different Dispatch headers that draw on the same shared
+        //  stock pool (same product + branch [+ customer reservation]):
+        //  both can pass the balance re-check and both post, over-
+        //  dispatching the pool. Gen_Stocks is an append-only ledger with
+        //  no single "current balance" row to UPDLOCK, so we take an
+        //  application lock keyed to the pool instead. It is acquired with
+        //  @LockOwner = 'Transaction', so it is held for the lifetime of
+        //  the ambient db.Database.BeginTransaction() and is released
+        //  automatically on commit or rollback — a second concurrent call
+        //  for the same pool blocks here until the first transaction ends.
+        // ─────────────────────────────────────────────────────────────
+        private void LockStockPool(int productId, int branchId, string saleType, int? customerId)
+        {
+            string resource = string.Equals(saleType, "DIRECT_SALE", StringComparison.OrdinalIgnoreCase)
+                ? $"DISPATCH_STOCK:FREE:{productId}:{branchId}"
+                : $"DISPATCH_STOCK:CUST:{productId}:{branchId}:{customerId ?? 0}";
+
+            // Resource names for sp_getapplock are capped at 255 chars;
+            // our keys are always short, but guard defensively anyway.
+            if (resource.Length > 255)
+                resource = resource.Substring(0, 255);
+
+            db.Database.ExecuteSqlCommand(@"
+DECLARE @lockResult INT;
+EXEC @lockResult = sp_getapplock
+    @Resource = @res,
+    @LockMode = 'Exclusive',
+    @LockOwner = 'Transaction',
+    @LockTimeout = 15000;
+IF @lockResult < 0
+    THROW 51000, 'Could not acquire the stock-pool lock for this product/branch/customer in time. Please retry.', 1;",
+                new SqlParameter("@res", resource));
+        }
         [HttpGet, Route("list")]
         public ActionResult List(
             string search = "",
@@ -1392,6 +1430,13 @@ SELECT  a.Id,
             {
                 try
                 {
+                    // High-severity fix: role gate. CanPostDispatch() exists
+                    // specifically to restrict who may post a dispatch — it
+                    // was never wired up here, so any authenticated user
+                    // could post regardless of role.
+                    if (!CanPostDispatch())
+                        return JsonError("You do not have permission to post dispatches.");
+
                     // Sprint-4: TOCTOU guard against concurrent Post / Reverse
                     // calls on the same row. Without the lock two operators
                     // hitting Post simultaneously would each pass the
@@ -1410,6 +1455,13 @@ SELECT  a.Id,
 
                     if (dispatch.IsReversed)
                         return JsonError("Reversed dispatch cannot be posted.");
+
+                    // High-severity fix: QC approval gate. This was dead
+                    // code on the posting path — a dispatch could post even
+                    // when its items had no QC-approved finished stock.
+                    dynamic qcCheck = ValidateQcApprovalForDispatch(id);
+                    if (!(bool)qcCheck.success)
+                        return JsonError((string)qcCheck.message);
 
                     string saleType = string.IsNullOrWhiteSpace(dispatch.SaleType)
                         ? "CUSTOMER_DEMAND"
@@ -1442,6 +1494,23 @@ SELECT  a.Id,
 
                     if (!items.Any())
                         return JsonError("No dispatch items found.");
+
+                    // High-severity fix: shared stock-pool lock. LockDispatchRow()
+                    // above only serialises against this SAME dispatch header; it
+                    // does nothing to stop a second, different dispatch header
+                    // that draws on the same product+branch(+customer) pool from
+                    // concurrently passing the balance checks below and over-
+                    // dispatching it. Lock every distinct product pool this
+                    // dispatch draws from before re-validating balance and before
+                    // the OUT insert further down — a concurrent PostDispatch for
+                    // the same pool blocks here until this transaction ends.
+                    foreach (var productId in items
+                        .Where(x => x.ProductId.HasValue && x.ProductId.Value > 0)
+                        .Select(x => x.ProductId.Value)
+                        .Distinct())
+                    {
+                        LockStockPool(productId, dispatch.BranchId, saleType, dispatch.CustomerId);
+                    }
 
                     int userId = GetCurrentUserId();
                     DateTime now = DateTime.Now;
@@ -1477,6 +1546,20 @@ SELECT  a.Id,
                                     : "Dispatch quantity exceeds customer reserved stock (pending drafts already reserved)."
                             );
                         }
+
+                        // High-severity fix: BaseController's dedicated finished-
+                        // stock validator was dead code on this path. Run it as an
+                        // additional required gate (on top of the ad-hoc balance
+                        // check above, which stays as-is).
+                        dynamic finishedStockCheck = ValidateFinishedStockBalance(
+                            it.ProductId.Value,
+                            dispatch.BranchId,
+                            qty,
+                            saleType,
+                            it.Id
+                        );
+                        if (!(bool)finishedStockCheck.success)
+                            return JsonError((string)finishedStockCheck.message);
 
                         it.Amount = qty * salePrice;
                     }
@@ -1625,6 +1708,24 @@ SELECT  a.Id,
 
                     if (!items.Any())
                         return JsonError("No dispatch items found.");
+
+                    // High-severity fix: same shared stock-pool lock as
+                    // PostDispatch (see LockStockPool). A reversal restores
+                    // stock into the same pool that a concurrent PostDispatch
+                    // for a different header may be validating against, so
+                    // serialise on the pool here too, before writing the IN
+                    // rows below.
+                    string reverseSaleType = string.IsNullOrWhiteSpace(dispatch.SaleType)
+                        ? "CUSTOMER_DEMAND"
+                        : dispatch.SaleType.Trim().ToUpper();
+
+                    foreach (var productId in items
+                        .Where(x => x.ProductId.HasValue && x.ProductId.Value > 0)
+                        .Select(x => x.ProductId.Value)
+                        .Distinct())
+                    {
+                        LockStockPool(productId, dispatch.BranchId, reverseSaleType, dispatch.CustomerId);
+                    }
 
                     foreach (var item in items)
                     {
@@ -2196,7 +2297,6 @@ SELECT  a.Id,
                 .ToList();
 
             decimal inQty = 0m;
-            decimal outQty = 0m;
 
             foreach (var s in stockRows)
             {
@@ -2228,9 +2328,42 @@ SELECT  a.Id,
                 if (jo == null)
                     continue;
 
+                // QC_INSPECTION.OutQty is NOT accumulated here — it is a
+                // stale field on the QC-sourced stock-in row itself and is
+                // never updated when a dispatch later posts against this
+                // reservation (dispatch OUT rows are separate Gen_Stocks
+                // ledger entries keyed by ReferenceType = "DISPATCH"). Using
+                // it here made the reserved balance never actually shrink
+                // after a dispatch posted, allowing repeat over-dispatch.
                 inQty += s.InQty ?? 0m;
-                outQty += s.OutQty ?? 0m;
             }
+
+            // Net out POSTED dispatch OUT rows already drawn against this
+            // same customer's reservation for this product+branch. Mirrors
+            // BaseController.ComputeStockBuckets' customer-drain bucketing
+            // (ReferenceType == "DISPATCH" + Dispatch.SaleType ==
+            // CUSTOMER_DEMAND), additionally scoped to this specific
+            // customer since this overload is per-customer.
+            decimal outQty = db.Gen_Stocks
+                .Where(gs =>
+                    gs.Deleted != true &&
+                    gs.StockStage == "FINISHED" &&
+                    gs.BranchId == branchId &&
+                    (gs.ItemType == "PRODUCT" || gs.ItemType == "FINISHED") &&
+                    (
+                        gs.ProdId == productId ||
+                        (!gs.ProdId.HasValue && gs.ItemId == productId)
+                    ) &&
+                    gs.ReferenceType == "DISPATCH" &&
+                    gs.ReferenceId.HasValue &&
+                    db.Dispatch.Any(d =>
+                        d.Id == gs.ReferenceId.Value &&
+                        d.Deleted != true &&
+                        d.CustomerId == customerId &&
+                        d.BranchId == branchId &&
+                        d.SaleType == "CUSTOMER_DEMAND"))
+                .Select(gs => (decimal?)gs.OutQty)
+                .Sum() ?? 0m;
 
             decimal balance = inQty - outQty;
             return balance < 0m ? 0m : balance;

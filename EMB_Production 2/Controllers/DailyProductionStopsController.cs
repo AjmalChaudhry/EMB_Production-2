@@ -23,7 +23,12 @@ namespace EMB_Production.Controllers
         [HttpGet, Route("list")]
         public ActionResult List(int? productionId = null, string search = "", int page = 1, int pageSize = 10)
         {
-            var q = db.DailyProductionStops.AsQueryable();
+            int branchId = GetCurrentBranchId();
+
+            var q = db.DailyProductionStops
+                .Where(x => x.DailyProduction != null
+                         && x.DailyProduction.WorkOrderItems != null
+                         && x.DailyProduction.WorkOrderItems.BranchId == branchId);
 
             if (productionId.HasValue && productionId.Value > 0)
                 q = q.Where(x => x.ProductionId == productionId.Value);
@@ -86,7 +91,13 @@ namespace EMB_Production.Controllers
         [HttpGet, Route("detail/{id:int}")]
         public ActionResult Detail(int id)
         {
-            var x = db.DailyProductionStops.FirstOrDefault(z => z.Id == id);
+            int branchId = GetCurrentBranchId();
+
+            var x = db.DailyProductionStops
+                .FirstOrDefault(z => z.Id == id
+                                   && z.DailyProduction != null
+                                   && z.DailyProduction.WorkOrderItems != null
+                                   && z.DailyProduction.WorkOrderItems.BranchId == branchId);
             if (x == null)
                 return Json(new { success = false, message = "Not found." }, JsonRequestBehavior.AllowGet);
 
@@ -127,6 +138,18 @@ namespace EMB_Production.Controllers
             if (dto.StopEnd.HasValue && dto.StopEnd.Value <= dto.StopStart)
                 return Json(new { success = false, message = "StopEnd must be greater than StopStart." });
 
+            int branchId = GetCurrentBranchId();
+            var production = db.DailyProduction
+                .Include("WorkOrderItems")
+                .FirstOrDefault(p => p.Id == dto.ProductionId
+                                   && p.WorkOrderItems != null
+                                   && p.WorkOrderItems.BranchId == branchId);
+            if (production == null)
+                return Json(new { success = false, message = "Production not found." });
+
+            if (production.IsPosted == true)
+                return Json(new { success = false, message = "Cannot modify stops for a posted production record." });
+
             if (HasOverlap(dto.ProductionId, dto.StopStart, dto.StopEnd, null))
                 return Json(new { success = false, message = "Stop time overlaps an existing stop for this production." });
 
@@ -151,9 +174,19 @@ namespace EMB_Production.Controllers
         [HttpPost, Route("update/{id:int}")]
         public ActionResult Update(int id, DailyProductionStopInputViewModel dto)
         {
-            var entity = db.DailyProductionStops.FirstOrDefault(x => x.Id == id);
+            int branchId = GetCurrentBranchId();
+
+            var entity = db.DailyProductionStops
+                .Include("DailyProduction")
+                .FirstOrDefault(x => x.Id == id
+                                   && x.DailyProduction != null
+                                   && x.DailyProduction.WorkOrderItems != null
+                                   && x.DailyProduction.WorkOrderItems.BranchId == branchId);
             if (entity == null)
                 return Json(new { success = false, message = "Not found." });
+
+            if (entity.DailyProduction.IsPosted == true)
+                return Json(new { success = false, message = "Cannot modify stops for a posted production record." });
 
             if (dto.ProductionId <= 0)
                 return Json(new { success = false, message = "Production is required." });
@@ -163,6 +196,21 @@ namespace EMB_Production.Controllers
 
             if (dto.StopEnd.HasValue && dto.StopEnd.Value <= dto.StopStart)
                 return Json(new { success = false, message = "StopEnd must be greater than StopStart." });
+
+            // Moving the stop to a different production: that target must
+            // also belong to the caller's branch and must not be posted.
+            if (dto.ProductionId != entity.ProductionId)
+            {
+                var targetProduction = db.DailyProduction
+                    .Include("WorkOrderItems")
+                    .FirstOrDefault(p => p.Id == dto.ProductionId
+                                       && p.WorkOrderItems != null
+                                       && p.WorkOrderItems.BranchId == branchId);
+                if (targetProduction == null)
+                    return Json(new { success = false, message = "Production not found." });
+                if (targetProduction.IsPosted == true)
+                    return Json(new { success = false, message = "Cannot modify stops for a posted production record." });
+            }
 
             if (HasOverlap(dto.ProductionId, dto.StopStart, dto.StopEnd, id))
                 return Json(new { success = false, message = "Stop time overlaps an existing stop for this production." });
@@ -183,9 +231,19 @@ namespace EMB_Production.Controllers
         [HttpPost, Route("delete/{id:int}")]
         public ActionResult Delete(int id)
         {
-            var entity = db.DailyProductionStops.FirstOrDefault(x => x.Id == id);
+            int branchId = GetCurrentBranchId();
+
+            var entity = db.DailyProductionStops
+                .Include("DailyProduction")
+                .FirstOrDefault(x => x.Id == id
+                                   && x.DailyProduction != null
+                                   && x.DailyProduction.WorkOrderItems != null
+                                   && x.DailyProduction.WorkOrderItems.BranchId == branchId);
             if (entity == null)
                 return Json(new { success = false, message = "Not found." });
+
+            if (entity.DailyProduction.IsPosted == true)
+                return Json(new { success = false, message = "Cannot modify stops for a posted production record." });
 
             db.DailyProductionStops.Remove(entity);
             db.SaveChanges();
@@ -199,7 +257,12 @@ namespace EMB_Production.Controllers
         [HttpGet, Route("analytics")]
         public ActionResult Analytics(int? productionId = null)
         {
-            var q = db.DailyProductionStops.AsQueryable();
+            int branchId = GetCurrentBranchId();
+
+            var q = db.DailyProductionStops
+                .Where(x => x.DailyProduction != null
+                         && x.DailyProduction.WorkOrderItems != null
+                         && x.DailyProduction.WorkOrderItems.BranchId == branchId);
 
             if (productionId.HasValue && productionId.Value > 0)
                 q = q.Where(x => x.ProductionId == productionId.Value);

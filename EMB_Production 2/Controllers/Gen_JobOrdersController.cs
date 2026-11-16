@@ -2267,6 +2267,26 @@ namespace EMB_Production.Controllers
             return RedirectToAction("Index", new { search, activeFilter, page, pageSize });
         }
 
+        // Explicit whitelist of client-editable business fields for the inline
+        // "update-field" grid endpoint. Anything not listed here — including
+        // Id, Deleted, IsPosted, PostedBy, PostedDate, BranchId and the audit
+        // columns — can never be set through this reflection-based endpoint.
+        private static readonly HashSet<string> JobOrderEditableFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "JobOrderCode",
+            "OrderQty",
+            "Status",
+            "DesignId",
+            "OrderDate",
+            "DueDate",
+            "Priority",
+            "CustomerId",
+            "OrderType",
+            "IsCompanyStockOrder",
+            "ProductId",
+            "Active"
+        };
+
         [HttpPost]
         [Route("update-field")]
         public JsonResult UpdateJobOrderField(int jobOrderId, string fieldName, string newValue)
@@ -2279,7 +2299,10 @@ namespace EMB_Production.Controllers
             if (order == null)
                 return Json(new { success = false, message = "Job order not found." });
 
-            // 2) Reflect to find the property
+            // 2) Only allow a known whitelist of business fields to be set.
+            if (string.IsNullOrWhiteSpace(fieldName) || !JobOrderEditableFields.Contains(fieldName))
+                return Json(new { success = false, message = "Field is not allowed to be updated." });
+
             var prop = typeof(Gen_JobOrders).GetProperty(fieldName);
             if (prop == null)
                 return Json(new { success = false, message = "Invalid field." });
@@ -2345,7 +2368,17 @@ namespace EMB_Production.Controllers
         public ActionResult DeleteConfirmed(int id)
         {
             var ord = db.Gen_JobOrders.Find(id);
-            db.Gen_JobOrders.Remove(ord);
+            if (ord == null)
+                return HttpNotFound();
+
+            if (ord.IsPosted)
+                return Json(new { success = false, message = "Posted Job Order cannot be deleted." });
+
+            ord.Deleted = true;
+            ord.Active = false;
+            ord.UpdatedBy = GetCurrentUserId();
+            ord.UpdatedDate = DateTime.Now;
+
             db.SaveChanges();
             return RedirectToAction("Index");
         }

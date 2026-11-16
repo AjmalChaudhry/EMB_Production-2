@@ -376,6 +376,8 @@ SELECT  a.Id, a.CustomerId, a.Action, a.ChangedBy,
                 var c = db.Hr_Customers.Find(id);
                 if (c == null)
                     return JsonError("Customer not found.");
+                if (c.Deleted == true)
+                    return JsonError("Customer not found.");
 
                 c.Customer_Id = model.Customer_Id;
                 c.Customer_Name = model.Customer_Name;
@@ -570,7 +572,7 @@ SELECT  a.Id, a.CustomerId, a.Action, a.ChangedBy,
                 return View("Index", vm);
 
 
-            int uid = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+            int uid = GetCurrentUserId();
             var now = DateTime.UtcNow;
 
             var c = vm.NewCustomer;
@@ -631,7 +633,7 @@ SELECT  a.Id, a.CustomerId, a.Action, a.ChangedBy,
 
             // 3) Audit
             c.RecordTimeStamp = DateTime.UtcNow;
-            c.UpdatedBy = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+            c.UpdatedBy = GetCurrentUserId();
             c.UpdatedDate = DateTime.UtcNow;
 
             db.Entry(c).State = EntityState.Modified;
@@ -647,12 +649,42 @@ SELECT  a.Id, a.CustomerId, a.Action, a.ChangedBy,
             });
         }
 
+        // High-severity fix: explicit whitelist for UpdateCustomerField's
+        // reflection-based mass-assignment. Business fields only — Id,
+        // Deleted, Active, BranchId, CreatedBy/CreatedDate, UpdatedBy/
+        // UpdatedDate (and RecordTimeStamp, also a system/audit field) must
+        // never be settable through this ad-hoc endpoint. Active/Deleted
+        // have their own dedicated actions; BranchId and full-record edits
+        // go through the dedicated Update action above.
+        private static readonly HashSet<string> AllowedCustomerFieldUpdates =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "Customer_Id",
+                "Customer_Name",
+                "NTN_Number",
+                "STRN_Number",
+                "Customer_Address",
+                "Customer_City",
+                "Customer_Country",
+                "Customer_Email",
+                "Customer_Email2",
+                "Customer_Phone",
+                "Customer_Phone2",
+                "Customer_Mobile",
+                "Customer_Fax",
+                "Customer_Credit_Limit_CAP",
+                "Customer_Invoice_Period"
+            };
+
         [HttpPost]
         [Route("update-field")]
         public JsonResult UpdateCustomerField(int customerId, string fieldName, string newValue)
         {
             if (Session["UserID"] == null)
                 return Json(new { success = false, message = "Not authenticated." });
+
+            if (string.IsNullOrWhiteSpace(fieldName) || !AllowedCustomerFieldUpdates.Contains(fieldName.Trim()))
+                return Json(new { success = false, message = "Field is not allowed to be updated this way." });
 
             // 1) Load the customer
             var customer = db.Hr_Customers.Find(customerId);
@@ -698,13 +730,23 @@ SELECT  a.Id, a.CustomerId, a.Action, a.ChangedBy,
                 }
 
                 // 4) Apply it
+                var oldValue = prop.GetValue(customer)?.ToString();
                 prop.SetValue(customer, converted);
 
                 // 5) Stamp the update audit fields
-                customer.UpdatedBy = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+                customer.UpdatedBy = GetCurrentUserId();
                 customer.UpdatedDate = DateTime.UtcNow;
 
                 db.SaveChanges();
+
+                // High-severity fix: this ad-hoc field update bypassed the
+                // dedicated audit logger entirely. Route it through the
+                // same LogCustomerAudit the full Update action uses.
+                LogCustomerAudit(customer.Id, "FIELD_UPDATED",
+                    oldValue: oldValue,
+                    newValue: converted?.ToString(),
+                    detail: "Field: " + fieldName);
+
                 return Json(new { success = true });
             }
             catch (Exception ex)
@@ -740,7 +782,7 @@ SELECT  a.Id, a.CustomerId, a.Action, a.ChangedBy,
 
             // soft-delete
             c.Deleted = true;
-            c.UpdatedBy = Convert.ToInt32(Session["EmployeeId"] ?? Session["UserID"] ?? 0);
+            c.UpdatedBy = GetCurrentUserId();
             c.UpdatedDate = DateTime.UtcNow;
             db.SaveChanges();
 

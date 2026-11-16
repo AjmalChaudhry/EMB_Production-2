@@ -12,11 +12,13 @@ using iTextSharp.text.pdf;
 
 using EMB_Production.Models;
 using EMB_Production.ViewModels;
+using EMB_Production.Infrastructure;
 
 
 namespace EMB_Production.Controllers
 {
     [RoutePrefix("emb-products/work-orders")]
+    [SessionAuthorize]
     public class WorkOrdersController : BaseController
     {
         [HttpGet]
@@ -2112,11 +2114,16 @@ ORDER BY a.ChangedDate DESC, a.Id DESC",
 
                     bool hasProduction = db.DailyProduction.Any(dp =>
                         dp.Deleted != true &&
-                        dp.WorkOrderItemId.HasValue &&
-                        db.WorkOrderItems.Any(wi =>
-                            wi.Id == dp.WorkOrderItemId.Value &&
-                            wi.WorkOrderId == id &&
-                            wi.Deleted != true));
+                        (
+                            // Linked via WorkOrderItemId → WorkOrderItems.WorkOrderId
+                            (dp.WorkOrderItemId.HasValue &&
+                                db.WorkOrderItems.Any(wi =>
+                                    wi.Id == dp.WorkOrderItemId.Value &&
+                                    wi.WorkOrderId == id &&
+                                    wi.Deleted != true))
+                            // Linked directly via DailyProduction.WorkOrderId
+                            || dp.WorkOrderId == id
+                        ));
 
                     if (hasProduction)
                         return JsonError("Cannot reverse. Daily Production already exists against this Work Order.");
