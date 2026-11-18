@@ -621,11 +621,16 @@ export class PurchaseRequisitionComponent implements OnInit, AfterViewInit, OnDe
 
       // Stage a fresh form pre-filled with source data. modalMode='create'
       // so save() goes through svc.create() and creates a brand-new row.
+      // PR Code is readonly but still bound straight to form.prCode and
+      // submitted as the real PrCode on save — it must hold an actual
+      // generated code (never a display placeholder) or Create fails
+      // (duplicate/invalid PrCode on the second attempt, garbage code on
+      // the first). Same nextCode() call as openCreate().
       this.modalMode = 'create';
       this.shortfallBannerCount = 0;
       this.form = {
         id: 0,
-        prCode: '(new clone of ' + src.prCode + ')',
+        prCode: '',
         supplierId: src.supplierId,
         sourceType: 'AD_HOC',         // a clone is always treated as manual
         remarks: 'Cloned from ' + src.prCode
@@ -646,6 +651,10 @@ export class PurchaseRequisitionComponent implements OnInit, AfterViewInit, OnDe
       // we're not editing one, so clear any stale workflow / audit state.
       this.workflowStageIndex = 0;
       this.auditLog = [];
+
+      this.svc.nextCode().subscribe(codeRes => {
+        if (codeRes?.success && codeRes.data?.code) this.form.prCode = codeRes.data.code;
+      });
 
       this.formModalInstance?.show();
     });
