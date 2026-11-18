@@ -24,11 +24,15 @@ namespace EMB_Production.Controllers
                     return emp;
                 }
 
-                var username = User?.Identity?.Name ?? string.Empty;
+                // Identity.Name is the user's email (AuthController.Login /
+                // HomeController.Login call SetAuthCookie(user.EmailAddress, ...)) —
+                // match EmailAddress first, UserName as a fallback.
+                var identityName = User?.Identity?.Name ?? string.Empty;
 
-                if (!string.IsNullOrWhiteSpace(username))
+                if (!string.IsNullOrWhiteSpace(identityName))
                 {
-                    var user = db.Adm_Users.FirstOrDefault(u => u.UserName == username);
+                    var user = db.Adm_Users.FirstOrDefault(u => u.EmailAddress == identityName)
+                           ?? db.Adm_Users.FirstOrDefault(u => u.UserName == identityName);
 
                     if (user != null && user.EmployeeId.HasValue)
                     {
@@ -58,8 +62,12 @@ namespace EMB_Production.Controllers
 
         protected int GetCurrentUserId()
         {
-            // 1) Session cache
-            var sessionVal = Session?["UserId"];
+            // 1) Session cache. "UserID" (capital D) is the key AuthController.Login
+            // and HomeController.Login actually set, and what every controller's
+            // own inline `Session["UserID"]` check reads. This used to read a
+            // differently-cased key ("UserId"), which never matched anything —
+            // every call fell straight through to the fallback below.
+            var sessionVal = Session?["UserID"];
             if (sessionVal != null &&
                 int.TryParse(sessionVal.ToString(), out int cachedId) &&
                 cachedId > 0 &&
@@ -68,30 +76,39 @@ namespace EMB_Production.Controllers
                 return cachedId;
             }
 
-            // 2) Resolve from logged-in username
-            var username = User?.Identity?.Name ?? string.Empty;
-            username = username.Trim();
+            // 2) Resolve from the Forms Auth identity. SetAuthCookie(...) is called
+            // with the user's EmailAddress (AuthController.Login / HomeController.Login),
+            // so User.Identity.Name is an email, not UserName — match EmailAddress
+            // first, then fall back to UserName/normalized for safety.
+            var identityName = (User?.Identity?.Name ?? string.Empty).Trim();
 
-            if (!string.IsNullOrEmpty(username))
+            if (!string.IsNullOrEmpty(identityName))
             {
-                // Optional normalization if your system sometimes stores "user" but identity gives "DOMAIN\user"
-                var normalized = username.Contains("\\")
-                    ? username.Substring(username.LastIndexOf("\\", StringComparison.Ordinal) + 1)
-                    : username;
+                // Optional normalization if identity ever comes back as "DOMAIN\user"
+                var normalized = identityName.Contains("\\")
+                    ? identityName.Substring(identityName.LastIndexOf("\\", StringComparison.Ordinal) + 1)
+                    : identityName;
 
-                // If you store emails as UserName sometimes, you can also try direct + normalized
-                var user = db.Adm_Users.FirstOrDefault(u => u.UserName == username)
+                var user = db.Adm_Users.FirstOrDefault(u => u.EmailAddress == identityName)
+                       ?? db.Adm_Users.FirstOrDefault(u => u.UserName == identityName)
                        ?? db.Adm_Users.FirstOrDefault(u => u.UserName == normalized);
 
                 if (user != null && user.Id > 0)
                 {
-                    Session["UserId"] = user.Id; // ✅ cache REAL Adm_Users.Id
+                    Session["UserID"] = user.Id; // ✅ cache REAL Adm_Users.Id
                     return user.Id;
                 }
             }
 
-            // 3) Safe fallback: pick an existing admin/system user
-            // Prefer explicit system user if you have one (e.g., username "admin" or "system")
+            // 3) Safe fallback: pick an existing admin/system user. With (1) and (2)
+            // fixed, this should now be unreachable for any real, authenticated
+            // request — if it ever fires, log it loudly instead of silently
+            // mis-attributing the action to an arbitrary user.
+            System.Diagnostics.Trace.TraceError(
+                "BaseController.GetCurrentUserId(): could not resolve the current user from " +
+                "session or identity — falling back to the default user. SessionUserID=" +
+                (Session?["UserID"] ?? "(null)") + ", IdentityName=" + (User?.Identity?.Name ?? "(null)"));
+
             var fallback = db.Adm_Users
                 .Where(u => u.Id > 0)
                 .OrderBy(u => u.Id)
@@ -100,7 +117,7 @@ namespace EMB_Production.Controllers
 
             if (fallback > 0)
             {
-                Session["UserId"] = fallback;
+                Session["UserID"] = fallback;
                 return fallback;
             }
 
@@ -126,11 +143,14 @@ namespace EMB_Production.Controllers
             if (Session?["BranchId"] != null)
                 return Convert.ToInt32(Session["BranchId"]);
 
-            // 2️⃣ From logged-in user
-            var username = User?.Identity?.Name;
-            if (!string.IsNullOrEmpty(username))
+            // 2️⃣ From logged-in user. Identity.Name is the user's email
+            // (AuthController.Login / HomeController.Login) — match EmailAddress
+            // first, UserName as a fallback.
+            var identityName = User?.Identity?.Name;
+            if (!string.IsNullOrEmpty(identityName))
             {
-                var user = db.Adm_Users.FirstOrDefault(u => u.UserName == username);
+                var user = db.Adm_Users.FirstOrDefault(u => u.EmailAddress == identityName)
+                       ?? db.Adm_Users.FirstOrDefault(u => u.UserName == identityName);
                 if (user?.BranchId != null)
                 {
                     Session["BranchId"] = user.BranchId;

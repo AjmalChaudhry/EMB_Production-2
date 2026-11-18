@@ -4,6 +4,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Security;      // ← for FormsAuthentication
 using EMB_Production.Models;
+using EMB_Production.Infrastructure;
 
 
 namespace EMB_Production.Controllers
@@ -15,6 +16,7 @@ namespace EMB_Production.Controllers
 
 
 
+        [AllowAnonymous]
         public ActionResult Angular()
         {
             string indexPath = Server.MapPath("~/Content/emb-products/index.html");
@@ -48,10 +50,17 @@ namespace EMB_Production.Controllers
             }
 
             // look up the user
-            var user = db.Adm_Users
-                 .SingleOrDefault(u => u.EmailAddress == email && u.Password == password);
-            if (user != null)
+            var user = db.Adm_Users.SingleOrDefault(u => u.EmailAddress == email);
+            if (user != null && PasswordHasher.Verify(password, user.Password))
             {
+                // Lazy migration: upgrade legacy plaintext passwords to a proper
+                // hash now that we know the password is correct (mirrors
+                // AuthController.Login's rehashing behavior).
+                if (!PasswordHasher.IsHashed(user.Password))
+                {
+                    user.Password = PasswordHasher.Hash(password);
+                }
+
                 // stamp the login time
                 user.LastLoginDate = DateTime.UtcNow;
                 db.SaveChanges();

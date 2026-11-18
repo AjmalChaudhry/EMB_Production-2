@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CommonModule, NgClass, DatePipe } from '@angular/common';
+import { CommonModule, NgClass } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import {WorkOrderRowViewModel,WorkOrderDetailViewModel,WorkOrderDto,WorkOrderFormModel} from '../shared/models/work-order.dto';
@@ -13,7 +13,7 @@ declare var bootstrap: any;
 @Component({
   selector: 'app-work-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgClass, DatePipe, RouterLink],
+  imports: [CommonModule, FormsModule, NgClass, RouterLink],
   templateUrl: './work-order.component.html',
   styleUrls: ['./work-order.component.css']
 })

@@ -16,7 +16,7 @@ namespace EMB_Production.Controllers
     [SessionAuthorize]
     public class Adm_RolesController : Controller
     {
-        private EMB_ProductionEntities1 db = new EMB_ProductionEntities1();
+        private readonly EMB_ProductionEntities1 db = new EMB_ProductionEntities1();
 
         [HttpGet, Route("")]
         public ActionResult GetAll()

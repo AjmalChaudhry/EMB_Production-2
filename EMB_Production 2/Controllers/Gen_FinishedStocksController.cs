@@ -13,7 +13,6 @@ namespace EMB_Production.Controllers
         // =====================================================
         // LIST
         // =====================================================
-        [AllowAnonymous]
         [HttpGet, Route("")]
         public ActionResult GetAll(string search = "")
         {
@@ -43,7 +42,6 @@ namespace EMB_Production.Controllers
         // =====================================================
         // DETAIL
         // =====================================================
-        [AllowAnonymous]
         [HttpGet, Route("detail/{id:int}")]
         public ActionResult Detail(int id)
         {

@@ -12,7 +12,7 @@ namespace EMB_Production.Controllers
 {
     public class Gen_JobOrderItemsController : Controller
     {
-        private EMB_ProductionEntities1 db = new EMB_ProductionEntities1();
+        private readonly EMB_ProductionEntities1 db = new EMB_ProductionEntities1();
 
         // GET: Gen_JobOrderItems
         public ActionResult Index()

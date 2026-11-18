@@ -13,7 +13,7 @@ namespace EMB_Production.Controllers
 {
     public class Adm_DepartmentsController : Controller
     {
-        private EMB_ProductionEntities1 db = new EMB_ProductionEntities1();
+        private readonly EMB_ProductionEntities1 db = new EMB_ProductionEntities1();
 
         // GET: Adm_Departments
         public ActionResult Index()

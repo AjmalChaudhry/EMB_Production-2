@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { SupplierService } from '../services/supplier.service';
 import {
@@ -11,7 +11,7 @@ import {
 @Component({
   selector: 'app-supplier-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './supplier-profile.component.html',
   styleUrls: ['./supplier-profile.component.css']
 })

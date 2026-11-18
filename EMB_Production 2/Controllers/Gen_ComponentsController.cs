@@ -189,7 +189,6 @@ SELECT  a.Id, a.ComponentId AS CompId, a.Action, a.ChangedBy,
         // =====================================================
         // LIST
         // =====================================================
-        [AllowAnonymous]
         [HttpGet, Route("")]
         public ActionResult GetAll(
             string search = "",
