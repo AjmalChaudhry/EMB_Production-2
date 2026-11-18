@@ -274,6 +274,53 @@ namespace EMB_Production.Controllers
         [HttpGet, Route("~/emb-products/workorders/list-dropdown")]
         public ActionResult WorkOrdersAlias() => WorkOrders();
 
+        // Work orders that still need materials issued against them — the
+        // inverse of the "has materials been issued yet" gate used by
+        // WorkOrderItems() below (which requires an issue to already exist
+        // before daily production can be logged).
+        [HttpGet, Route("work-orders-pending-issue")]
+        public ActionResult WorkOrdersPendingIssue()
+        {
+            try
+            {
+                var issuedWorkOrderIds = db.Gen_Store
+                    .Where(s =>
+                        s.Deleted != true &&
+                        s.ReferenceType == "MATERIAL_ISSUE" &&
+                        s.ReferenceId.HasValue &&
+                        s.OutQty > 0)
+                    .Select(s => s.ReferenceId.Value)
+                    .Distinct();
+
+                var list = db.WorkOrders
+                    .Where(wo =>
+                        wo.Deleted != true &&
+                        wo.Active == true &&
+                        wo.IsPosted == true &&
+                        wo.Status != "Completed" &&
+                        !issuedWorkOrderIds.Contains(wo.Id))
+                    .OrderByDescending(wo => wo.Id)
+                    .Select(wo => new
+                    {
+                        id = wo.Id,
+                        code = wo.WorkOrderCode,
+                        name = wo.WorkOrderCode
+                    })
+                    .ToList();
+
+                return Json(new { success = true, data = list }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Failed to load pending work orders.",
+                    detail = ex.Message
+                }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
         [HttpGet]
         [Route("work-order-items")]
         public ActionResult WorkOrderItems()

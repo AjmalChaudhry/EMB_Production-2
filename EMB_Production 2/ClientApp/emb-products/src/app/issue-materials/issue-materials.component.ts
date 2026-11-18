@@ -68,12 +68,11 @@ export class IssueMaterialsComponent implements OnInit {
   }
 
   loadWorkOrders(): void {
-    this.wo.getAll('', '', 1, 500).subscribe({
-      next: (r: any) => {
-        const rows: any[] = r?.data?.items ?? r?.data ?? [];
+    this.wo.getPendingForIssue().subscribe({
+      next: (rows) => {
         this.workOrders = rows
-          .filter(x => !x.deleted && x.workOrderCode)
-          .map(x => ({ id: x.id, workOrderCode: x.workOrderCode }));
+          .filter(x => x.code)
+          .map(x => ({ id: x.id, workOrderCode: x.code }));
       },
       error: _ => { this.workOrders = []; }
     });

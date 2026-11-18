@@ -69,6 +69,19 @@ export class WorkOrderService {
     );
   }
   // =====================================================
+  // PENDING FOR MATERIAL ISSUE
+  // =====================================================
+  // Work orders that still need materials issued against them (posted,
+  // not completed, no MATERIAL_ISSUE row yet). Always fetched fresh —
+  // deliberately not cached, since issuing materials against a WO should
+  // immediately remove it from this list.
+  getPendingForIssue(): Observable<Array<{ id: number; code: string; name: string }>> {
+    return this.http.get<any>(`/emb-products/dropdowns/work-orders-pending-issue`).pipe(
+      map(res => Array.isArray(res?.data) ? res.data : [])
+    );
+  }
+
+  // =====================================================
   // DETAIL
   // =====================================================
   getDetail(id: number): Observable<ApiResponseData<WorkOrderDetailViewModel>> {
