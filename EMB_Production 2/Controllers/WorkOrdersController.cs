@@ -3150,14 +3150,18 @@ WHERE  poi.RawItemId = @raw
             EMB_Production.Models.EMB_ProductionEntities1 db,
             int rawItemId, int branchId)
         {
-            var last = db.Gen_Store
-                .Where(s => s.ItemId == rawItemId
-                         && s.BranchId == branchId
-                         && s.Deleted == false)
-                .OrderByDescending(s => s.Id)
-                .Select(s => (decimal?)s.CurrentQty)
-                .FirstOrDefault();
-            return last ?? 0m;
+            // Aggregate In - Out, same as IssueMaterialsController.GetCurrentStoreBalance
+            // and the Reports/Store balance (see ReportsController's comment on this).
+            // Gen_Store.CurrentQty on the latest row is only a point-in-time snapshot
+            // that some write paths don't keep in sync, so trusting it here made the
+            // auto-generated PR's shortfall calc disagree with what Issue Materials
+            // shows as "Available" for the same raw item — under-ordering shortages
+            // whenever the last row's snapshot was stale.
+            var q = db.Gen_Store.Where(s =>
+                s.ItemId == rawItemId && s.BranchId == branchId && s.Deleted != true);
+            decimal totalIn  = q.Sum(s => (decimal?)s.InQty)  ?? 0m;
+            decimal totalOut = q.Sum(s => (decimal?)s.OutQty) ?? 0m;
+            return totalIn - totalOut;
         }
 
         private static int? ModeSupplier(IEnumerable<int?> supplierIds)
