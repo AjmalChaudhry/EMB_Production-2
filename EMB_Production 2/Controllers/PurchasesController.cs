@@ -1396,9 +1396,19 @@ SELECT  p.Id AS PurchaseId,
                     DateTime now = DateTime.UtcNow;
                     string reverseTag = "PUR-REV-" + purchase.Id;
 
-                    // ── Phase E guard rail: for every Gen_Store IN row this purchase wrote,
-                    //    the linked item's current balance must be >= the qty brought in.
-                    //    Otherwise downstream issues consumed it and reversal would underflow.
+                    // ── Phase E guard rail: block reversal only when stock this
+                    //    purchase brought in has actually been consumed since.
+                    //    The old check compared the item's CURRENT total balance
+                    //    to the qty brought in and blocked whenever balance <
+                    //    broughtIn — which false-positives on every item whose
+                    //    balance was already negative before this purchase (a
+                    //    normal state elsewhere in this ledger, e.g. a purchase
+                    //    that merely closes an existing shortfall): the result
+                    //    ends up lower than broughtIn even though nothing was
+                    //    consumed afterward. What actually matters is whether
+                    //    any OUT row for this item/branch happened AFTER this
+                    //    purchase's row (ledger order = Id order) — if none did,
+                    //    reversing is safe no matter the balance's sign.
                     var storeInRows = db.Gen_Store
                         .Where(s => s.ReferenceType == "PURCHASE"
                                     && s.ReferenceId == purchase.Id
@@ -1408,13 +1418,18 @@ SELECT  p.Id AS PurchaseId,
 
                     foreach (var r in storeInRows)
                     {
-                        decimal balance = GetCurrentStoreBalance(r.ItemId, purchase.BranchId, null);
-                        decimal broughtIn = r.InQty ?? 0m;
-                        if (balance < broughtIn)
+                        decimal consumedAfter = db.Gen_Store
+                            .Where(s => s.ItemId == r.ItemId
+                                     && s.BranchId == purchase.BranchId
+                                     && s.Deleted == false
+                                     && s.Id > r.Id)
+                            .Sum(s => (decimal?)s.OutQty) ?? 0m;
+
+                        if (consumedAfter > 0m)
                         {
                             var ri = db.Gen_RawItems.FirstOrDefault(x => x.Id == r.ItemId);
                             string label = ri != null ? ri.ItemName : ("Item #" + r.ItemId);
-                            return JsonError($"Cannot reverse: '{label}' has been consumed downstream. Available {balance}, purchase brought {broughtIn}. Reverse the relevant material issues first.");
+                            return JsonError($"Cannot reverse: '{label}' has {consumedAfter} issued against it since this purchase. Reverse those material issues first.");
                         }
                     }
 
