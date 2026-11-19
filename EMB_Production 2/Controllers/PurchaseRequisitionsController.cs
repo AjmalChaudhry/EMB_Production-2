@@ -492,13 +492,23 @@ GROUP BY PrId").ToList();
             {
                 // 1) Aggregate Gen_Store balances per raw item (across all
                 //    branches — PRs are procurement-level, not branch-level).
+                //    OpeningQty is overloaded: on a genuine OpeningIn() row
+                //    (ReferenceType OPENING) it's a one-time stock injection
+                //    that has to be added in; on every ordinary Purchase/Issue/
+                //    Adjustment row it's instead a "balance right before this
+                //    transaction" audit snapshot that's already reflected by
+                //    every prior row's own In/Out, so summing it there
+                //    double-counted the balance. Only real OPENING rows'
+                //    OpeningQty counts toward the total (matches
+                //    Gen_StoreController's balance list/GetCurrentBalance).
                 var balances = db.Gen_Store
                     .Where(s => s.Deleted == false)
                     .GroupBy(s => s.ItemId)
                     .Select(g => new
                     {
                         ItemId = g.Key,
-                        CurrentBalance = g.Sum(x => (x.InQty ?? 0m) - (x.OutQty ?? 0m) + (x.OpeningQty ?? 0m))
+                        CurrentBalance = g.Sum(x => (x.InQty ?? 0m) - (x.OutQty ?? 0m)
+                                                   + (x.ReferenceType == "OPENING" ? (x.OpeningQty ?? 0m) : 0m))
                     })
                     .ToList()
                     .ToDictionary(x => x.ItemId, x => x.CurrentBalance);

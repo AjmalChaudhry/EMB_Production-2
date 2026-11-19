@@ -794,7 +794,12 @@ namespace EMB_Production.Controllers
                 // last row's CurrentQty (the old method) under-counted balances
                 // for any item with an Opening entry. Aggregation is the
                 // single source of truth used by GetCurrentBalance() and the
-                // Store balance-list endpoint.
+                // Store balance-list endpoint. OpeningQty is overloaded though:
+                // only a genuine OpeningIn() row (ReferenceType OPENING) is a
+                // real one-time injection — on every ordinary Purchase/Issue/
+                // Adjustment row it's just a "balance right before this
+                // transaction" audit snapshot, already reflected by every
+                // prior row's own In/Out, so only OPENING rows count here.
                 var storeQ = db.Gen_Store
                     .Include("Gen_RawItems")
                     .Where(s => s.Deleted == false
@@ -813,9 +818,11 @@ namespace EMB_Production.Controllers
                         s.BranchId
                     })
                     .Select(g => {
-                        decimal balance = g.Sum(x => (x.OpeningQty ?? 0m)
-                                                   + (x.InQty ?? 0m)
-                                                   - (x.OutQty ?? 0m));
+                        decimal balance = g.Sum(x =>
+                            ((x.ReferenceType == StoreReferenceType.OPENING
+                           || x.ReferenceType == StoreReferenceType.OPENING_IN) ? (x.OpeningQty ?? 0m) : 0m)
+                            + (x.InQty ?? 0m)
+                            - (x.OutQty ?? 0m));
                         decimal rate = g
                             .OrderByDescending(x => x.TransactionDate)
                             .ThenByDescending(x => x.Id)

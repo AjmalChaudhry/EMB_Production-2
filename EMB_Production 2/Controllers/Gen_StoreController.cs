@@ -311,7 +311,18 @@ SELECT  a.Id,
                             .ThenByDescending(x => x.Id)
                             .FirstOrDefault();
 
-                        decimal openingQty = workOrderId.HasValue ? 0m : g.Sum(x => x.OpeningQty);
+                        // OpeningQty is overloaded: on a genuine OpeningIn() row
+                        // (ReferenceType OPENING/OPENING_IN) it's a one-time stock
+                        // injection that has to be added in. On every ordinary
+                        // Purchase/Issue/Adjustment row it's instead a "balance
+                        // right before this transaction" audit snapshot — already
+                        // reflected by every prior row's own In/Out — so summing
+                        // it there double-counted the balance. Only real OPENING
+                        // rows' OpeningQty counts toward the total.
+                        decimal openingQty = workOrderId.HasValue ? 0m : g
+                            .Where(x => x.ReferenceType == StoreReferenceType.OPENING
+                                     || x.ReferenceType == StoreReferenceType.OPENING_IN)
+                            .Sum(x => x.OpeningQty);
                         decimal totalIn = workOrderId.HasValue ? 0m : g.Sum(x => x.InQty);
                         decimal totalOut = g.Sum(x => x.OutQty);
                         decimal currentBalance = workOrderId.HasValue
@@ -685,7 +696,17 @@ SELECT  a.Id,
 
                 var rows = q.ToList();
 
-                decimal totalOpening = rows.Sum(x => x.OpeningQty ?? 0m);
+                // OpeningQty is overloaded: a genuine OpeningIn() row
+                // (ReferenceType OPENING) is a one-time stock injection that
+                // has to be added in; on every ordinary Purchase/Issue/
+                // Adjustment row it's instead a "balance right before this
+                // transaction" audit snapshot already reflected by every
+                // prior row's own In/Out, so summing it there double-counted
+                // the balance. Only real OPENING rows' OpeningQty counts.
+                decimal totalOpening = rows
+                    .Where(x => x.ReferenceType == StoreReferenceType.OPENING
+                             || x.ReferenceType == StoreReferenceType.OPENING_IN)
+                    .Sum(x => x.OpeningQty ?? 0m);
                 decimal totalIn = rows.Sum(x => x.InQty ?? 0m);
                 decimal totalOut = rows.Sum(x => x.OutQty ?? 0m);
 
@@ -696,7 +717,9 @@ SELECT  a.Id,
                     .Sum(g =>
                     {
                         decimal balance =
-                            g.Sum(x => x.OpeningQty ?? 0m) +
+                            g.Where(x => x.ReferenceType == StoreReferenceType.OPENING
+                                      || x.ReferenceType == StoreReferenceType.OPENING_IN)
+                             .Sum(x => x.OpeningQty ?? 0m) +
                             g.Sum(x => x.InQty ?? 0m) -
                             g.Sum(x => x.OutQty ?? 0m);
 
@@ -1340,7 +1363,12 @@ SELECT  a.Id,
                     })
                     .Select(g =>
                     {
-                        decimal opening = g.Sum(x => x.OpeningQty ?? 0m);
+                        // Only a genuine OpeningIn() row's OpeningQty counts —
+                        // see the comment on Gen_StoreController's List() action.
+                        decimal opening = g
+                            .Where(x => x.ReferenceType == StoreReferenceType.OPENING
+                                     || x.ReferenceType == StoreReferenceType.OPENING_IN)
+                            .Sum(x => x.OpeningQty ?? 0m);
                         decimal totalIn = g.Sum(x => x.InQty ?? 0m);
                         decimal totalOut = g.Sum(x => x.OutQty ?? 0m);
                         decimal balanceQty = opening + totalIn - totalOut;
@@ -1553,9 +1581,16 @@ SELECT  a.Id,
             if (warehouseId.HasValue && warehouseId.Value > 0)
                 q = q.Where(x => x.WarehouseId == warehouseId.Value);
 
+            // OpeningQty is overloaded: on a genuine OpeningIn() row it's a
+            // one-time stock injection with InQty/OutQty both 0, so it has
+            // to be added in. On every ordinary Purchase/Issue row it's
+            // instead a "balance right before this transaction" audit
+            // snapshot — already reflected by every prior row's own In/Out
+            // — so summing it there double(/triple/...)-counts the balance.
+            // Only "OPENING" rows' OpeningQty counts toward the total.
             return q.Sum(x =>
                 (decimal?)(
-                    (x.OpeningQty ?? 0m) +
+                    (x.ReferenceType == "OPENING" ? (x.OpeningQty ?? 0m) : 0m) +
                     (x.InQty ?? 0m) -
                     (x.OutQty ?? 0m)
                 )
