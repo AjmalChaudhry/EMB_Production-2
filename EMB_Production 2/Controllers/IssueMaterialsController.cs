@@ -148,26 +148,43 @@ namespace EMB_Production.Controllers
                 int userId = GetCurrentUserId();
                 DateTime now = DateTime.UtcNow;
 
-                var threadIds = dto.Items.Select(x => x.ThreadId).Distinct().ToList();
-                var threadMap = db.Gen_Threads
-                    .Where(t => threadIds.Contains(t.Id) && t.Deleted != true)
-                    .ToDictionary(t => t.Id);
+                // dto.Items[].ThreadId is, per Suggest()'s "single source of
+                // truth" refactor, actually a Gen_RawItems.Id (field name kept
+                // for Angular DTO compatibility). Gen_Threads is only an
+                // optional LEFT-join for display info when the raw item is
+                // thread-backed — it must never be the primary lookup key,
+                // since fabrics/accessories have no Gen_Threads row at all.
+                var rawItemIds = dto.Items.Select(x => x.ThreadId).Distinct().ToList();
+                var rawItemMap = db.Gen_RawItems
+                    .Where(r => rawItemIds.Contains(r.Id) && r.Deleted != true)
+                    .ToDictionary(r => r.Id);
+
+                var threadByRaw = db.Gen_Threads
+                    .Where(t => t.RawItemId.HasValue && rawItemIds.Contains(t.RawItemId.Value) && t.Deleted != true)
+                    .ToList()
+                    .GroupBy(t => t.RawItemId.Value)
+                    .ToDictionary(g => g.Key, g => g.First());
+
+                var unitIds = rawItemMap.Values.Select(r => r.UnitId).Distinct().ToList();
+                var unitCodeMap = db.Gen_Units
+                    .Where(u => unitIds.Contains(u.Id))
+                    .ToDictionary(u => u.Id, u => u.UnitCode);
 
                 // Pre-validate every item before any write
                 foreach (var i in dto.Items)
                 {
-                    if (i.ThreadId <= 0) return JsonError("Invalid thread.");
+                    if (i.ThreadId <= 0) return JsonError("Invalid item.");
                     if (i.Qty <= 0) return JsonError("Quantity must be greater than zero.");
-                    if (!threadMap.ContainsKey(i.ThreadId))
-                        return JsonError($"Thread {i.ThreadId} does not exist or is deleted.");
+                    if (!rawItemMap.ContainsKey(i.ThreadId))
+                        return JsonError($"Item {i.ThreadId} does not exist or is deleted.");
 
-                    var t = threadMap[i.ThreadId];
-                    if (!t.RawItemId.HasValue || t.RawItemId.Value <= 0)
-                        return JsonError($"Thread {t.Code} {t.Name} is not linked to a raw item. Link it before issuing.");
+                    var raw = rawItemMap[i.ThreadId];
+                    threadByRaw.TryGetValue(i.ThreadId, out var threadInfo);
+                    string displayName = threadInfo != null ? $"{threadInfo.Code} {threadInfo.Name}" : raw.ItemName;
 
-                    decimal balance = GetCurrentStoreBalance(t.RawItemId.Value, branchId, null);
+                    decimal balance = GetCurrentStoreBalance(i.ThreadId, branchId, null);
                     if (i.Qty > balance)
-                        return JsonError($"Insufficient stock for {t.Code} {t.Name}. Available: {balance}, Requested: {i.Qty}.");
+                        return JsonError($"Insufficient stock for {displayName}. Available: {balance}, Requested: {i.Qty}.");
                 }
 
                 string issueCode = NextIssueCode(now.Year);
@@ -178,8 +195,10 @@ namespace EMB_Production.Controllers
                     {
                         foreach (var i in dto.Items)
                         {
-                            var thread = threadMap[i.ThreadId];
-                            int rawItemId = thread.RawItemId.Value;
+                            int rawItemId = i.ThreadId;
+                            var raw = rawItemMap[rawItemId];
+                            threadByRaw.TryGetValue(rawItemId, out var thread);
+                            string displayName = thread != null ? $"{thread.Code} {thread.Name}" : raw.ItemName;
 
                             // Sprint-4 TOCTOU guard: the pre-validation loop above
                             // read the balance before this transaction/lock existed,
@@ -193,10 +212,13 @@ namespace EMB_Production.Controllers
                             if (i.Qty > opening)
                             {
                                 tx.Rollback();
-                                return JsonError($"Insufficient stock for {thread.Code} {thread.Name}. Available: {opening}, Requested: {i.Qty}.");
+                                return JsonError($"Insufficient stock for {displayName}. Available: {opening}, Requested: {i.Qty}.");
                             }
 
-                            decimal rate = i.Rate ?? (thread.UnitCost ?? 0m);
+                            decimal rate = i.Rate ?? thread?.UnitCost ?? GetLastRate(rawItemId, branchId);
+                            string unit = thread?.UnitOfMeasure
+                                ?? (unitCodeMap.ContainsKey(raw.UnitId) ? unitCodeMap[raw.UnitId] : null)
+                                ?? "MTR";
 
                             db.Gen_Store.Add(new Gen_Store
                             {
@@ -215,7 +237,7 @@ namespace EMB_Production.Controllers
                                 OutQty = i.Qty,
                                 CurrentQty = opening - i.Qty,
 
-                                Unit = thread.UnitOfMeasure ?? "MTR",
+                                Unit = unit,
                                 Rate = rate,
                                 Amount = i.Qty * rate,
 
@@ -548,6 +570,19 @@ namespace EMB_Production.Controllers
             decimal totalIn = q.Sum(x => (decimal?)x.InQty) ?? 0m;
             decimal totalOut = q.Sum(x => (decimal?)x.OutQty) ?? 0m;
             return totalIn - totalOut;
+        }
+
+        // Rate fallback for raw items with no explicit Rate/UnitCost (e.g.
+        // fabrics/accessories): last rate this item was transacted at.
+        // Mirrors Gen_StoreController.GetLastRate.
+        private decimal GetLastRate(int itemId, int branchId)
+        {
+            return db.Gen_Store
+                .Where(x => x.ItemId == itemId && x.BranchId == branchId && x.Deleted != true)
+                .OrderByDescending(x => x.TransactionDate)
+                .ThenByDescending(x => x.Id)
+                .Select(x => (decimal?)x.Rate)
+                .FirstOrDefault() ?? 0m;
         }
     }
 }
