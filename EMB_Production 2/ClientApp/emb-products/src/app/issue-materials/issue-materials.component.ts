@@ -31,6 +31,7 @@ export class IssueMaterialsComponent implements OnInit {
   loading = false;
   saving = false;
   error = '';
+  creatingShortfallPr = false;
 
   list: IssueListRow[] = [];
   detail: IssueDetail | null = null;
@@ -99,6 +100,26 @@ export class IssueMaterialsComponent implements OnInit {
         this.loading = false;
       },
       error: e => { this.error = e?.error?.message || 'Failed to fetch suggestions.'; this.loading = false; }
+    });
+  }
+
+  /** Raise a top-up Purchase Requisition for whatever is still short on
+   *  the selected WO, against current stock — for a WO whose original
+   *  auto-PR already under-ordered and has no other way to be corrected
+   *  short of a brand-new WO post. */
+  createShortfallPr(): void {
+    if (!this.selectedWorkOrderId) return;
+    this.creatingShortfallPr = true;
+    this.wo.createShortfallPr(this.selectedWorkOrderId).subscribe({
+      next: r => {
+        this.creatingShortfallPr = false;
+        if (!r?.success) { alert(r?.message || 'Failed to create shortfall PR.'); return; }
+        alert(r.message || 'Done.');
+      },
+      error: e => {
+        this.creatingShortfallPr = false;
+        alert(e?.error?.message || e?.message || 'Failed to create shortfall PR.');
+      }
     });
   }
 

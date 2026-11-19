@@ -73,10 +73,17 @@
           EDIT · {{ editingIssueCode }}
         </span>
       </div>
-      <div class="small">
-        Total: <strong>{{ totalQty | number:'1.0-2' }}</strong>
+      <div class="small d-flex align-items-center">
+        Total: <strong class="ms-1">{{ totalQty | number:'1.0-2' }}</strong>
         &nbsp;|&nbsp; Amount: <strong>{{ totalAmount | number:'1.0-0' }}</strong>
         <span *ngIf="anyShortfall" class="text-danger ms-2">⚠ Shortfall on some items</span>
+        <button *ngIf="anyShortfall" type="button"
+                class="btn btn-sm btn-outline-warning ms-2"
+                [disabled]="creatingShortfallPr"
+                (click)="createShortfallPr()"
+                title="Raise a new DRAFT Purchase Requisition for whatever is still short on this Work Order">
+          <i class="bi bi-cart-plus me-1"></i>{{ creatingShortfallPr ? 'Creating…' : 'Create Shortfall PR' }}
+        </button>
       </div>
     </div>
     <div class="card-body p-0">

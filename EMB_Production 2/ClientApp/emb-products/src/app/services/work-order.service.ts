@@ -197,6 +197,14 @@ export class WorkOrderService {
     return this.http.post<any>(`${this.baseUrl}/reverse-post/${id}`, {});
   }
 
+  /** Re-runs the WO's shortfall calc against current stock and raises a
+   *  second DRAFT PR for whatever is still short — for a WO whose original
+   *  auto-PR already exists (possibly under-sized) and has no other way
+   *  to be topped up short of a brand-new WO post. */
+  createShortfallPr(id: number): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${id}/create-shortfall-pr`, {});
+  }
+
   // Phase L.1 - Work Order 360 profile
   getProfile(id: number): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/profile/${id}`);

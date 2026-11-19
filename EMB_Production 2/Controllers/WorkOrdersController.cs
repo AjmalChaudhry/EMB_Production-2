@@ -2085,6 +2085,63 @@ ORDER BY a.ChangedDate DESC, a.Id DESC",
             catch { return false; }
         }
 
+        // ====================================================================
+        // TOP-UP SHORTFALL PR — for a WO that's already posted (so its
+        // WO_POST auto-PR already exists/was already converted to a PO),
+        // re-run the exact same shortfall calc against current stock and
+        // raise a second DRAFT PR for whatever is still short. Required is
+        // always the WO's full BOM need, but OnHand nets out everything
+        // already received against the first PR/PO, so this only lines up
+        // the remaining gap — not a duplicate of what's already covered.
+        // Exists because the shortfall calc used to under-count on-hand
+        // stock (see AutoPrCore.OnHand's history), so WOs posted before
+        // that fix can be stuck with an under-sized PR with no way to
+        // correct it short of a brand-new WO post.
+        // ====================================================================
+        [HttpPost]
+        [Route("{id:int}/create-shortfall-pr")]
+        public ActionResult CreateShortfallPr(int id)
+        {
+            try
+            {
+                var wo = db.WorkOrders.FirstOrDefault(x => x.Id == id && x.Deleted != true);
+                if (wo == null) return JsonError("Work Order not found.");
+                if (wo.IsPosted != true) return JsonError("Work Order is not posted yet.");
+
+                int userId = GetCurrentUserId();
+                DateTime now = DateTime.Now;
+
+                var result = AutoPrCore.Generate(
+                    db,
+                    new List<int> { wo.Id },
+                    sourceType:        "WO_POST",
+                    sourceReferenceId: wo.Id,
+                    sourceLabel:       wo.WorkOrderCode,
+                    userId:            userId,
+                    canAutoApprove:    CanCurrentRoleAutoApprovePr(),
+                    now:               now);
+
+                if (result.PrId <= 0 || string.IsNullOrEmpty(result.PrCode))
+                {
+                    return JsonSuccess(
+                        "No shortfall against current stock — nothing to order.",
+                        new { created = false, reason = result.SkipReason });
+                }
+
+                LogAudit(wo.Id, "ShortfallPrCreated", null, null,
+                    "Shortfall top-up PR " + result.PrCode + " (" + result.ItemCount + " line(s))");
+
+                return JsonSuccess(
+                    "Purchase Requisition " + result.PrCode + " created as DRAFT for "
+                        + result.ItemCount + " material shortfall line(s).",
+                    new { created = true, prId = result.PrId, prCode = result.PrCode, itemCount = result.ItemCount });
+            }
+            catch (Exception ex)
+            {
+                return JsonError("Failed to create shortfall PR.", ex);
+            }
+        }
+
         [HttpPost]
         [Route("reverse-post/{id:int}")]
         public ActionResult ReversePost(int id)
